@@ -1,0 +1,54 @@
+/*
+ * TrackBar.h
+ *
+ *  Created on: Sep 12, 2016
+ *      Author: zaqc
+ */
+
+#ifndef SRC_TRACKBAR_H_
+#define SRC_TRACKBAR_H_
+
+#include <SDL.h>
+
+class TrackBar {
+protected:
+	int m_X;
+	int m_Y;
+	int m_W;
+	int m_H;
+	int m_Pos;
+	int m_Min;
+	int m_Max;
+	int m_ThumbWidth;
+	int m_ThumbHeight;
+	int m_TrackSize;
+	int m_Border;
+	int m_MouseDownX;
+	int m_MouseDownY;
+	bool m_MouseDown;
+	float m_PosDelta;
+	bool m_Revert;
+public:
+	TrackBar(int aX, int aY, int aW, int aH);
+	virtual ~TrackBar();
+
+	int GetValue(void) {
+		if (m_MouseDown)
+			return m_PosDelta;
+		return m_Pos;
+	}
+
+	bool ProcessEvent(SDL_Event aEvent);
+
+	SDL_Rect CalcThumbRect(void);
+
+	void PaintBackground(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
+	void PaintTrack(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
+	void PaintThumb(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
+
+	bool PtInThumb(int aX, int aY);
+
+	void Render(SDL_Renderer *aRnd);
+};
+
+#endif /* SRC_TRACKBAR_H_ */
