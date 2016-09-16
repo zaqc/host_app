@@ -31,7 +31,8 @@ void Label::SetText(std::string aStr) {
 	m_Text = aStr;
 }
 
-void Label::ProcessEvent(SDL_Event aEvent) {
+bool Label::ProcessEvent(SDL_Event aEvent) {
+	return false;
 }
 
 void Label::Render(SDL_Renderer *aRnd) {

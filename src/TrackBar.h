@@ -10,7 +10,10 @@
 
 #include <SDL.h>
 
-class TrackBar {
+#include "Window.h"
+//----------------------------------------------------------------------------
+
+class TrackBar: public Control {
 protected:
 	int m_X;
 	int m_Y;
@@ -38,7 +41,7 @@ public:
 		return m_Pos;
 	}
 
-	bool ProcessEvent(SDL_Event aEvent);
+	virtual bool ProcessEvent(SDL_Event aEvent);
 
 	SDL_Rect CalcThumbRect(void);
 
@@ -48,7 +51,7 @@ public:
 
 	bool PtInThumb(int aX, int aY);
 
-	void Render(SDL_Renderer *aRnd);
+	virtual void Render(SDL_Renderer *aRnd);
 };
 
 #endif /* SRC_TRACKBAR_H_ */

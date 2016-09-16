@@ -13,7 +13,10 @@
 
 #include <string>
 
-class Label {
+#include "Window.h"
+//----------------------------------------------------------------------------
+
+class Label: public Control {
 protected:
 	int m_X;
 	int m_Y;
@@ -27,8 +30,8 @@ public:
 
 	void SetText(std::string aStr);
 
-	void ProcessEvent(SDL_Event aEvent);
-	void Render(SDL_Renderer *aRnd);
+	virtual bool ProcessEvent(SDL_Event aEvent);
+	virtual void Render(SDL_Renderer *aRnd);
 };
 
 #endif /* SRC_LABEL_H_ */

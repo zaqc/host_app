@@ -12,7 +12,10 @@
 #include <SDL_ttf.h>
 #include <string>
 
-class Button {
+#include "Window.h"
+//----------------------------------------------------------------------------
+
+class Button: public Control {
 	int m_X;
 	int m_Y;
 	int m_W;
@@ -24,11 +27,11 @@ public:
 	Button(int aX, int aY, int aW, int aH, std::string aText);
 	virtual ~Button();
 
-//	void Init(SDL_Renderer *aRnd);
+//	void Init(void);
 //	void Done(void);
 
-	void Render(SDL_Renderer *aRnd);
-	bool ProcessEvent(SDL_Event aEvent);
+	virtual void Render(SDL_Renderer *aRnd);
+	virtual bool ProcessEvent(SDL_Event aEvent);
 };
 
 #endif /* SRC_BUTTON_H_ */

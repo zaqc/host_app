@@ -11,6 +11,7 @@
 
 #include <SDL.h>
 #include <vector>
+//----------------------------------------------------------------------------
 
 class Control {
 protected:
@@ -29,14 +30,23 @@ public:
 
 class Window {
 protected:
+	SDL_Renderer *m_Rnd;
+	int m_X;
+	int m_Y;
+	int m_W;
+	int m_H;
 	std::vector<Control*> m_Control;
 public:
-	Window(int aX, int aY, int aW, int aH);
+	Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~Window();
 
-	void Paint(SDL_Renderer *aRnd);
+	void AddControl(Control *aControl);
 
-	int Execute(SDL_Renderer *aRnd);
+	virtual void Init(void);
+	virtual void Done(void);
+
+	virtual void Paint(void);
+	int Execute(void);
 };
 //----------------------------------------------------------------------------
 
