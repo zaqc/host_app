@@ -19,6 +19,8 @@
 #include "TrackBar.h"
 #include "Label.h"
 #include "Button.h"
+#include "Window.h"
+#include "AScanWnd.h"
 
 int main(void) {
 //	int fd = open("/dev/fb0", O_RDWR);
@@ -34,6 +36,12 @@ int main(void) {
 	SDL_GL_SetSwapInterval(1);
 
 	TTF_Init();
+
+	Window *w = new AScanWnd(rnd, 0, 0, 800, 480);
+	w->Init();
+	w->Execute();
+
+	return 0;
 
 	Label *l = new Label(100, 5, 128, 28, "0%");
 	TrackBar *tb = new TrackBar(20, 20, 64, 400);

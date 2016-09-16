@@ -45,6 +45,8 @@ public:
 	virtual void Init(void);
 	virtual void Done(void);
 
+	virtual void UpdateControls(void);
+
 	virtual void Paint(void);
 	int Execute(void);
 };

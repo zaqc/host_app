@@ -1,7 +1,7 @@
 TARGET=host_app
 CFLAGS=-g3 -Wall -I src/
 
-OBJ = main.o obj/TrackBar.o obj/Label.o obj/Button.o obj/Window.o
+OBJ = main.o obj/TrackBar.o obj/Label.o obj/Button.o obj/Window.o obj/AScanWnd.o
 
 all: $(TARGET)
 
@@ -20,6 +20,9 @@ obj/Button.o: src/Button.cpp src/Button.h
 	
 obj/Window.o: src/Window.cpp src/Window.h
 	g++ -c src/Window.cpp -o obj/Window.o $(CFLAGS) $(shell pkg-config sdl2 SDL2_ttf --cflags)
+	
+obj/AScanWnd.o: src/AScanWnd.cpp src/AScanWnd.h
+	g++ -c src/AScanWnd.cpp -o obj/AScanWnd.o $(CFLAGS) $(shell pkg-config sdl2 SDL2_ttf --cflags)
 	
 $(TARGET): $(OBJ)
 	@echo Linking project...

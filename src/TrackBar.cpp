@@ -96,6 +96,9 @@ void TrackBar::PaintBackground(SDL_Renderer *aRnd, int aX, int aY, int aW,
 	SDL_SetRenderDrawColor(aRnd, 192, 192, 202, 255);
 	SDL_Rect r = { aX, aY, aW, aH };
 	SDL_RenderFillRect(aRnd, &r);
+
+	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
+	SDL_RenderDrawRect(aRnd, &r);
 }
 
 void TrackBar::PaintTrack(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) {
@@ -126,12 +129,12 @@ SDL_Rect TrackBar::CalcThumbRect() {
 		pos = m_PosDelta;
 
 	int x = m_X + (m_W - m_ThumbWidth) / 2;
-	int y = m_X + m_Border
+	int y = m_Y + m_Border
 			+ (int) ((double) (m_H - m_Border * 2 - m_ThumbHeight)
 					/ (double) (m_Max - m_Min) * (double) (pos - m_Min));
 
 	if (m_Revert) {
-		y = m_X + m_H - m_Border - m_ThumbHeight
+		y = m_Y + m_H - m_Border - m_ThumbHeight
 				- (int) ((double) (m_H - m_Border * 2 - m_ThumbHeight)
 						/ (double) (m_Max - m_Min) * (double) (pos - m_Min));
 	}
