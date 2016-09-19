@@ -33,7 +33,10 @@ int main(void) {
 	SDL_Window *wnd;
 	SDL_Renderer *rnd;
 
-	SDL_CreateWindowAndRenderer(800, 480, SDL_WINDOW_RESIZABLE, &wnd, &rnd);
+	SDL_CreateWindowAndRenderer(800, 480,
+			SDL_WINDOW_BORDERLESS
+			/*SDL_WINDOW_BORDERLESS |
+			 SDL_WINDOW_FULLSCREEN*/, &wnd, &rnd);
 
 	SDL_GL_SetSwapInterval(1);
 

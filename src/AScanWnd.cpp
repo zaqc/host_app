@@ -155,14 +155,18 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, NULL);
+
+	SDL_DestroyTexture(txt);
+	SDL_FreeSurface(surf);
 }
 
 void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
-
+	SDL_Rect dr = { aX, aY, m_W, m_H };
+	SDL_RenderCopy(aRnd, m_Txt, NULL, &dr);
 }
 
 //============================================================================
-//
+//	Menu
 //============================================================================
 Menu::Menu(int aX, int aY, int aW, int aH, std::string aCaption,
 		Menu *aParent) {
@@ -184,6 +188,10 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::string aCaption,
 	} else {
 		m_ItemFont = NULL;
 	}
+
+	m_CaptionHeight = 32;
+	m_ItemHeight = 28;
+	m_BorderSize = 4;
 }
 
 Menu::~Menu() {
@@ -211,14 +219,24 @@ SDL_Color Menu::GetItemBackground(void) {
 	return m_ItemBackground;
 }
 
+void Menu::CalcMenuRect(void) {
+	int menu_height = 0;
+	menu_height += m_BorderSize * 2;
+	menu_height += m_CaptionHeight;
+	menu_height += m_Items.size() * m_ItemHeight;
+	m_MenuRect = (SDL_Rect ) { m_X, m_Y, m_W, menu_height };
+}
+
 void Menu::AddMenuItem(std::string aCaption, int aID) {
 	MenuItem *mi = new MenuItem(this, aCaption, aID);
 	m_Items.push_back(mi);
+	CalcMenuRect();
 }
 
 void Menu::AddMenuItem(std::string aCaption, Menu *aSubMenu) {
 	MenuItem *mi = new MenuItem(this, aCaption, aSubMenu);
 	m_Items.push_back(mi);
+	CalcMenuRect();
 }
 
 void Menu::Render(SDL_Renderer *aRnd) {
@@ -228,15 +246,26 @@ void Menu::Render(SDL_Renderer *aRnd) {
 				GetItemColor(), GetItemBackground());
 	}
 
-	SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	SDL_Rect r = m_MenuRect; //{ m_X, m_Y, m_W, m_H };
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(aRnd, 32, 32, 32, 192);
 	SDL_RenderFillRect(aRnd, &r);
+	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
+	SDL_RenderDrawRect(aRnd, &r);
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 
 	SDL_Rect dst_rect = { m_X, m_Y, m_W, 32 };
 	SDL_RenderCopy(aRnd, m_CaptionTxt, NULL, &dst_rect);
 
+	int inum = 0;
+	for (std::vector<MenuItem*>::iterator i = m_Items.begin();
+			i != m_Items.end(); i++) {
+		MenuItem *mi = *i;
+		mi->Render(aRnd, m_W, m_ItemHeight);
+		int y = m_Y + m_BorderSize + m_CaptionHeight + inum * m_ItemHeight;
+		mi->Paint(aRnd, m_X, y);
+		inum++;
+	}
 }
 
 bool Menu::ProcessEvent(SDL_Event aEvent) {
@@ -245,7 +274,7 @@ bool Menu::ProcessEvent(SDL_Event aEvent) {
 }
 
 //============================================================================
-//
+//	AScanWnd
 //============================================================================
 AScanWnd::AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
@@ -263,6 +292,10 @@ void AScanWnd::Init(void) {
 	AddControl(m_TBAmpOne);
 
 	Menu *mm = new Menu(100, 100, 200, 340, "Main Menu", NULL);
+	mm->AddMenuItem("MenuItem1", 1);
+	mm->AddMenuItem("MenuItem2", 2);
+	mm->AddMenuItem("MenuItem3", 3);
+	mm->AddMenuItem("MenuItem4", 4);
 	AddControl(mm);
 }
 
@@ -283,6 +316,7 @@ void AScanWnd::Paint(void) {
 	SDL_Rect r = { m_X, m_Y, m_W, m_H };
 	SDL_RenderFillRect(m_Rnd, &r);
 	SDL_SetRenderDrawColor(m_Rnd, 0, 0, 0, 255);
+	SDL_RenderDrawRect(m_Rnd, &r);
 	for (int i = 0; i < 7; i++) {
 		int x = m_X + m_W / 7 * (i + 1);
 		SDL_RenderDrawLine(m_Rnd, x, m_Y, x, m_Y + m_H);

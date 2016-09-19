@@ -31,6 +31,7 @@ protected:
 	bool m_Invalidate;
 	int m_H;
 	int m_W;
+
 public:
 	MenuItem(Menu *aMenu, std::string aCaption, int aID);
 	MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu);
@@ -58,6 +59,11 @@ protected:
 	TTF_Font *m_ItemFont;
 
 	SDL_Texture *m_CaptionTxt;
+
+	int m_CaptionHeight;
+	int m_ItemHeight;
+	int m_BorderSize;
+	SDL_Rect m_MenuRect;
 public:
 	Menu(int aX, int aY, int aW, int aH, std::string aCaption,
 			Menu *aParent);
@@ -66,6 +72,8 @@ public:
 	TTF_Font *GetItemFont(void);
 	SDL_Color GetItemColor(void);
 	SDL_Color GetItemBackground(void);
+
+	void CalcMenuRect(void);
 
 	void AddMenuItem(std::string aCaption, int aID);
 	void AddMenuItem(std::string aCaption, Menu *aSubMenu);
