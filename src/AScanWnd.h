@@ -17,7 +17,7 @@
 class Menu;
 //----------------------------------------------------------------------------
 
-SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont, std::string aCaption, int aW, int aH, SDL_Color aColor, SDL_Color aBkColor);
+SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont, std::wstring aCaption, int aW, int aH, SDL_Color aColor, SDL_Color aBkColor);
 //----------------------------------------------------------------------------
 
 class MenuItem {
@@ -50,13 +50,15 @@ protected:
 	int m_Y;
 	int m_W;
 	int m_H;
-	std::string m_Caprion;
+	std::wstring m_Caprion;
 	Menu *m_Parent;
 	std::vector<MenuItem*> m_Items;
 
 	SDL_Color m_ItemColor;
 	SDL_Color m_ItemBackground;
 	TTF_Font *m_ItemFont;
+
+	TTF_Font *m_CaptionFont;
 
 	SDL_Texture *m_CaptionTxt;
 
@@ -65,7 +67,7 @@ protected:
 	int m_BorderSize;
 	SDL_Rect m_MenuRect;
 public:
-	Menu(int aX, int aY, int aW, int aH, std::string aCaption,
+	Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
 			Menu *aParent);
 	virtual ~Menu();
 

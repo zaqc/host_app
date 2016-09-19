@@ -19,21 +19,28 @@
 //	SDL Util
 //============================================================================
 SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
-		std::string aCaption, int aW, int aH, SDL_Color aColor,
+		std::wstring aCaption, int aW, int aH, SDL_Color aColor,
 		SDL_Color aBkColor) {
 
 	SDL_Texture *res_txt = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888,
 			SDL_TEXTUREACCESS_TARGET, aW, aH);
 
+	SDL_SetTextureBlendMode(res_txt, SDL_BLENDMODE_BLEND);
+
 	SDL_SetRenderTarget(aRnd, res_txt);
-	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
-	SDL_RenderClear(aRnd);
+	//SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
+	//SDL_RenderClear(aRnd);
 	SDL_SetRenderDrawColor(aRnd, aBkColor.r, aBkColor.g, aBkColor.b,
 			aBkColor.a);
-	SDL_Rect r = { 2, 2, aW - 4, aH - 4 };
+	SDL_Rect r = { 0, 0, aW, aH };
 	SDL_RenderFillRect(aRnd, &r);
 
-	SDL_Surface *surf = TTF_RenderText_Blended(aFont, aCaption.c_str(), aColor);
+	setlocale(LC_ALL, "ru_RU.utf8");
+	char buf[128];
+	memset(buf, 0, 128);
+	wcstombs(buf, aCaption.c_str(), 128);
+
+	SDL_Surface *surf = TTF_RenderUTF8_Blended(aFont, buf, aColor);
 
 	SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
 
@@ -41,10 +48,10 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 	int sy = 0;
 	int sw = surf->w;
 	int sh = surf->h;
-	int dx = 3;
-	int dy = 3;
-	int dw = aW - 6;
-	int dh = aH - 6;
+	int dx = 0;
+	int dy = 0;
+	int dw = aW;
+	int dh = aH;
 	if (sh > dh) {
 		sy += (sh - dh) / 2;
 		sh = dh;
@@ -112,12 +119,15 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	m_W = aW;
 	m_H = aH;
 
+	SDL_SetTextureBlendMode(m_Txt, SDL_BLENDMODE_BLEND);
+
 	SDL_SetRenderTarget(aRnd, m_Txt);
+	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
 	SDL_SetRenderDrawColor(aRnd, c.r, c.g, c.b, c.a);
-	SDL_Rect r = { 2, 2, aW - 4, aH - 4 };
+	SDL_Rect r = { 0, 0, aW, aH };
 	SDL_RenderFillRect(aRnd, &r);
 
 	TTF_Font *font = m_Menu->GetItemFont();
@@ -130,10 +140,10 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	int sy = 0;
 	int sw = surf->w;
 	int sh = surf->h;
-	int dx = 3;
-	int dy = 3;
-	int dw = m_W - 6;
-	int dh = m_H - 6;
+	int dx = 0;
+	int dy = 0;
+	int dw = m_W;
+	int dh = m_H;
 	if (sh > dh) {
 		sy += (sh - dh) / 2;
 		sh = dh;
@@ -154,6 +164,7 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
+	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 	SDL_SetRenderTarget(aRnd, NULL);
 
 	SDL_DestroyTexture(txt);
@@ -168,7 +179,7 @@ void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 //============================================================================
 //	Menu
 //============================================================================
-Menu::Menu(int aX, int aY, int aW, int aH, std::string aCaption,
+Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
 		Menu *aParent) {
 	m_X = aX;
 	m_Y = aY;
@@ -185,16 +196,23 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::string aCaption,
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
 		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
 		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
+
+		m_CaptionFont = TTF_OpenFont(
+				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
 	} else {
 		m_ItemFont = NULL;
 	}
 
 	m_CaptionHeight = 32;
-	m_ItemHeight = 28;
+	m_ItemHeight = 42;
 	m_BorderSize = 4;
 }
 
 Menu::~Menu() {
+	if(NULL != m_CaptionFont){
+		TTF_CloseFont(m_CaptionFont);
+		m_CaptionFont = NULL;
+	}
 	if (NULL != m_ItemFont) {
 		TTF_CloseFont(m_ItemFont);
 		m_ItemFont = NULL;
@@ -242,8 +260,10 @@ void Menu::AddMenuItem(std::string aCaption, Menu *aSubMenu) {
 void Menu::Render(SDL_Renderer *aRnd) {
 
 	if (NULL == m_CaptionTxt) {
-		m_CaptionTxt = CreateText(aRnd, GetItemFont(), m_Caprion, m_W, 32,
-				GetItemColor(), GetItemBackground());
+		SDL_Color c = { 255, 255, 255, 255 };
+		SDL_Color bk = { 0, 0, 64, 192 };
+		m_CaptionTxt = CreateText(aRnd, GetItemFont(), m_Caprion,
+				m_W - m_BorderSize * 2, m_CaptionHeight, c, bk);
 	}
 
 	SDL_Rect r = m_MenuRect; //{ m_X, m_Y, m_W, m_H };
@@ -252,20 +272,22 @@ void Menu::Render(SDL_Renderer *aRnd) {
 	SDL_RenderFillRect(aRnd, &r);
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
 	SDL_RenderDrawRect(aRnd, &r);
-	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 
-	SDL_Rect dst_rect = { m_X, m_Y, m_W, 32 };
+	SDL_Rect dst_rect = { m_X + m_BorderSize, m_Y + m_BorderSize, m_W
+			- m_BorderSize * 2, m_CaptionHeight };
 	SDL_RenderCopy(aRnd, m_CaptionTxt, NULL, &dst_rect);
 
 	int inum = 0;
 	for (std::vector<MenuItem*>::iterator i = m_Items.begin();
 			i != m_Items.end(); i++) {
 		MenuItem *mi = *i;
-		mi->Render(aRnd, m_W, m_ItemHeight);
+		mi->Render(aRnd, m_W - m_BorderSize * 2, m_ItemHeight - 1);
 		int y = m_Y + m_BorderSize + m_CaptionHeight + inum * m_ItemHeight;
-		mi->Paint(aRnd, m_X, y);
+		mi->Paint(aRnd, m_X + m_BorderSize, y + 1);
 		inum++;
 	}
+
+	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 }
 
 bool Menu::ProcessEvent(SDL_Event aEvent) {
@@ -291,11 +313,11 @@ void AScanWnd::Init(void) {
 	m_TBAmpOne = new TrackBar(10, 32, 64, 400);
 	AddControl(m_TBAmpOne);
 
-	Menu *mm = new Menu(100, 100, 200, 340, "Main Menu", NULL);
-	mm->AddMenuItem("MenuItem1", 1);
-	mm->AddMenuItem("MenuItem2", 2);
-	mm->AddMenuItem("MenuItem3", 3);
-	mm->AddMenuItem("MenuItem4", 4);
+	Menu *mm = new Menu(100, 100, 200, 340, L"Главное меню", NULL);
+	mm->AddMenuItem("New", 1);
+	mm->AddMenuItem("Open", 2);
+	mm->AddMenuItem("Calibrate", 3);
+	mm->AddMenuItem("Configure", 4);
 	AddControl(mm);
 }
 
