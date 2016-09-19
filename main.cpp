@@ -16,6 +16,8 @@
 #include <iostream>
 #include <SDL.h>
 
+#include <SDL2_gfxPrimitives.h>
+
 #include "TrackBar.h"
 #include "Label.h"
 #include "Button.h"
@@ -79,6 +81,11 @@ int main(void) {
 		l->Render(rnd);
 		tb->Render(rnd);
 		btn->Render(rnd);
+
+		SDL_RenderClear(rnd);
+
+		stringRGBA(rnd, 100, 100, "asdasdasd", 255, 0, 0, 255);
+		roundedRectangleRGBA(rnd, 100, 100, 200, 200, 10, 255, 0, 0, 255);
 
 		//ioctl(fd, FBIO_WAITFORVSYNC, 1);
 		SDL_RenderPresent(rnd);

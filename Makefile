@@ -7,7 +7,7 @@ all: $(TARGET)
 
 main.o: main.cpp
 	@echo compile main.cpp
-	g++ -c main.cpp $(CFLAGS) $(shell pkg-config sdl2 --cflags)
+	g++ -c main.cpp $(CFLAGS) $(shell pkg-config sdl2 SDL2_ttf SDL2_gfx --cflags)
 	
 obj/TrackBar.o: src/TrackBar.cpp src/TrackBar.h
 	g++ -c src/TrackBar.cpp -o obj/TrackBar.o $(CFLAGS) $(shell pkg-config sdl2 --cflags)
@@ -26,7 +26,7 @@ obj/AScanWnd.o: src/AScanWnd.cpp src/AScanWnd.h
 	
 $(TARGET): $(OBJ)
 	@echo Linking project...
-	g++ -o $(TARGET) $(OBJ) $(shell pkg-config sdl2 SDL2_ttf --libs)
+	g++ -o $(TARGET) $(OBJ) $(shell pkg-config sdl2 SDL2_ttf SDL2_gfx --libs)
 	
 clean:
 	rm -f *.o obj/*.o
