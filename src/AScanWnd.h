@@ -28,6 +28,7 @@ protected:
 	Menu* m_SubMenu;
 	SDL_Texture *m_Txt;
 	bool m_Focus;
+	bool m_MouseOver;
 	bool m_Invalidate;
 	int m_H;
 	int m_W;
@@ -38,6 +39,7 @@ public:
 	virtual ~MenuItem(void);
 
 	void SetFocus(bool aFocus);
+	void SetMouseOver(bool aMouseOver);
 
 	void Render(SDL_Renderer *aRnd, int aW, int aH);
 	void Paint(SDL_Renderer *aRnd, int aX, int aY);
@@ -74,6 +76,8 @@ public:
 	TTF_Font *GetItemFont(void);
 	SDL_Color GetItemColor(void);
 	SDL_Color GetItemBackground(void);
+
+	SDL_Rect CalcItemRect(MenuItem *aMI);
 
 	void CalcMenuRect(void);
 

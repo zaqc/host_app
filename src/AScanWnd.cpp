@@ -88,6 +88,7 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, int aID) {
 	m_SubMenu = NULL;
 	m_Txt = NULL;
 	m_Focus = false;
+	m_MouseOver = false;
 	m_Invalidate = false;
 	m_W = m_H = 0;
 }
@@ -99,6 +100,7 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
 	m_SubMenu = aSubMenu;
 	m_Txt = NULL;
 	m_Focus = false;
+	m_MouseOver = false;
 	m_Invalidate = false;
 	m_W = m_H = 0;
 }
@@ -109,6 +111,10 @@ MenuItem::~MenuItem(void) {
 
 void MenuItem::SetFocus(bool aFocus) {
 
+}
+
+void MenuItem::SetMouseOver(bool aMouseOver) {
+	m_MouseOver = aMouseOver;
 }
 
 void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
@@ -124,6 +130,9 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_SetRenderTarget(aRnd, m_Txt);
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
+	if (m_MouseOver) {
+		c = (SDL_Color ) { 0, 0, 255, 255 };
+	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
 	SDL_SetRenderDrawColor(aRnd, c.r, c.g, c.b, c.a);
@@ -209,7 +218,7 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
 }
 
 Menu::~Menu() {
-	if(NULL != m_CaptionFont){
+	if (NULL != m_CaptionFont) {
 		TTF_CloseFont(m_CaptionFont);
 		m_CaptionFont = NULL;
 	}
@@ -235,6 +244,19 @@ SDL_Color Menu::GetItemBackground(void) {
 	if (NULL != m_Parent)
 		return m_Parent->GetItemBackground();
 	return m_ItemBackground;
+}
+
+SDL_Rect Menu::CalcItemRect(MenuItem *aMI) {
+	int item_num = 0;
+	for (std::vector<MenuItem*>::iterator i = m_Items.begin();
+			i != m_Items.end(); i++) {
+		if (*i == aMI)
+			break;
+		item_num++;
+	}
+	SDL_Rect r = { m_X + m_BorderSize, m_Y + m_BorderSize + m_CaptionHeight
+			+ item_num * m_ItemHeight, m_W - m_BorderSize * 2, m_ItemHeight };
+	return r;
 }
 
 void Menu::CalcMenuRect(void) {
@@ -292,6 +314,26 @@ void Menu::Render(SDL_Renderer *aRnd) {
 
 bool Menu::ProcessEvent(SDL_Event aEvent) {
 
+	if (aEvent.type == SDL_MOUSEMOTION) {
+		int x = aEvent.motion.x;
+		int y = aEvent.motion.y;
+		int item_num = 0;
+		for (std::vector<MenuItem*>::iterator i = m_Items.begin();
+				i != m_Items.end(); i++) {
+			MenuItem *mi = *i;
+			int ix = m_X + m_BorderSize;
+			int iy = m_Y + m_BorderSize + m_CaptionHeight
+					+ item_num * m_ItemHeight;
+			int iw = m_W - m_BorderSize * 2;
+			int ih = m_ItemHeight;
+			if (x >= ix && x < ix + iw && y >= iy && y < iy + ih) {
+				mi->SetMouseOver(true);
+			} else {
+				mi->SetMouseOver(false);
+			}
+			item_num++;
+		}
+	}
 	return false;
 }
 
@@ -313,11 +355,13 @@ void AScanWnd::Init(void) {
 	m_TBAmpOne = new TrackBar(10, 32, 64, 400);
 	AddControl(m_TBAmpOne);
 
-	Menu *mm = new Menu(100, 100, 200, 340, L"Главное меню", NULL);
-	mm->AddMenuItem("New", 1);
-	mm->AddMenuItem("Open", 2);
-	mm->AddMenuItem("Calibrate", 3);
-	mm->AddMenuItem("Configure", 4);
+	Menu *mm = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
+	mm->AddMenuItem("BScan tape", 1);
+	mm->AddMenuItem("WayMeter tape", 2);
+	mm->AddMenuItem("AScan TuneMaster", 3);
+	mm->AddMenuItem("Calibrate WayMeter", 4);
+	mm->AddMenuItem("Configure", 5);
+	mm->AddMenuItem("Hide menu", 6);
 	AddControl(mm);
 }
 
