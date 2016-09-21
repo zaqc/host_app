@@ -11,7 +11,8 @@
 
 #include <SDL.h>
 
-TrackBar::TrackBar(int aX, int aY, int aW, int aH) {
+TrackBar::TrackBar(int aX, int aY, int aW, int aH) :
+		Control() {
 	m_X = aX;
 	m_Y = aY;
 	m_W = aW;

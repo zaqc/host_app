@@ -9,6 +9,7 @@
 
 #include "Label.h"
 #include "TrackBar.h"
+#include "Button.h"
 #include "Window.h"
 
 #include <SDL.h>
@@ -68,8 +69,8 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, NULL);
@@ -131,7 +132,7 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	if (m_MouseOver) {
-		c = (SDL_Color ) { 0, 0, 255, 255 };
+		c = (SDL_Color ) {0, 0, 255, 255};
 	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
@@ -169,8 +170,8 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
@@ -188,8 +189,9 @@ void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 //============================================================================
 //	Menu
 //============================================================================
-Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
-		Menu *aParent) {
+Menu::Menu(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH,
+		std::wstring aCaption, Menu *aParent) :
+		Window(aRnd, aX, aY, aW, aH) {
 	m_X = aX;
 	m_Y = aY;
 	m_W = aW;
@@ -203,8 +205,8 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
 	if (NULL == aParent) {
 		m_ItemFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
-		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
-		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
+		m_ItemColor = (SDL_Color ) {255, 255, 0, 255};
+		m_ItemBackground = (SDL_Color ) {32, 32, 32, 192};
 
 		m_CaptionFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
@@ -264,7 +266,7 @@ void Menu::CalcMenuRect(void) {
 	menu_height += m_BorderSize * 2;
 	menu_height += m_CaptionHeight;
 	menu_height += m_Items.size() * m_ItemHeight;
-	m_MenuRect = (SDL_Rect ) { m_X, m_Y, m_W, menu_height };
+	m_MenuRect = (SDL_Rect ) {m_X, m_Y, m_W, menu_height};
 }
 
 void Menu::AddMenuItem(std::string aCaption, int aID) {
@@ -337,6 +339,15 @@ bool Menu::ProcessEvent(SDL_Event aEvent) {
 	return false;
 }
 
+int Menu::Execute(void) {
+	return Window::Execute();
+	return 0;
+}
+
+void Menu::Paint(void) {
+	Render(m_Rnd);
+}
+
 //============================================================================
 //	AScanWnd
 //============================================================================
@@ -344,6 +355,7 @@ AScanWnd::AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
 	m_LAmpOne = NULL;
 	m_TBAmpOne = NULL;
+	m_Button = NULL;
 }
 
 AScanWnd::~AScanWnd() {
@@ -355,14 +367,16 @@ void AScanWnd::Init(void) {
 	m_TBAmpOne = new TrackBar(10, 32, 64, 400);
 	AddControl(m_TBAmpOne);
 
-	Menu *mm = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
-	mm->AddMenuItem("BScan tape", 1);
-	mm->AddMenuItem("WayMeter tape", 2);
-	mm->AddMenuItem("AScan TuneMaster", 3);
-	mm->AddMenuItem("Calibrate WayMeter", 4);
-	mm->AddMenuItem("Configure", 5);
-	mm->AddMenuItem("Hide menu", 6);
-	AddControl(mm);
+	m_Button = new Button(200, 10, 120, 40, "MainMenu");
+	AddControl(m_Button);
+
+	m_MainMenu = new Menu(m_Rnd, 100, 100, 420, 340, L"Главное меню", NULL);
+	m_MainMenu->AddMenuItem("BScan tape", 1);
+	m_MainMenu->AddMenuItem("WayMeter tape", 2);
+	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
+	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
+	m_MainMenu->AddMenuItem("Configure", 5);
+	m_MainMenu->AddMenuItem("Hide menu", 6);
 }
 
 void AScanWnd::Done(void) {
@@ -374,6 +388,12 @@ void AScanWnd::UpdateControls(void) {
 		char str[128];
 		sprintf(str, "%idB", val);
 		m_LAmpOne->SetText(std::string(str));
+	}
+
+	if (NULL != m_Button) {
+		if (m_Button->OnClick()) {
+			m_MainMenu->Execute();
+		}
 	}
 }
 

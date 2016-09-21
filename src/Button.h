@@ -23,12 +23,15 @@ class Button: public Control {
 	TTF_Font *m_Font;
 	std::string m_Text;
 	bool m_Down;
+	bool m_OnClick;
 public:
 	Button(int aX, int aY, int aW, int aH, std::string aText);
 	virtual ~Button();
 
 //	void Init(void);
 //	void Done(void);
+
+	bool OnClick(void);
 
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);

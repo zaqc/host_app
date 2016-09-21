@@ -30,7 +30,8 @@ Control::~Control() {
 //============================================================================
 //	Window
 //============================================================================
-Window::Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) {
+Window::Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
+		Control() {
 	m_Rnd = aRnd;
 	m_X = aX;
 	m_Y = aY;
@@ -41,6 +42,11 @@ Window::Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) {
 
 Window::~Window() {
 	// TODO Auto-generated destructor stub
+}
+//----------------------------------------------------------------------------
+
+void Window::ProcessMessage(int aID) {
+
 }
 //----------------------------------------------------------------------------
 
@@ -84,12 +90,18 @@ int Window::Execute(void) {
 			if (e.type == SDL_QUIT)
 				return -1;
 
+			bool self_handle = true;
 			for (std::vector<Control*>::reverse_iterator i = m_Control.rbegin();
 					i != m_Control.rend(); i++) {
 				Control *cnt = *i;
-				if (cnt->ProcessEvent(e))
+				if (cnt->ProcessEvent(e)) {
+					self_handle = false;
 					break;
+				}
 			}
+
+			if (self_handle)
+				ProcessEvent(e);
 		}
 
 		UpdateControls();

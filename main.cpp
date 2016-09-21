@@ -28,15 +28,14 @@ int main(void) {
 //	int fd = open("/dev/fb0", O_RDWR);
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
-	SDL_Init(SDL_INIT_VIDEO);
+	std::cout << SDL_Init(SDL_INIT_VIDEO) << std::endl;
 
 	SDL_Window *wnd;
 	SDL_Renderer *rnd;
 
-	SDL_CreateWindowAndRenderer(800, 480,
-			SDL_WINDOW_BORDERLESS
-			/*SDL_WINDOW_BORDERLESS |
-			 SDL_WINDOW_FULLSCREEN*/, &wnd, &rnd);
+	SDL_CreateWindowAndRenderer(800, 480, SDL_WINDOW_BORDERLESS
+	/*SDL_WINDOW_BORDERLESS |
+	 SDL_WINDOW_FULLSCREEN*/, &wnd, &rnd);
 
 	SDL_GL_SetSwapInterval(1);
 

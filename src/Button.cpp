@@ -12,7 +12,8 @@
 #include <string>
 #include <iostream>
 
-Button::Button(int aX, int aY, int aW, int aH, std::string aText) {
+Button::Button(int aX, int aY, int aW, int aH, std::string aText) :
+		Control() {
 	m_X = aX;
 	m_Y = aY;
 	m_W = aW;
@@ -23,10 +24,20 @@ Button::Button(int aX, int aY, int aW, int aH, std::string aText) {
 	std::cout << "Can't open /usr/share/fonts/truetype/freefont/FreeSerif.ttf"
 			<< std::endl;
 	m_Down = false;
+	m_OnClick = false;
 }
 
 Button::~Button() {
 	TTF_CloseFont(m_Font);
+}
+
+bool Button::OnClick(void) {
+	if (m_OnClick) {
+		m_OnClick = false;
+		return true;
+	}
+
+	return false;
 }
 
 void Button::Render(SDL_Renderer *aRnd) {
@@ -66,8 +77,8 @@ void Button::Render(SDL_Renderer *aRnd) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_DestroyTexture(txt);
@@ -81,6 +92,7 @@ bool Button::ProcessEvent(SDL_Event aEvent) {
 		int y = aEvent.button.y;
 		if (x >= m_X && x < m_X + m_W && y >= m_Y && y < m_Y + m_H) {
 			m_Down = true;
+			return true;
 		}
 		break;
 	}
@@ -92,6 +104,12 @@ bool Button::ProcessEvent(SDL_Event aEvent) {
 	case SDL_MOUSEBUTTONUP: {
 		if (m_Down) {
 			m_Down = false;
+			int x = aEvent.button.x;
+			int y = aEvent.button.y;
+			if (x >= m_X && x < m_X + m_W && y >= m_Y && y < m_Y + m_H) {
+				m_OnClick = true;
+				return true;
+			}
 		}
 		break;
 	}

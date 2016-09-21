@@ -12,12 +12,15 @@
 
 #include "Label.h"
 #include "TrackBar.h"
+#include "Button.h"
 //----------------------------------------------------------------------------
 
 class Menu;
 //----------------------------------------------------------------------------
 
-SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont, std::wstring aCaption, int aW, int aH, SDL_Color aColor, SDL_Color aBkColor);
+SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
+		std::wstring aCaption, int aW, int aH, SDL_Color aColor,
+		SDL_Color aBkColor);
 //----------------------------------------------------------------------------
 
 class MenuItem {
@@ -46,7 +49,7 @@ public:
 };
 //----------------------------------------------------------------------------
 
-class Menu: public Control {
+class Menu: public Window {
 protected:
 	int m_X;
 	int m_Y;
@@ -69,8 +72,8 @@ protected:
 	int m_BorderSize;
 	SDL_Rect m_MenuRect;
 public:
-	Menu(int aX, int aY, int aW, int aH, std::wstring aCaption,
-			Menu *aParent);
+	Menu(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH,
+			std::wstring aCaption, Menu *aParent);
 	virtual ~Menu();
 
 	TTF_Font *GetItemFont(void);
@@ -84,6 +87,9 @@ public:
 	void AddMenuItem(std::string aCaption, int aID);
 	void AddMenuItem(std::string aCaption, Menu *aSubMenu);
 
+	int Execute(void);
+	virtual void Paint(void);
+
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);
 };
@@ -93,6 +99,8 @@ class AScanWnd: public Window {
 protected:
 	Label *m_LAmpOne;
 	TrackBar *m_TBAmpOne;
+	Button *m_Button;
+	Menu *m_MainMenu;
 public:
 	AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~AScanWnd();

@@ -10,7 +10,8 @@
 
 #include <iostream>
 
-Label::Label(int aX, int aY, int aW, int aH, std::string aText) {
+Label::Label(int aX, int aY, int aW, int aH, std::string aText) :
+		Control() {
 	m_X = aX;
 	m_Y = aY;
 	m_W = aW;
@@ -68,8 +69,8 @@ void Label::Render(SDL_Renderer *aRnd) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 	SDL_DestroyTexture(txt);
 	SDL_FreeSurface(surf);
