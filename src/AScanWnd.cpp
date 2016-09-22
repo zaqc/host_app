@@ -69,8 +69,8 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
+	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, NULL);
@@ -132,7 +132,7 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	if (m_MouseOver) {
-		c = (SDL_Color ) {0, 0, 255, 255};
+		c = (SDL_Color ) { 0, 0, 255, 255 };
 	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
@@ -170,8 +170,8 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
+	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
@@ -189,9 +189,8 @@ void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 //============================================================================
 //	Menu
 //============================================================================
-Menu::Menu(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH,
-		std::wstring aCaption, Menu *aParent) :
-		Window(aRnd, aX, aY, aW, aH) {
+Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent) :
+		Control() {
 	m_X = aX;
 	m_Y = aY;
 	m_W = aW;
@@ -205,8 +204,8 @@ Menu::Menu(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH,
 	if (NULL == aParent) {
 		m_ItemFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
-		m_ItemColor = (SDL_Color ) {255, 255, 0, 255};
-		m_ItemBackground = (SDL_Color ) {32, 32, 32, 192};
+		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
+		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
 
 		m_CaptionFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
@@ -266,7 +265,7 @@ void Menu::CalcMenuRect(void) {
 	menu_height += m_BorderSize * 2;
 	menu_height += m_CaptionHeight;
 	menu_height += m_Items.size() * m_ItemHeight;
-	m_MenuRect = (SDL_Rect ) {m_X, m_Y, m_W, menu_height};
+	m_MenuRect = (SDL_Rect ) { m_X, m_Y, m_W, menu_height };
 }
 
 void Menu::AddMenuItem(std::string aCaption, int aID) {
@@ -340,12 +339,11 @@ bool Menu::ProcessEvent(SDL_Event aEvent) {
 }
 
 int Menu::Execute(void) {
-	return Window::Execute();
 	return 0;
 }
 
 void Menu::Paint(void) {
-	Render(m_Rnd);
+	Control::Paint();
 }
 
 //============================================================================
@@ -356,6 +354,8 @@ AScanWnd::AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 	m_LAmpOne = NULL;
 	m_TBAmpOne = NULL;
 	m_Button = NULL;
+	m_MainMenu = NULL;
+	m_BtnQuit = NULL;
 }
 
 AScanWnd::~AScanWnd() {
@@ -370,13 +370,17 @@ void AScanWnd::Init(void) {
 	m_Button = new Button(200, 10, 120, 40, "MainMenu");
 	AddControl(m_Button);
 
-	m_MainMenu = new Menu(m_Rnd, 100, 100, 420, 340, L"Главное меню", NULL);
+	m_BtnQuit = new Button(200, 60, 120, 40, "Quit");
+	AddControl(m_BtnQuit);
+
+	m_MainMenu = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
 	m_MainMenu->AddMenuItem("BScan tape", 1);
 	m_MainMenu->AddMenuItem("WayMeter tape", 2);
 	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
 	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
 	m_MainMenu->AddMenuItem("Configure", 5);
 	m_MainMenu->AddMenuItem("Hide menu", 6);
+	AddControl(m_MainMenu);
 }
 
 void AScanWnd::Done(void) {
@@ -392,7 +396,19 @@ void AScanWnd::UpdateControls(void) {
 
 	if (NULL != m_Button) {
 		if (m_Button->OnClick()) {
-			m_MainMenu->Execute();
+			if (m_MainMenu->GetHideState()) {
+				m_MainMenu->Show();
+			} else {
+				m_MainMenu->Hide();
+			}
+		}
+	}
+
+	if (NULL != m_BtnQuit) {
+		if (m_BtnQuit->OnClick()) {
+			SDL_Event e;
+			e.type = SDL_QUIT;
+			SDL_PushEvent(&e);
 		}
 	}
 }
@@ -415,4 +431,6 @@ void AScanWnd::Paint(void) {
 
 	roundedBoxRGBA(m_Rnd, 100, 40, 220, 80, 4, 255, 0, 0, 150);
 	stringRGBA(m_Rnd, 110, 50, "asdasdasd", 255, 250, 20, 255);
+
+	Window::Paint();
 }

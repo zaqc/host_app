@@ -23,11 +23,20 @@
 #include "Button.h"
 #include "Window.h"
 #include "AScanWnd.h"
+#include "Desktop.h"
 
 int main(void) {
 //	int fd = open("/dev/fb0", O_RDWR);
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
+	Desktop *dt = new Desktop();
+	dt->Init();
+	dt->Run();
+	dt->Done();
+	delete dt;
+
+	return 0;
+
 	std::cout << SDL_Init(SDL_INIT_VIDEO) << std::endl;
 
 	SDL_Window *wnd;

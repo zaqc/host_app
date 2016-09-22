@@ -5,8 +5,9 @@
  *      Author: zaqc
  */
 
-#include <Window.h>
+#include "Window.h"
 
+#include <iostream>
 #include <SDL.h>
 #include <vector>
 
@@ -20,6 +21,7 @@
 //============================================================================
 Control::Control() {
 	m_Invalidate = true;
+	m_Hide = false;
 }
 //----------------------------------------------------------------------------
 
@@ -55,20 +57,6 @@ void Window::AddControl(Control *aControl) {
 }
 //----------------------------------------------------------------------------
 
-void Window::Init(void) {
-}
-//----------------------------------------------------------------------------
-
-void Window::Done(void) {
-
-}
-//----------------------------------------------------------------------------
-
-void Window::UpdateControls(void) {
-
-}
-//----------------------------------------------------------------------------
-
 void Window::Paint(void) {
 	SDL_SetRenderDrawColor(m_Rnd, 192, 192, 255, 255);
 	SDL_Rect r = { m_X, m_Y, m_W, m_H };
@@ -77,45 +65,26 @@ void Window::Paint(void) {
 	for (std::vector<Control*>::reverse_iterator i = m_Control.rbegin();
 			i != m_Control.rend(); i++) {
 		Control *cnt = *i;
-		cnt->Render(m_Rnd);
-	}
-}
-//----------------------------------------------------------------------------
-
-int Window::Execute(void) {
-	while (true) {
-		SDL_Event e;
-
-		while (SDL_PollEvent(&e)) {
-			if (e.type == SDL_QUIT)
-				return -1;
-
-			bool self_handle = true;
-			for (std::vector<Control*>::reverse_iterator i = m_Control.rbegin();
-					i != m_Control.rend(); i++) {
-				Control *cnt = *i;
-				if (cnt->ProcessEvent(e)) {
-					self_handle = false;
-					break;
-				}
-			}
-
-			if (self_handle)
-				ProcessEvent(e);
-		}
-
-		UpdateControls();
-
-		Paint();
-		for (std::vector<Control*>::iterator i = m_Control.begin();
-				i != m_Control.end(); i++) {
-			Control *cnt = *i;
+		if (!cnt->GetHideState())
 			cnt->Render(m_Rnd);
-		}
-
-		SDL_RenderPresent(m_Rnd);
 	}
-
-	return 0;
 }
 //----------------------------------------------------------------------------
+
+bool Window::ProcessEvent(SDL_Event aEvent) {
+	if (aEvent.type == SDL_KEYDOWN) {
+		std::cout << (int) aEvent.key.keysym.mod << std::endl;
+	}
+
+	for (std::vector<Control*>::reverse_iterator i = m_Control.rbegin();
+			i != m_Control.rend(); i++) {
+		Control *cnt = *i;
+		if (!cnt->GetHideState() && cnt->ProcessEvent(aEvent))
+			return true;
+	}
+
+	if (Control::ProcessEvent(aEvent))
+		return true;
+
+	return false;
+}

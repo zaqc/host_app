@@ -6,7 +6,10 @@
  */
 
 #include <SDL.h>
+#include <SDL_ttf.h>
+
 #include "Desktop.h"
+#include "AScanWnd.h"
 
 Desktop::Desktop() {
 	m_ActiveWindow = NULL;
@@ -23,6 +26,9 @@ void Desktop::Init(void) {
 	SDL_CreateWindowAndRenderer(800, 480, SDL_WINDOW_BORDERLESS, &m_Wnd,
 			&m_Rnd);
 	SDL_GL_SetSwapInterval(1);
+
+	m_ActiveWindow = new AScanWnd(m_Rnd, 0, 0, 800, 480);
+	m_ActiveWindow->Init();
 }
 
 void Desktop::PushMessage(int aID) {
@@ -57,16 +63,19 @@ void Desktop::Run(void) {
 
 			if (NULL != m_ActiveWindow) {
 				m_ActiveWindow->ProcessEvent(e);
-				m_ActiveWindow->Paint();
 				while (0 != m_Messages.size()) {
 					int id = m_Messages.front();
 					m_Messages.pop();
 					m_ActiveWindow->ProcessMessage(id);
 				}
 			}
-
-			SDL_RenderPresent(m_Rnd);
 		}
+		if (NULL != m_ActiveWindow) {
+			m_ActiveWindow->UpdateControls();
+			m_ActiveWindow->Paint();
+		}
+
+		SDL_RenderPresent(m_Rnd);
 	}
 }
 

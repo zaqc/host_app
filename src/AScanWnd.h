@@ -23,6 +23,15 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		SDL_Color aBkColor);
 //----------------------------------------------------------------------------
 
+enum TextAlign {
+	taNone, taLeft, taCenter, taRight
+};
+
+enum MenuItemType {
+	miSimple, miSubMenu, miIntVal, miString, miCheck
+};
+//----------------------------------------------------------------------------
+
 class MenuItem {
 protected:
 	Menu *m_Menu;
@@ -35,11 +44,14 @@ protected:
 	bool m_Invalidate;
 	int m_H;
 	int m_W;
+	MenuItemType m_ItemType;
 
 public:
 	MenuItem(Menu *aMenu, std::string aCaption, int aID);
 	MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu);
 	virtual ~MenuItem(void);
+
+	void SetItemType(MenuItemType *aMIT);
 
 	void SetFocus(bool aFocus);
 	void SetMouseOver(bool aMouseOver);
@@ -49,7 +61,7 @@ public:
 };
 //----------------------------------------------------------------------------
 
-class Menu: public Window {
+class Menu: public Control {
 protected:
 	int m_X;
 	int m_Y;
@@ -72,8 +84,7 @@ protected:
 	int m_BorderSize;
 	SDL_Rect m_MenuRect;
 public:
-	Menu(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH,
-			std::wstring aCaption, Menu *aParent);
+	Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent);
 	virtual ~Menu();
 
 	TTF_Font *GetItemFont(void);
@@ -100,6 +111,7 @@ protected:
 	Label *m_LAmpOne;
 	TrackBar *m_TBAmpOne;
 	Button *m_Button;
+	Button *m_BtnQuit;
 	Menu *m_MainMenu;
 public:
 	AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
