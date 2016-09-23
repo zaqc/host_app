@@ -56,8 +56,36 @@ public:
 	void SetFocus(bool aFocus);
 	void SetMouseOver(bool aMouseOver);
 
-	void Render(SDL_Renderer *aRnd, int aW, int aH);
-	void Paint(SDL_Renderer *aRnd, int aX, int aY);
+	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
+	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
+
+	virtual bool ProcessEvent(SDL_Event aEvent) {
+		return false;
+	}
+};
+//----------------------------------------------------------------------------
+
+/*
+ * ===========================================================================
+ * Value is right aligned on Manu Item
+ * Item Caption is left aligned on space excepted rect needed for show Value
+ * ===========================================================================
+ */
+class IntMenuItem: public MenuItem {
+protected:
+	int m_Min;
+	int m_Max;
+	int m_Val;
+	SDL_Texture *m_ValTxt;
+public:
+	IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
+			int aMax);
+	virtual ~IntMenuItem();
+
+	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
+	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
+
+	virtual bool ProcessEvent(SDL_Event aEvent);
 };
 //----------------------------------------------------------------------------
 

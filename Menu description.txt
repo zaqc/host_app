@@ -1,0 +1,79 @@
+[HW Button "HOME"]	- Go to Main screen (main menu)
+[HW Buttom "MENU"]	- Open context menu (proprietary of current form)
+
+[HW Buttom "<-"]	- Scroll tape left & right
+[HW Buttom "->"]
+
+[HW Buttom "<"]		- Select Item
+[HW Buttom ">"]
+[HW Buttom "^"]
+[HW Buttom "v"]
+
+[HW Buttom "+"]		- Zoom In & Out
+[HW Buttom "-"]
+
+[HW Buttom "Enter"]	- Confirm, Abandon & Select Group
+[HW Buttom "Esc"]
+[HW Buttom "Tab"]
+
+[HW Buttom "F1"]	- Select B Scan View Mode
+[HW Buttom "F2"]
+[HW Buttom "F3"]
+[HW Buttom "F4"]
+[HW Buttom "F5"]
+[HW Buttom "F6"]
+
+
+[HW Button	Rail type - P50, P60 & P75]
+[HW Button	Rail Joint]
+[HW Button	100 Meter]
+[HW Button	1 KM]
+
+TOP LINE - on all mode
+[P75][Moscow][Petushki][1 WAY][123 KM][8 PK][65.77 M]:align left	[<-STATION] [STATION->]:align right - on line	
+[P75][Moscow][Petushki][1 WAY][123 KM][8 PK][65.77 M]:align left 	[STATION][ST_WAY]:align right - on station
+[P50][Fryazino][1 WAY][123 KM][8 PK][65.77 M]:align left  - on station route
+
+BOTTOM LINE - on BScan tape
+[F1-LEFT] [F2-RIGHT] [F3-Forward] [F4-Backword] [F5-Sonic Group] [F6-AScan]
+Sonic Group [58 + 70 / 45 + 0]
+AScan [Selected channel]
+
+BOTTOM LINE - on AScan
+[F6-Return to BScan tape]
+
+Main Menu 
+	Trip param
+	AScan View - Show all (7x4) AScan for all channel (select one for FullScreen)
+	AScan Tune Master - Tune channel paran
+		Tick time [nSec]
+		Tick count [0..256]
+		Delay Time [uSec]
+		Phy Delay Mesure [uSec] -> [Mesure Form]
+		PP Input Angle [degree] -> [Angle Form]
+		PP Rotate Angle [degree] [-90..90]
+		Amp One [0..96 dB]
+		Amp Two [ + to 96 dB]
+		VRC [0..200 uSec]
+		Strobe 1 [On/Off] -> (descript's in XML external file)
+			Strobe 1 - Use on Rail Type [P50-P75]
+			Strobe 1 - On/Off
+			Strobe 1 - Start [uSec]
+			Strobe 1 - Len [uSec]
+			Strobe 1 - Level [%]
+			Strobe 1 - Found (> Level) or Less ( < Level) trigged mode
+			Strobe 1 - Gesteresis On [0-off 1..N WayTickCount]
+			Strobe 1 - Gesteresis Off [0-off 1..N WayTickCount]
+			Strobe 1 - Sound Tone
+			Strobe 1 - Trigged Color ?
+			Strobe 1 - DEFECT 53 (Double Trigged Mode)
+		Strobe 2
+		Strobe N
+	BScan View
+		View Left [CheckBox] - F1
+		View Right [CheckBof] - F2
+		View Head Scan - F3
+		View Neck Scan - F4
+		View Foot Scan - F5
+		View one Channel per Track - F6
+	WayMeter View

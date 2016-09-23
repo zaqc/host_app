@@ -92,6 +92,7 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, int aID) {
 	m_MouseOver = false;
 	m_Invalidate = false;
 	m_W = m_H = 0;
+	m_ItemType = miSimple;
 }
 
 MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
@@ -104,6 +105,7 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
 	m_MouseOver = false;
 	m_Invalidate = false;
 	m_W = m_H = 0;
+	m_ItemType = miSimple;
 }
 
 MenuItem::~MenuItem(void) {
@@ -362,18 +364,18 @@ AScanWnd::~AScanWnd() {
 }
 
 void AScanWnd::Init(void) {
-	m_LAmpOne = new Label(10, 10, 64, 24, "Amp1");
+	m_LAmpOne = new Label(10, 30, 64, 24, "Amp1");
 	AddControl(m_LAmpOne);
-	m_TBAmpOne = new TrackBar(10, 32, 64, 400);
+	m_TBAmpOne = new TrackBar(10, 54, 64, 340);
 	AddControl(m_TBAmpOne);
 
-	m_Button = new Button(200, 10, 120, 40, "MainMenu");
+	m_Button = new Button(200, 30, 120, 40, "MainMenu");
 	AddControl(m_Button);
 
-	m_BtnQuit = new Button(200, 60, 120, 40, "Quit");
+	m_BtnQuit = new Button(200, 70, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	m_MainMenu = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
+	m_MainMenu = new Menu(100, 120, 420, 340, L"Главное меню", NULL);
 	m_MainMenu->AddMenuItem("BScan tape", 1);
 	m_MainMenu->AddMenuItem("WayMeter tape", 2);
 	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
