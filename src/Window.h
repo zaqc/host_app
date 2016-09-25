@@ -17,8 +17,13 @@ class Control {
 protected:
 	bool m_Invalidate;
 	bool m_Hide;
+	SDL_Texture *m_ControlTexture;
+	int m_X;
+	int m_Y;
+	int m_W;
+	int m_H;
 public:
-	Control();
+	Control(int aX, int aY, int aW, int aH);
 	virtual ~Control();
 
 	void Hide() {
@@ -28,7 +33,7 @@ public:
 		m_Hide = false;
 	}
 
-	bool GetHideState(){
+	bool GetHideState() {
 		return m_Hide;
 	}
 
@@ -44,11 +49,8 @@ public:
 		return false;
 	}
 
-	virtual void Render(SDL_Renderer *aRnd) { // prepare Texture's if they needed to update for redrawing
-	}
-
-	virtual void Paint(void) { // paint controls stuff (lines, rects, txtures) but not critical by time
-	}
+	virtual void Render(SDL_Renderer *aRnd);
+	virtual void Paint(SDL_Renderer *aRnd);
 
 	virtual bool ProcessEvent(SDL_Event aEvent) {
 		switch (aEvent.type) {
@@ -76,10 +78,6 @@ public:
 class Window: public Control {
 protected:
 	SDL_Renderer *m_Rnd;
-	int m_X;
-	int m_Y;
-	int m_W;
-	int m_H;
 	std::vector<Control*> m_Control;
 public:
 	Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);

@@ -16,10 +16,6 @@
 //----------------------------------------------------------------------------
 
 class Button: public Control {
-	int m_X;
-	int m_Y;
-	int m_W;
-	int m_H;
 	TTF_Font *m_Font;
 	std::string m_Text;
 	bool m_Down;

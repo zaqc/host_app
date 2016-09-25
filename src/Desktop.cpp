@@ -10,6 +10,7 @@
 
 #include "Desktop.h"
 #include "AScanWnd.h"
+//----------------------------------------------------------------------------
 
 //============================================================================
 //	InfoItem
@@ -26,6 +27,7 @@ InfoItem::InfoItem(InfoLine *aInfoLine, std::wstring aText, int aW, int aH,
 	m_BorderSize = 2;
 	m_RealWidth = aBorderSize;
 }
+//----------------------------------------------------------------------------
 
 InfoItem::~InfoItem() {
 	if (NULL != m_Txt) {
@@ -33,10 +35,12 @@ InfoItem::~InfoItem() {
 		m_Txt = NULL;
 	}
 }
+//----------------------------------------------------------------------------
 
 void InfoItem::SetText(std::wstring aText) {
 	m_Invalidate = true;
 }
+//----------------------------------------------------------------------------
 
 void InfoItem::Render(SDL_Renderer *aRnd) {
 	if (m_Invalidate) {
@@ -98,9 +102,12 @@ void InfoItem::Render(SDL_Renderer *aRnd) {
 				case iaRight:
 					if (sw > dw)
 						sw = dw;
-					else
+					else {
 						dx += dw - sw;
+						dw = sw;
+					}
 					break;
+
 				default:
 					break;
 				}
@@ -111,9 +118,10 @@ void InfoItem::Render(SDL_Renderer *aRnd) {
 			}
 		}
 
-		m_Invalidate = true;
+		m_Invalidate = false;
 	}
 }
+//----------------------------------------------------------------------------
 
 void InfoItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 	Render(aRnd);
@@ -123,6 +131,7 @@ void InfoItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 		SDL_RenderCopy(aRnd, m_Txt, &src_rect, &dst_rect);
 	}
 }
+//----------------------------------------------------------------------------
 
 //============================================================================
 //	InfoLine
@@ -133,10 +142,11 @@ InfoLine::InfoLine(int aX, int aY, int aW, int aH) {
 	m_W = aW;
 	m_H = aH;
 	m_Font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
-			18);
-	m_TextColor = (SDL_Color ) { 0, 0, 255, 255 };
-	m_BkColor = (SDL_Color ) { 255, 255, 0, 255 };
+			20);
+	m_TextColor = (SDL_Color ) {0, 0, 255, 255};
+	m_BkColor = (SDL_Color ) {255, 255, 0, 255};
 }
+//----------------------------------------------------------------------------
 
 InfoLine::~InfoLine() {
 	if (NULL != m_Font) {
@@ -144,18 +154,26 @@ InfoLine::~InfoLine() {
 		m_Font = NULL;
 	}
 }
+//----------------------------------------------------------------------------
 
 void InfoLine::AddItem(InfoItem *aInfoItem) {
 	m_Items.push_back(aInfoItem);
 }
+//----------------------------------------------------------------------------
 
 InfoItem *InfoLine::AddItem(std::wstring aText, InfoAlign aIA, int aWidth) {
 	InfoItem *ii = new InfoItem(this, aText, aWidth, m_H, aIA);
 	m_Items.push_back(ii);
 	return ii;
 }
+//----------------------------------------------------------------------------
 
 void InfoLine::Paint(SDL_Renderer *aRnd) {
+
+	SDL_SetRenderDrawColor(aRnd, 32, 32, 32, 255);
+	SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	SDL_RenderFillRect(aRnd, &r);
+
 	int x = m_X;
 	for (std::vector<InfoItem*>::iterator i = m_Items.begin();
 			i != m_Items.end(); i++) {
@@ -169,6 +187,7 @@ void InfoLine::Paint(SDL_Renderer *aRnd) {
 			break;
 	}
 }
+//----------------------------------------------------------------------------
 
 //============================================================================
 //	Desktop
@@ -180,9 +199,11 @@ Desktop::Desktop() {
 
 	m_IL = NULL;
 }
+//----------------------------------------------------------------------------
 
 Desktop::~Desktop() {
 }
+//----------------------------------------------------------------------------
 
 void Desktop::Init(void) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -191,7 +212,7 @@ void Desktop::Init(void) {
 			&m_Rnd);
 	SDL_GL_SetSwapInterval(1);
 
-	m_IL = new InfoLine(0, 0, 800, 20);
+	m_IL = new InfoLine(0, 0, 800, 30);
 	m_IL->AddItem(L"P75", iaAutoWidth);
 	m_IL->AddItem(L"Moscow-Petushky", iaAutoWidth);
 	m_IL->AddItem(L"Way 1", iaAutoWidth);
@@ -199,17 +220,23 @@ void Desktop::Init(void) {
 	m_IL->AddItem(L"PK:7", iaAutoWidth);
 	m_IL->AddItem(L"M:67.5", iaAutoWidth);
 
-	m_ActiveWindow = new AScanWnd(m_Rnd, 0, 20, 800, 480);
+	m_IL->AddItem(L"->+", iaRight, 80);
+	m_IL->AddItem(L"abc", iaCenter, 80);
+
+	m_ActiveWindow = new AScanWnd(m_Rnd, 0, 30, 800, 450);
 	m_ActiveWindow->Init();
 }
+//----------------------------------------------------------------------------
 
 void Desktop::PushMessage(int aID) {
 	m_Messages.push(aID);
 }
+//----------------------------------------------------------------------------
 
 void Desktop::SetActiveWindow(Window *aWindow) {
 	m_ActiveWindow = aWindow;
 }
+//----------------------------------------------------------------------------
 
 void Desktop::ShowModal(Window *aWindow) {
 	while (true) {
@@ -225,6 +252,7 @@ void Desktop::ShowModal(Window *aWindow) {
 		}
 	}
 }
+//----------------------------------------------------------------------------
 
 void Desktop::Run(void) {
 	while (true) {
@@ -255,6 +283,7 @@ void Desktop::Run(void) {
 		SDL_RenderPresent(m_Rnd);
 	}
 }
+//----------------------------------------------------------------------------
 
 void Desktop::Done(void) {
 	SDL_DestroyRenderer(m_Rnd);
@@ -264,4 +293,4 @@ void Desktop::Done(void) {
 
 	SDL_Quit();
 }
-
+//----------------------------------------------------------------------------

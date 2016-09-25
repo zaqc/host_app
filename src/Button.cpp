@@ -13,11 +13,7 @@
 #include <iostream>
 
 Button::Button(int aX, int aY, int aW, int aH, std::string aText) :
-		Control() {
-	m_X = aX;
-	m_Y = aY;
-	m_W = aW;
-	m_H = aH;
+		Control(aX, aY, aW, aH) {
 	m_Text = aText;
 	m_Font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
 			24);
@@ -41,24 +37,23 @@ bool Button::OnClick(void) {
 }
 
 void Button::Render(SDL_Renderer *aRnd) {
-
 	if (m_Down) {
 		SDL_SetRenderDrawColor(aRnd, 225, 225, 255, 255);
 	} else {
 		SDL_SetRenderDrawColor(aRnd, 192, 192, 192, 255);
 	}
-	SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	SDL_Rect r = { 0, 0, m_W, m_H };
 	SDL_RenderFillRect(aRnd, &r);
 
-	SDL_Color c = { 0, 0, 0, 0 };
+	SDL_Color c = { 0, 0, 0, 255 };
 	SDL_Surface *surf = TTF_RenderText_Blended(m_Font, m_Text.c_str(), c);
 	SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
 	int sx = 0;
 	int sy = 0;
 	int sw = surf->w;
 	int sh = surf->h;
-	int dx = m_X;
-	int dy = m_Y;
+	int dx = 0; //m_X;
+	int dy = 0; //m_Y;
 	int dw = m_W;
 	int dh = m_H;
 	if (sh > dh) {

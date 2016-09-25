@@ -12,11 +12,7 @@
 #include <SDL.h>
 
 TrackBar::TrackBar(int aX, int aY, int aW, int aH) :
-		Control() {
-	m_X = aX;
-	m_Y = aY;
-	m_W = aW;
-	m_H = aH;
+		Control(aX, aY, aW, aH) {
 	m_ThumbWidth = 48;
 	m_ThumbHeight = 24;
 	m_TrackSize = 12;
@@ -48,6 +44,8 @@ bool TrackBar::ProcessEvent(SDL_Event aEvent) {
 			m_MouseDownX = aEvent.button.x - (r.x + r.w / 2);
 			m_MouseDownY = aEvent.button.y - (r.y + r.h / 2);
 
+			m_Invalidate = true;
+
 			return true;
 		}
 		break;
@@ -61,6 +59,8 @@ bool TrackBar::ProcessEvent(SDL_Event aEvent) {
 				m_Pos = m_PosDelta;
 			}
 			m_MouseDown = false;
+
+			m_Invalidate = true;
 
 			return true;
 		}
@@ -82,6 +82,8 @@ bool TrackBar::ProcessEvent(SDL_Event aEvent) {
 				m_PosDelta = m_Min;
 			if (m_PosDelta > m_Max)
 				m_PosDelta = m_Max;
+
+			m_Invalidate = true;
 
 			return true;
 		}
@@ -154,11 +156,11 @@ bool TrackBar::PtInThumb(int aX, int aY) {
 }
 
 void TrackBar::Render(SDL_Renderer *aRnd) {
-	PaintBackground(aRnd, m_X, m_Y, m_W, m_H);
-	int x = m_X + (m_W - m_TrackSize) / 2;
-	int y = m_Y + m_Border + m_ThumbHeight / 2;
+	PaintBackground(aRnd, 0, 0, m_W, m_H);
+	int x = (m_W - m_TrackSize) / 2;
+	int y = m_Border + m_ThumbHeight / 2;
 	PaintTrack(aRnd, x, y, m_TrackSize, m_H - m_Border * 2 - m_ThumbHeight);
 
 	SDL_Rect r = CalcThumbRect();
-	PaintThumb(aRnd, r.x, r.y, m_ThumbWidth, m_ThumbHeight);
+	PaintThumb(aRnd, r.x - m_X, r.y - m_Y, m_ThumbWidth, m_ThumbHeight);
 }

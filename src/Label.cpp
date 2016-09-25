@@ -11,11 +11,7 @@
 #include <iostream>
 
 Label::Label(int aX, int aY, int aW, int aH, std::string aText) :
-		Control() {
-	m_X = aX;
-	m_Y = aY;
-	m_W = aW;
-	m_H = aH;
+		Control(aX, aY, aW, aH) {
 	m_Text = aText;
 
 	m_Font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
@@ -30,6 +26,7 @@ Label::~Label() {
 
 void Label::SetText(std::string aStr) {
 	m_Text = aStr;
+	m_Invalidate = true;
 }
 
 bool Label::ProcessEvent(SDL_Event aEvent) {
@@ -44,13 +41,14 @@ void Label::Render(SDL_Renderer *aRnd) {
 	int sy = 0;
 	int sw = surf->w;
 	int sh = surf->h;
-	int dx = m_X;
-	int dy = m_Y;
+	int dx = 0; //m_X;
+	int dy = 0; //m_Y;
 	int dw = m_W;
 	int dh = m_H;
 
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 32, 255);
-	SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	//SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	SDL_Rect r = { 0, 0, m_W, m_H };
 	SDL_RenderFillRect(aRnd, &r);
 
 	if (sh > dh) {

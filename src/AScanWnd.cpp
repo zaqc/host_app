@@ -14,6 +14,8 @@
 
 #include <SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+
+#include <iostream>
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -28,6 +30,7 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 
 	SDL_SetTextureBlendMode(res_txt, SDL_BLENDMODE_BLEND);
 
+	SDL_Texture *save_txt = SDL_GetRenderTarget(aRnd);
 	SDL_SetRenderTarget(aRnd, res_txt);
 	//SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	//SDL_RenderClear(aRnd);
@@ -69,11 +72,11 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
-	SDL_SetRenderTarget(aRnd, NULL);
+	SDL_SetRenderTarget(aRnd, save_txt);
 
 	return res_txt;
 }
@@ -113,7 +116,7 @@ MenuItem::~MenuItem(void) {
 }
 
 void MenuItem::SetFocus(bool aFocus) {
-
+	m_Focus = aFocus;
 }
 
 void MenuItem::SetMouseOver(bool aMouseOver) {
@@ -130,11 +133,15 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 
 	SDL_SetTextureBlendMode(m_Txt, SDL_BLENDMODE_BLEND);
 
+	SDL_Texture *save_txt = SDL_GetRenderTarget(aRnd);
 	SDL_SetRenderTarget(aRnd, m_Txt);
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	if (m_MouseOver) {
-		c = (SDL_Color ) { 0, 0, 255, 255 };
+		c = (SDL_Color ) {0, 0, 255, 255};
+	}
+	if (m_Focus) {
+		c = (SDL_Color ) {255, 0, 0, 255};
 	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
@@ -172,12 +179,12 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
-	SDL_SetRenderTarget(aRnd, NULL);
+	SDL_SetRenderTarget(aRnd, save_txt);
 
 	SDL_DestroyTexture(txt);
 	SDL_FreeSurface(surf);
@@ -189,15 +196,39 @@ void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 }
 
 //============================================================================
+//	IntMenuItem
+//============================================================================
+IntMenuItem::IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
+		int aMax) :
+		MenuItem(aMenu, aCaption, 0) {
+	m_ModalResult = false;
+}
+
+IntMenuItem::~IntMenuItem() {
+
+}
+
+void IntMenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
+	MenuItem::Render(aRnd, aW, aH);
+}
+
+void IntMenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
+	MenuItem::Paint(aRnd, aX, aY);
+}
+
+bool IntMenuItem::ProcessEvent(SDL_Event aEvent) {
+	if (aEvent.type == SDL_KEYDOWN)
+		if (aEvent.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+			m_ModalResult = true;
+	;
+	return true;
+}
+
+//============================================================================
 //	Menu
 //============================================================================
 Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent) :
-		Control() {
-	m_X = aX;
-	m_Y = aY;
-	m_W = aW;
-	m_H = aH;
-
+		Control(aX, aY, aW, aH) {
 	m_Caprion = aCaption;
 	m_Parent = aParent;
 
@@ -206,8 +237,8 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent)
 	if (NULL == aParent) {
 		m_ItemFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
-		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
-		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
+		m_ItemColor = (SDL_Color ) {255, 255, 0, 255};
+		m_ItemBackground = (SDL_Color ) {32, 32, 32, 192};
 
 		m_CaptionFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
@@ -218,6 +249,9 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent)
 	m_CaptionHeight = 32;
 	m_ItemHeight = 42;
 	m_BorderSize = 4;
+
+	m_FocusedItem = NULL;
+	m_ItemCaptureEvent = false;
 }
 
 Menu::~Menu() {
@@ -257,7 +291,7 @@ SDL_Rect Menu::CalcItemRect(MenuItem *aMI) {
 			break;
 		item_num++;
 	}
-	SDL_Rect r = { m_X + m_BorderSize, m_Y + m_BorderSize + m_CaptionHeight
+	SDL_Rect r = { m_BorderSize, m_BorderSize + m_CaptionHeight
 			+ item_num * m_ItemHeight, m_W - m_BorderSize * 2, m_ItemHeight };
 	return r;
 }
@@ -267,7 +301,7 @@ void Menu::CalcMenuRect(void) {
 	menu_height += m_BorderSize * 2;
 	menu_height += m_CaptionHeight;
 	menu_height += m_Items.size() * m_ItemHeight;
-	m_MenuRect = (SDL_Rect ) { m_X, m_Y, m_W, menu_height };
+	m_MenuRect = (SDL_Rect ) {0, 0, m_W, menu_height};
 }
 
 void Menu::AddMenuItem(std::string aCaption, int aID) {
@@ -282,11 +316,15 @@ void Menu::AddMenuItem(std::string aCaption, Menu *aSubMenu) {
 	CalcMenuRect();
 }
 
-void Menu::Render(SDL_Renderer *aRnd) {
+void Menu::AddMenuItem(MenuItem *aMI) {
+	m_Items.push_back(aMI);
+	CalcMenuRect();
+}
 
+void Menu::Render(SDL_Renderer *aRnd) {
 	if (NULL == m_CaptionTxt) {
 		SDL_Color c = { 255, 255, 255, 255 };
-		SDL_Color bk = { 0, 0, 64, 192 };
+		SDL_Color bk = { 0, 0, 128, 192 };
 		m_CaptionTxt = CreateText(aRnd, GetItemFont(), m_Caprion,
 				m_W - m_BorderSize * 2, m_CaptionHeight, c, bk);
 	}
@@ -295,11 +333,11 @@ void Menu::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(aRnd, 32, 32, 32, 192);
 	SDL_RenderFillRect(aRnd, &r);
-	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderDrawRect(aRnd, &r);
 
-	SDL_Rect dst_rect = { m_X + m_BorderSize, m_Y + m_BorderSize, m_W
-			- m_BorderSize * 2, m_CaptionHeight };
+	SDL_Rect dst_rect = { m_BorderSize, m_BorderSize, m_W - m_BorderSize * 2,
+			m_CaptionHeight };
 	SDL_RenderCopy(aRnd, m_CaptionTxt, NULL, &dst_rect);
 
 	int inum = 0;
@@ -307,8 +345,8 @@ void Menu::Render(SDL_Renderer *aRnd) {
 			i != m_Items.end(); i++) {
 		MenuItem *mi = *i;
 		mi->Render(aRnd, m_W - m_BorderSize * 2, m_ItemHeight - 1);
-		int y = m_Y + m_BorderSize + m_CaptionHeight + inum * m_ItemHeight;
-		mi->Paint(aRnd, m_X + m_BorderSize, y + 1);
+		int y = m_BorderSize + m_CaptionHeight + inum * m_ItemHeight;
+		mi->Paint(aRnd, m_BorderSize, y + 1);
 		inum++;
 	}
 
@@ -316,6 +354,70 @@ void Menu::Render(SDL_Renderer *aRnd) {
 }
 
 bool Menu::ProcessEvent(SDL_Event aEvent) {
+
+	if (m_FocusedItem == NULL) {
+		if (m_Items.size() != 0) {
+			m_FocusedItem = m_Items[0];
+			m_FocusedItem->SetFocus(true);
+		}
+	}
+
+	MenuItem *mi = m_FocusedItem;
+
+	if (aEvent.type == SDL_KEYDOWN) {
+		if (m_ItemCaptureEvent) {
+			m_FocusedItem->ProcessEvent(aEvent);
+			if (m_FocusedItem->GetModalResult())
+				m_ItemCaptureEvent = false;
+		} else {
+			switch (aEvent.key.keysym.sym) {
+
+			case KEY_DN: {
+				std::vector<MenuItem*>::iterator i = m_Items.begin();
+				while (*i != m_FocusedItem)
+					if (i != m_Items.end())
+						i++;
+					else
+						break;
+
+				if (i != m_Items.end() && ++i != m_Items.end())
+					m_FocusedItem = *i;
+				break;
+			}
+
+			case KEY_UP: {
+				std::vector<MenuItem*>::reverse_iterator i = m_Items.rbegin();
+				while (*i != m_FocusedItem)
+					if (i != m_Items.rend())
+						i++;
+					else
+						break;
+
+				if (i != m_Items.rend() && ++i != m_Items.rend())
+					m_FocusedItem = *i;
+				break;
+			}
+
+			case KEY_ENTER:
+				if (m_FocusedItem->CanCaptureFocus()) {
+					m_ItemCaptureEvent = true;
+				}
+				break;
+
+			case KEY_ESC:
+				//return false;
+				break;
+			}
+		}
+	}
+
+	if (mi != m_FocusedItem) {
+		if (mi)
+			mi->SetFocus(false);
+		if (m_FocusedItem)
+			m_FocusedItem->SetFocus(true);
+		m_Invalidate = true;
+	}
 
 	if (aEvent.type == SDL_MOUSEMOTION) {
 		int x = aEvent.motion.x;
@@ -344,8 +446,8 @@ int Menu::Execute(void) {
 	return 0;
 }
 
-void Menu::Paint(void) {
-	Control::Paint();
+void Menu::Paint(SDL_Renderer *aRnd) {
+	Control::Paint(aRnd);
 }
 
 //============================================================================
@@ -364,19 +466,21 @@ AScanWnd::~AScanWnd() {
 }
 
 void AScanWnd::Init(void) {
-	m_LAmpOne = new Label(10, 30, 64, 24, "Amp1");
+	m_LAmpOne = new Label(10, 35, 64, 24, "Amp1");
 	AddControl(m_LAmpOne);
-	m_TBAmpOne = new TrackBar(10, 54, 64, 340);
+	m_TBAmpOne = new TrackBar(10, 60, 64, 340);
 	AddControl(m_TBAmpOne);
 
-	m_Button = new Button(200, 30, 120, 40, "MainMenu");
+	m_Button = new Button(200, 5, 120, 40, "MainMenu");
 	AddControl(m_Button);
 
-	m_BtnQuit = new Button(200, 70, 120, 40, "Quit");
+	m_BtnQuit = new Button(200, 50, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	m_MainMenu = new Menu(100, 120, 420, 340, L"Главное меню", NULL);
+	m_MainMenu = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
 	m_MainMenu->AddMenuItem("BScan tape", 1);
+	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
+	m_MainMenu->AddMenuItem(imi);
 	m_MainMenu->AddMenuItem("WayMeter tape", 2);
 	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
 	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
@@ -416,10 +520,11 @@ void AScanWnd::UpdateControls(void) {
 }
 
 void AScanWnd::Paint(void) {
+	/*
 	SDL_SetRenderDrawColor(m_Rnd, 255, 255, 255, 255);
 	SDL_Rect r = { m_X, m_Y, m_W, m_H };
 	SDL_RenderFillRect(m_Rnd, &r);
-	SDL_SetRenderDrawColor(m_Rnd, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(m_Rnd, 0, 0, 0, 0);
 	SDL_RenderDrawRect(m_Rnd, &r);
 	for (int i = 0; i < 7; i++) {
 		int x = m_X + m_W / 7 * (i + 1);
@@ -433,6 +538,6 @@ void AScanWnd::Paint(void) {
 
 	roundedBoxRGBA(m_Rnd, 100, 40, 220, 80, 4, 255, 0, 0, 150);
 	stringRGBA(m_Rnd, 110, 50, "asdasdasd", 255, 250, 20, 255);
-
+	*/
 	Window::Paint();
 }

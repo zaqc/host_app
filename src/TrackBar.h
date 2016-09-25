@@ -15,10 +15,6 @@
 
 class TrackBar: public Control {
 protected:
-	int m_X;
-	int m_Y;
-	int m_W;
-	int m_H;
 	int m_Pos;
 	int m_Min;
 	int m_Max;

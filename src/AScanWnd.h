@@ -15,6 +15,17 @@
 #include "Button.h"
 //----------------------------------------------------------------------------
 
+#define	KEY_UP		1073741906
+#define	KEY_DN		1073741905
+#define	KEY_LEFT	1073741904
+#define	KEY_RIGHT	1073741903
+#define	KEY_ESC		27
+#define	KEY_ENTER	13
+#define	KEY_TAB		9
+#define	KEY_PLUS	1073741911
+#define	KEY_MINUS	1073741910
+//----------------------------------------------------------------------------
+
 class Menu;
 //----------------------------------------------------------------------------
 
@@ -56,6 +67,13 @@ public:
 	void SetFocus(bool aFocus);
 	void SetMouseOver(bool aMouseOver);
 
+	virtual bool CanCaptureFocus(void) {
+		return false;
+	}
+	virtual bool GetModalResult(void){
+		return false;
+	}
+
 	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
 	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
 
@@ -77,10 +95,20 @@ protected:
 	int m_Max;
 	int m_Val;
 	SDL_Texture *m_ValTxt;
+	bool m_ModalResult;
 public:
 	IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
 			int aMax);
 	virtual ~IntMenuItem();
+
+	virtual bool CanCaptureFocus(void) {
+		m_ModalResult = false;
+		return true;
+	}
+
+	virtual bool GetModalResult(void){
+		return m_ModalResult;
+	}
 
 	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
 	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
@@ -91,13 +119,12 @@ public:
 
 class Menu: public Control {
 protected:
-	int m_X;
-	int m_Y;
-	int m_W;
-	int m_H;
 	std::wstring m_Caprion;
 	Menu *m_Parent;
 	std::vector<MenuItem*> m_Items;
+
+	MenuItem *m_FocusedItem;
+	bool m_ItemCaptureEvent;
 
 	SDL_Color m_ItemColor;
 	SDL_Color m_ItemBackground;
@@ -125,9 +152,10 @@ public:
 
 	void AddMenuItem(std::string aCaption, int aID);
 	void AddMenuItem(std::string aCaption, Menu *aSubMenu);
+	void AddMenuItem(MenuItem *aMI);
 
 	int Execute(void);
-	virtual void Paint(void);
+	virtual void Paint(SDL_Renderer *aRnd);
 
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);
