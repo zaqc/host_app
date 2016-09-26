@@ -143,8 +143,8 @@ InfoLine::InfoLine(int aX, int aY, int aW, int aH) {
 	m_H = aH;
 	m_Font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
 			20);
-	m_TextColor = (SDL_Color ) {0, 0, 255, 255};
-	m_BkColor = (SDL_Color ) {255, 255, 0, 255};
+	m_TextColor = (SDL_Color ) { 0, 0, 255, 255 };
+	m_BkColor = (SDL_Color ) { 255, 255, 0, 255 };
 }
 //----------------------------------------------------------------------------
 
@@ -243,10 +243,10 @@ void Desktop::ShowModal(Window *aWindow) {
 		SDL_Event e;
 		while (SDL_PollEvent(&e)) {
 			if (NULL != m_ActiveWindow)
-				m_ActiveWindow->Paint();
+				m_ActiveWindow->PaintWindow();
 
 			aWindow->ProcessEvent(e);
-			aWindow->Paint();
+			aWindow->PaintWindow();
 
 			SDL_RenderPresent(m_Rnd);
 		}
@@ -277,7 +277,7 @@ void Desktop::Run(void) {
 
 		if (NULL != m_ActiveWindow) {
 			m_ActiveWindow->UpdateControls();
-			m_ActiveWindow->Paint();
+			m_ActiveWindow->PaintWindow();
 		}
 
 		SDL_RenderPresent(m_Rnd);

@@ -27,7 +27,15 @@ public:
 //	void Init(void);
 //	void Done(void);
 
+	virtual bool CanFocused(void) {
+		return true;
+	}
+
 	bool OnClick(void);
+
+	virtual bool OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY);
+	virtual bool OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY);
+	virtual bool OnMouseMove(int32_t aX, int32_t aY);
 
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);

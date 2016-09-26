@@ -48,16 +48,17 @@ protected:
 	Menu *m_Menu;
 	std::string m_Caption;
 	int m_ID;
-	Menu* m_SubMenu;
 	SDL_Texture *m_Txt;
 	bool m_Focus;
 	bool m_MouseOver;
 	bool m_Invalidate;
 	int m_H;
 	int m_W;
+	bool m_ModalResult;
+public:
+	Menu* m_SubMenu;
 	MenuItemType m_ItemType;
 
-public:
 	MenuItem(Menu *aMenu, std::string aCaption, int aID);
 	MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu);
 	virtual ~MenuItem(void);
@@ -68,18 +69,27 @@ public:
 	void SetMouseOver(bool aMouseOver);
 
 	virtual bool CanCaptureFocus(void) {
+		if (m_ItemType == miSubMenu)
+			return true;
 		return false;
 	}
-	virtual bool GetModalResult(void){
+
+	void SetModalResult(void) {
+		m_ModalResult = true;
+	}
+
+	virtual bool GetModalResult(void) {
+		return m_ModalResult;
+	}
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode){
 		return false;
 	}
 
 	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
 	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
 
-	virtual bool ProcessEvent(SDL_Event aEvent) {
-		return false;
-	}
+	virtual bool ProcessEvent(SDL_Event aEvent);
 };
 //----------------------------------------------------------------------------
 
@@ -95,7 +105,6 @@ protected:
 	int m_Max;
 	int m_Val;
 	SDL_Texture *m_ValTxt;
-	bool m_ModalResult;
 public:
 	IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
 			int aMax);
@@ -106,12 +115,10 @@ public:
 		return true;
 	}
 
-	virtual bool GetModalResult(void){
-		return m_ModalResult;
-	}
-
 	virtual void Render(SDL_Renderer *aRnd, int aW, int aH);
 	virtual void Paint(SDL_Renderer *aRnd, int aX, int aY);
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode);
 
 	virtual bool ProcessEvent(SDL_Event aEvent);
 };
@@ -142,6 +149,14 @@ public:
 	Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent);
 	virtual ~Menu();
 
+	void CloseModal(){
+		m_ItemCaptureEvent = false;
+	}
+
+	virtual bool CanFocused(void) {
+		return true;
+	}
+
 	TTF_Font *GetItemFont(void);
 	SDL_Color GetItemColor(void);
 	SDL_Color GetItemBackground(void);
@@ -154,8 +169,10 @@ public:
 	void AddMenuItem(std::string aCaption, Menu *aSubMenu);
 	void AddMenuItem(MenuItem *aMI);
 
-	int Execute(void);
+	void CheckFocusItem(void);
 	virtual void Paint(SDL_Renderer *aRnd);
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode);
 
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);
@@ -178,7 +195,7 @@ public:
 
 	virtual void UpdateControls(void);
 
-	virtual void Paint(void);
+	virtual void PaintWindow(void);
 };
 //----------------------------------------------------------------------------
 

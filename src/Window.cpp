@@ -27,6 +27,8 @@ Control::Control(int aX, int aY, int aW, int aH) {
 	m_Invalidate = true;
 	m_Hide = false;
 	m_ControlTexture = NULL;
+	m_ControlTextureWidth = 0;
+	m_ControlTextureHeight = 0;
 }
 //----------------------------------------------------------------------------
 
@@ -46,9 +48,16 @@ void Control::Render(SDL_Renderer *aRnd) {
 
 void Control::Paint(SDL_Renderer *aRnd) {
 	if (0 != m_W && 0 != m_H) {
-		if (NULL == m_ControlTexture) {
+		if (NULL == m_ControlTexture || m_ControlTextureWidth != m_W
+				|| m_ControlTextureHeight != m_H) {
+			if (NULL != m_ControlTexture) {
+				SDL_DestroyTexture(m_ControlTexture);
+				m_ControlTexture = NULL;
+			}
 			m_ControlTexture = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888,
 					SDL_TEXTUREACCESS_TARGET, m_W, m_H);
+			m_ControlTextureWidth = m_W;
+			m_ControlTextureHeight = m_H;
 		}
 
 		if (m_Invalidate) {
@@ -72,6 +81,7 @@ void Control::Paint(SDL_Renderer *aRnd) {
 Window::Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Control(aX, aY, aW, aH) {
 	m_Rnd = aRnd;
+	m_ActiveControl = NULL;
 }
 //----------------------------------------------------------------------------
 
@@ -92,7 +102,7 @@ void Window::AddControl(Control *aControl) {
 }
 //----------------------------------------------------------------------------
 
-void Window::Paint(void) {
+void Window::PaintWindow(void) {
 	if (NULL == m_ControlTexture) {
 		m_ControlTexture = SDL_CreateTexture(m_Rnd, SDL_PIXELFORMAT_ABGR8888,
 				SDL_TEXTUREACCESS_TARGET, m_W, m_H);
@@ -126,19 +136,107 @@ void Window::Paint(void) {
 //----------------------------------------------------------------------------
 
 bool Window::ProcessEvent(SDL_Event aEvent) {
-//	if (aEvent.type == SDL_KEYDOWN) {
-//		std::cout << (int) aEvent.key.keysym.mod << std::endl;
-//	}
+	if (aEvent.type == SDL_KEYDOWN) {
+		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB) {
+			int step = 0;
+			for (std::vector<Control*>::iterator i = m_Control.begin();
+					i != m_Control.end(); i++) {
+				Control *ctl = *i;
+				if (NULL == m_ActiveControl) {
+					if (ctl->CanFocused()) {
+						m_ActiveControl = ctl;
+						return true;
+					}
+				} else {
+					if (step == 0) {
+						if (m_ActiveControl == ctl)
+							step = 1;
+					} else {
+						if (ctl->CanFocused()) {
+							m_ActiveControl = ctl;
+							return true;
+						}
+					}
+				}
+			}
+			for (std::vector<Control*>::iterator i = m_Control.begin();
+					i != m_Control.end(); i++) {
+				Control *ctl = *i;
+				if (ctl->CanFocused()) {
+					m_ActiveControl = ctl;
+					return true;
+				}
+			}
+		}
+	}
 
 	for (std::vector<Control*>::reverse_iterator i = m_Control.rbegin();
 			i != m_Control.rend(); i++) {
 		Control *cnt = *i;
-		if (!cnt->GetHideState() && cnt->ProcessEvent(aEvent))
-			return true;
+		if (!cnt->GetHideState()) {
+			if (cnt->ProcessEvent(aEvent))
+				return true;
+
+			switch (aEvent.type) {
+			case SDL_KEYDOWN:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyDown(
+								aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_KEYUP:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyUp(aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_MOUSEBUTTONDOWN: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseDown(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseUp(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEMOTION: {
+				int x = aEvent.motion.x - m_X;
+				int y = aEvent.motion.y - m_Y;
+				if (cnt->OnMouseMove(x, y))
+					return true;
+				break;
+			}
+			}
+		}
 	}
 
-	if (Control::ProcessEvent(aEvent))
-		return true;
+	switch (aEvent.type) {
+	case SDL_MOUSEBUTTONDOWN: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseDown(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEBUTTONUP: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseUp(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEMOTION: {
+		int x = aEvent.motion.x - m_X;
+		int y = aEvent.motion.y - m_Y;
+		if (OnMouseMove(x, y))
+			return true;
+		break;
+	}
+	}
 
 	return false;
 }

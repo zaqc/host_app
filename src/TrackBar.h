@@ -37,7 +37,15 @@ public:
 		return m_Pos;
 	}
 
-	virtual bool ProcessEvent(SDL_Event aEvent);
+	virtual bool CanFocused(void) {
+		return true;
+	}
+
+	virtual bool OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY);
+	virtual bool OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY);
+	virtual bool OnMouseMove(int32_t aX, int32_t aY);
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode);
 
 	SDL_Rect CalcThumbRect(void);
 

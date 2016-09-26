@@ -72,8 +72,8 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
+	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, save_txt);
@@ -96,6 +96,7 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, int aID) {
 	m_Invalidate = false;
 	m_W = m_H = 0;
 	m_ItemType = miSimple;
+	m_ModalResult = false;
 }
 
 MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
@@ -108,7 +109,8 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
 	m_MouseOver = false;
 	m_Invalidate = false;
 	m_W = m_H = 0;
-	m_ItemType = miSimple;
+	m_ItemType = miSubMenu;
+	m_ModalResult = false;
 }
 
 MenuItem::~MenuItem(void) {
@@ -138,10 +140,10 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	if (m_MouseOver) {
-		c = (SDL_Color ) {0, 0, 255, 255};
+		c = (SDL_Color ) { 0, 0, 255, 255 };
 	}
 	if (m_Focus) {
-		c = (SDL_Color ) {255, 0, 0, 255};
+		c = (SDL_Color ) { 255, 0, 0, 255 };
 	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
@@ -179,8 +181,8 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
+	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
@@ -195,13 +197,23 @@ void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 	SDL_RenderCopy(aRnd, m_Txt, NULL, &dr);
 }
 
+bool MenuItem::ProcessEvent(SDL_Event aEvent) {
+	if (aEvent.type == SDL_KEYDOWN)
+		if (aEvent.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+			m_ModalResult = true;
+	return true;
+}
+
 //============================================================================
 //	IntMenuItem
 //============================================================================
 IntMenuItem::IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
 		int aMax) :
 		MenuItem(aMenu, aCaption, 0) {
-	m_ModalResult = false;
+	m_Val = aVal;
+	m_Min = aMin;
+	m_Max = aMax;
+	m_ValTxt = NULL;
 }
 
 IntMenuItem::~IntMenuItem() {
@@ -216,12 +228,15 @@ void IntMenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
 	MenuItem::Paint(aRnd, aX, aY);
 }
 
-bool IntMenuItem::ProcessEvent(SDL_Event aEvent) {
-	if (aEvent.type == SDL_KEYDOWN)
-		if (aEvent.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-			m_ModalResult = true;
-	;
+bool IntMenuItem::OnKeyDown(SDL_Scancode aScanCode) {
+	if (aScanCode == SDL_SCANCODE_ESCAPE)
+		m_ModalResult = true;
+
 	return true;
+}
+
+bool IntMenuItem::ProcessEvent(SDL_Event aEvent) {
+	return false;
 }
 
 //============================================================================
@@ -237,8 +252,8 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent)
 	if (NULL == aParent) {
 		m_ItemFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
-		m_ItemColor = (SDL_Color ) {255, 255, 0, 255};
-		m_ItemBackground = (SDL_Color ) {32, 32, 32, 192};
+		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
+		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
 
 		m_CaptionFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
@@ -301,24 +316,36 @@ void Menu::CalcMenuRect(void) {
 	menu_height += m_BorderSize * 2;
 	menu_height += m_CaptionHeight;
 	menu_height += m_Items.size() * m_ItemHeight;
-	m_MenuRect = (SDL_Rect ) {0, 0, m_W, menu_height};
+	m_MenuRect = (SDL_Rect ) { 0, 0, m_W, menu_height };
 }
 
 void Menu::AddMenuItem(std::string aCaption, int aID) {
 	MenuItem *mi = new MenuItem(this, aCaption, aID);
 	m_Items.push_back(mi);
 	CalcMenuRect();
+	m_H = m_MenuRect.h;
+	m_W = m_MenuRect.w;
+	m_Invalidate = true;
+	CheckFocusItem();
 }
 
 void Menu::AddMenuItem(std::string aCaption, Menu *aSubMenu) {
 	MenuItem *mi = new MenuItem(this, aCaption, aSubMenu);
 	m_Items.push_back(mi);
 	CalcMenuRect();
+	m_H = m_MenuRect.h;
+	m_W = m_MenuRect.w;
+	m_Invalidate = true;
+	CheckFocusItem();
 }
 
 void Menu::AddMenuItem(MenuItem *aMI) {
 	m_Items.push_back(aMI);
 	CalcMenuRect();
+	m_H = m_MenuRect.h;
+	m_W = m_MenuRect.w;
+	m_Invalidate = true;
+	CheckFocusItem();
 }
 
 void Menu::Render(SDL_Renderer *aRnd) {
@@ -333,7 +360,7 @@ void Menu::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(aRnd, 32, 32, 32, 192);
 	SDL_RenderFillRect(aRnd, &r);
-	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(aRnd, 255, 255, 255, 255);
 	SDL_RenderDrawRect(aRnd, &r);
 
 	SDL_Rect dst_rect = { m_BorderSize, m_BorderSize, m_W - m_BorderSize * 2,
@@ -353,72 +380,80 @@ void Menu::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 }
 
-bool Menu::ProcessEvent(SDL_Event aEvent) {
-
-	if (m_FocusedItem == NULL) {
-		if (m_Items.size() != 0) {
-			m_FocusedItem = m_Items[0];
-			m_FocusedItem->SetFocus(true);
-		}
-	}
-
+bool Menu::OnKeyDown(SDL_Scancode aScanCode) {
 	MenuItem *mi = m_FocusedItem;
+	bool res = false;
+	if (m_ItemCaptureEvent) {
+		if (miSubMenu == m_FocusedItem->m_ItemType
+				&& NULL != m_FocusedItem->m_SubMenu) {
+			m_FocusedItem->m_SubMenu->OnKeyDown(aScanCode);
+		} else
+			m_FocusedItem->OnKeyDown(aScanCode);
 
-	if (aEvent.type == SDL_KEYDOWN) {
-		if (m_ItemCaptureEvent) {
-			m_FocusedItem->ProcessEvent(aEvent);
-			if (m_FocusedItem->GetModalResult())
-				m_ItemCaptureEvent = false;
-		} else {
-			switch (aEvent.key.keysym.sym) {
+		if (m_FocusedItem->GetModalResult())
+			m_ItemCaptureEvent = false;
 
-			case KEY_DN: {
-				std::vector<MenuItem*>::iterator i = m_Items.begin();
-				while (*i != m_FocusedItem)
-					if (i != m_Items.end())
-						i++;
-					else
-						break;
+		res = true;
+	} else {
+		switch (aScanCode) {
 
-				if (i != m_Items.end() && ++i != m_Items.end())
-					m_FocusedItem = *i;
-				break;
+		case SDL_SCANCODE_DOWN: {
+			std::vector<MenuItem*>::iterator i = m_Items.begin();
+			while (*i != m_FocusedItem)
+				if (i != m_Items.end())
+					i++;
+				else
+					break;
+
+			if (i != m_Items.end() && ++i != m_Items.end())
+				m_FocusedItem = *i;
+
+			res = true;
+			break;
+		}
+
+		case SDL_SCANCODE_UP: {
+			std::vector<MenuItem*>::reverse_iterator i = m_Items.rbegin();
+			while (*i != m_FocusedItem)
+				if (i != m_Items.rend())
+					i++;
+				else
+					break;
+
+			if (i != m_Items.rend() && ++i != m_Items.rend())
+				m_FocusedItem = *i;
+
+			res = true;
+			break;
+		}
+
+		case SDL_SCANCODE_RETURN:
+			if (m_FocusedItem->CanCaptureFocus()) {
+				m_ItemCaptureEvent = true;
 			}
+			break;
 
-			case KEY_UP: {
-				std::vector<MenuItem*>::reverse_iterator i = m_Items.rbegin();
-				while (*i != m_FocusedItem)
-					if (i != m_Items.rend())
-						i++;
-					else
-						break;
+		case SDL_SCANCODE_ESCAPE:
+			if (NULL != m_Parent)
+				m_Parent->CloseModal();
+			break;
 
-				if (i != m_Items.rend() && ++i != m_Items.rend())
-					m_FocusedItem = *i;
-				break;
-			}
+		default:
+			break;
+		}
 
-			case KEY_ENTER:
-				if (m_FocusedItem->CanCaptureFocus()) {
-					m_ItemCaptureEvent = true;
-				}
-				break;
-
-			case KEY_ESC:
-				//return false;
-				break;
-			}
+		if (mi != m_FocusedItem) {
+			if (mi)
+				mi->SetFocus(false);
+			if (m_FocusedItem)
+				m_FocusedItem->SetFocus(true);
+			m_Invalidate = true;
 		}
 	}
+	return res;
+}
 
-	if (mi != m_FocusedItem) {
-		if (mi)
-			mi->SetFocus(false);
-		if (m_FocusedItem)
-			m_FocusedItem->SetFocus(true);
-		m_Invalidate = true;
-	}
-
+bool Menu::ProcessEvent(SDL_Event aEvent) {
 	if (aEvent.type == SDL_MOUSEMOTION) {
 		int x = aEvent.motion.x;
 		int y = aEvent.motion.y;
@@ -442,12 +477,23 @@ bool Menu::ProcessEvent(SDL_Event aEvent) {
 	return false;
 }
 
-int Menu::Execute(void) {
-	return 0;
+void Menu::CheckFocusItem(void) {
+	if (m_FocusedItem == NULL) {
+		if (m_Items.size() != 0) {
+			m_FocusedItem = m_Items[0];
+			m_FocusedItem->SetFocus(true);
+			m_Invalidate = true;
+		}
+	}
 }
 
 void Menu::Paint(SDL_Renderer *aRnd) {
 	Control::Paint(aRnd);
+
+	if (m_ItemCaptureEvent && NULL != m_FocusedItem
+			&& m_FocusedItem->m_ItemType == miSubMenu
+			&& NULL != m_FocusedItem->m_SubMenu)
+		m_FocusedItem->m_SubMenu->Paint(aRnd);
 }
 
 //============================================================================
@@ -474,10 +520,17 @@ void AScanWnd::Init(void) {
 	m_Button = new Button(200, 5, 120, 40, "MainMenu");
 	AddControl(m_Button);
 
-	m_BtnQuit = new Button(200, 50, 120, 40, "Quit");
+	m_BtnQuit = new Button(330, 5, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	m_MainMenu = new Menu(100, 100, 420, 340, L"Главное меню", NULL);
+	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
+
+	Menu *sub_menu = new Menu(110, 110, 420, 340, L"SubMenu", m_MainMenu);
+	sub_menu->AddMenuItem("Item One", 11);
+	sub_menu->AddMenuItem("Item Two", 12);
+	sub_menu->AddMenuItem("Item Three", 13);
+
+	m_MainMenu->AddMenuItem("Sub Menu", sub_menu);
 	m_MainMenu->AddMenuItem("BScan tape", 1);
 	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
 	m_MainMenu->AddMenuItem(imi);
@@ -519,25 +572,25 @@ void AScanWnd::UpdateControls(void) {
 	}
 }
 
-void AScanWnd::Paint(void) {
+void AScanWnd::PaintWindow(void) {
 	/*
-	SDL_SetRenderDrawColor(m_Rnd, 255, 255, 255, 255);
-	SDL_Rect r = { m_X, m_Y, m_W, m_H };
-	SDL_RenderFillRect(m_Rnd, &r);
-	SDL_SetRenderDrawColor(m_Rnd, 0, 0, 0, 0);
-	SDL_RenderDrawRect(m_Rnd, &r);
-	for (int i = 0; i < 7; i++) {
-		int x = m_X + m_W / 7 * (i + 1);
-		SDL_RenderDrawLine(m_Rnd, x, m_Y, x, m_Y + m_H);
-	}
+	 SDL_SetRenderDrawColor(m_Rnd, 255, 255, 255, 255);
+	 SDL_Rect r = { m_X, m_Y, m_W, m_H };
+	 SDL_RenderFillRect(m_Rnd, &r);
+	 SDL_SetRenderDrawColor(m_Rnd, 0, 0, 0, 0);
+	 SDL_RenderDrawRect(m_Rnd, &r);
+	 for (int i = 0; i < 7; i++) {
+	 int x = m_X + m_W / 7 * (i + 1);
+	 SDL_RenderDrawLine(m_Rnd, x, m_Y, x, m_Y + m_H);
+	 }
 
-	for (int i = 0; i < 4; i++) {
-		int y = m_Y + m_H / 4 * (i + 1);
-		SDL_RenderDrawLine(m_Rnd, m_X, y, m_X + m_W, y);
-	}
+	 for (int i = 0; i < 4; i++) {
+	 int y = m_Y + m_H / 4 * (i + 1);
+	 SDL_RenderDrawLine(m_Rnd, m_X, y, m_X + m_W, y);
+	 }
 
-	roundedBoxRGBA(m_Rnd, 100, 40, 220, 80, 4, 255, 0, 0, 150);
-	stringRGBA(m_Rnd, 110, 50, "asdasdasd", 255, 250, 20, 255);
-	*/
-	Window::Paint();
+	 roundedBoxRGBA(m_Rnd, 100, 40, 220, 80, 4, 255, 0, 0, 150);
+	 stringRGBA(m_Rnd, 110, 50, "asdasdasd", 255, 250, 20, 255);
+	 */
+	Window::PaintWindow();
 }

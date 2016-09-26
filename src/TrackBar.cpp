@@ -32,63 +32,75 @@ TrackBar::TrackBar(int aX, int aY, int aW, int aH) :
 TrackBar::~TrackBar() {
 }
 
-bool TrackBar::ProcessEvent(SDL_Event aEvent) {
-	switch (aEvent.type) {
-	case SDL_MOUSEBUTTONDOWN: {
-		SDL_Rect r = CalcThumbRect();
-		int x = aEvent.button.x;
-		int y = aEvent.button.y;
-		if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.y) {
-			m_PosDelta = m_Pos;
-			m_MouseDown = true;
-			m_MouseDownX = aEvent.button.x - (r.x + r.w / 2);
-			m_MouseDownY = aEvent.button.y - (r.y + r.h / 2);
+bool TrackBar::OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY) {
+	SDL_Rect r = CalcThumbRect();
+	if (aX >= r.x && aX < r.x + r.w && aY >= r.y && aY < r.y + r.h) {
+		m_PosDelta = m_Pos;
+		m_MouseDown = true;
+		m_MouseDownX = aX - (r.x + r.w / 2);
+		m_MouseDownY = aY - (r.y + r.h / 2);
 
-			m_Invalidate = true;
+		m_Invalidate = true;
 
-			return true;
-		}
-		break;
+		return true;
 	}
+	return false;
+}
 
-	case SDL_MOUSEBUTTONUP:
-		if (m_MouseDown) {
-			int x = aEvent.motion.x;
-			int y = aEvent.motion.y;
-			if (x >= m_X && x < m_X + m_W && y >= m_Y && y < m_Y + m_H) {
-				m_Pos = m_PosDelta;
-			}
-			m_MouseDown = false;
-
-			m_Invalidate = true;
-
-			return true;
+bool TrackBar::OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY) {
+	if (m_MouseDown) {
+		if (aX >= m_X && aX < m_X + m_W && aY >= m_Y && aY < m_Y + m_H) {
+			m_Pos = m_PosDelta;
 		}
-		break;
 
-	case SDL_MOUSEMOTION: {
-		if (m_MouseDown) {
-			int y = aEvent.motion.y;
-			int delta = y - m_Y - m_ThumbHeight / 2 - m_MouseDownY;
-			if (m_Revert)
-				delta = m_MouseDownY + m_Y + m_H - m_ThumbHeight / 2 - m_Border
-						- y;
+		m_MouseDown = false;
+		m_Invalidate = true;
 
-			m_PosDelta = m_Min
-					+ (double) (delta)
-							/ (double) (m_H - m_Border * 2 - m_ThumbHeight)
-							* (double) (m_Max - m_Min);
-			if (m_PosDelta < m_Min)
-				m_PosDelta = m_Min;
-			if (m_PosDelta > m_Max)
-				m_PosDelta = m_Max;
-
-			m_Invalidate = true;
-
-			return true;
-		}
-		break;
+		return true;
 	}
+	return false;
+}
+
+bool TrackBar::OnMouseMove(int32_t aX, int32_t aY) {
+	if (m_MouseDown) {
+		int delta = aY - m_Y - m_ThumbHeight / 2 - m_MouseDownY;
+		if (m_Revert)
+			delta = m_MouseDownY + m_Y + m_H - m_ThumbHeight / 2 - m_Border
+					- aY;
+
+		m_PosDelta = m_Min
+				+ (double) (delta)
+						/ (double) (m_H - m_Border * 2 - m_ThumbHeight)
+						* (double) (m_Max - m_Min);
+		if (m_PosDelta < m_Min)
+			m_PosDelta = m_Min;
+		if (m_PosDelta > m_Max)
+			m_PosDelta = m_Max;
+
+		m_Invalidate = true;
+
+		return true;
+	}
+	return false;
+}
+
+bool TrackBar::OnKeyDown(SDL_Scancode aScanCode) {
+	switch (aScanCode) {
+	case SDL_SCANCODE_DOWN:
+		if (m_Pos > m_Min) {
+			m_Pos--;
+			m_Invalidate = true;
+		}
+		return true;
+	case SDL_SCANCODE_UP:
+		if (m_Pos < m_Max) {
+			m_Pos++;
+			m_Invalidate = true;
+			return true;
+		}
+		return true;
+	default:
+		break;
 	}
 
 	return false;

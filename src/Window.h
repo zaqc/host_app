@@ -18,6 +18,8 @@ protected:
 	bool m_Invalidate;
 	bool m_Hide;
 	SDL_Texture *m_ControlTexture;
+	int m_ControlTextureWidth;
+	int m_ControlTextureHeight;
 	int m_X;
 	int m_Y;
 	int m_W;
@@ -25,6 +27,10 @@ protected:
 public:
 	Control(int aX, int aY, int aW, int aH);
 	virtual ~Control();
+
+	virtual bool CanFocused(void) {
+		return false;
+	}
 
 	void Hide() {
 		m_Hide = true;
@@ -49,27 +55,18 @@ public:
 		return false;
 	}
 
+	virtual bool OnKeyUp(SDL_Scancode aScanCode) {
+		return false;
+	}
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode) {
+		return false;
+	}
+
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual void Paint(SDL_Renderer *aRnd);
 
 	virtual bool ProcessEvent(SDL_Event aEvent) {
-		switch (aEvent.type) {
-		case SDL_MOUSEBUTTONDOWN:
-			if (OnMouseDown(aEvent.button.button, aEvent.button.x,
-					aEvent.button.y))
-				return true;
-			break;
-		case SDL_MOUSEBUTTONUP:
-			if (OnMouseUp(aEvent.button.button, aEvent.button.x,
-					aEvent.button.y))
-				return true;
-			break;
-		case SDL_MOUSEMOTION:
-			if (OnMouseMove(aEvent.motion.x, aEvent.motion.y))
-				return true;
-			break;
-		}
-
 		return false;
 	}
 };
@@ -79,9 +76,12 @@ class Window: public Control {
 protected:
 	SDL_Renderer *m_Rnd;
 	std::vector<Control*> m_Control;
+	Control *m_ActiveControl;
 public:
 	Window(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~Window();
+
+	//void NextControl(void);
 
 	virtual void ProcessMessage(int aID);
 
@@ -95,12 +95,8 @@ public:
 	virtual void UpdateControls(void) {
 	}
 
-	virtual void Paint(void);
+	virtual void PaintWindow(void);
 	virtual bool ProcessEvent(SDL_Event aEvent);
-
-	int Execute(void) {
-		return 0;
-	}
 };
 //----------------------------------------------------------------------------
 

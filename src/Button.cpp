@@ -27,6 +27,35 @@ Button::~Button() {
 	TTF_CloseFont(m_Font);
 }
 
+bool Button::OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY) {
+	if (aX >= m_X && aX < m_X + m_W && aY >= m_Y && aY < m_Y + m_H) {
+		m_Down = true;
+		m_Invalidate = true;
+		return true;
+	}
+	return false;
+}
+
+bool Button::OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY) {
+	if (m_Down) {
+		m_Down = false;
+		m_Invalidate = true;
+		if (aX >= m_X && aX < m_X + m_W && aY >= m_Y && aY < m_Y + m_H) {
+			m_OnClick = true;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool Button::OnMouseMove(int32_t aX, int32_t aY) {
+	if (m_Down)
+		return true;
+
+	return false;
+}
+
 bool Button::OnClick(void) {
 	if (m_OnClick) {
 		m_OnClick = false;
@@ -72,8 +101,8 @@ void Button::Render(SDL_Renderer *aRnd) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
+	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_DestroyTexture(txt);
@@ -81,34 +110,5 @@ void Button::Render(SDL_Renderer *aRnd) {
 }
 
 bool Button::ProcessEvent(SDL_Event aEvent) {
-	switch (aEvent.type) {
-	case SDL_MOUSEBUTTONDOWN: {
-		int x = aEvent.button.x;
-		int y = aEvent.button.y;
-		if (x >= m_X && x < m_X + m_W && y >= m_Y && y < m_Y + m_H) {
-			m_Down = true;
-			return true;
-		}
-		break;
-	}
-
-	case SDL_MOUSEMOTION: {
-		break;
-	}
-
-	case SDL_MOUSEBUTTONUP: {
-		if (m_Down) {
-			m_Down = false;
-			int x = aEvent.button.x;
-			int y = aEvent.button.y;
-			if (x >= m_X && x < m_X + m_W && y >= m_Y && y < m_Y + m_H) {
-				m_OnClick = true;
-				return true;
-			}
-		}
-		break;
-	}
-
-	}
 	return false;
 }

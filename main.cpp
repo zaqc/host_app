@@ -52,7 +52,7 @@ int main(void) {
 
 	Window *w = new AScanWnd(rnd, 0, 0, 800, 480);
 	w->Init();
-	w->Execute();
+	//w->Execute();
 
 	return 0;
 
