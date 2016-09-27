@@ -114,7 +114,6 @@ MenuItem::MenuItem(Menu *aMenu, std::string aCaption, Menu *aSubMenu) {
 }
 
 MenuItem::~MenuItem(void) {
-
 }
 
 void MenuItem::SetFocus(bool aFocus) {
@@ -217,7 +216,6 @@ IntMenuItem::IntMenuItem(Menu *aMenu, std::string aCaption, int aVal, int aMin,
 }
 
 IntMenuItem::~IntMenuItem() {
-
 }
 
 void IntMenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
@@ -499,6 +497,41 @@ void Menu::Paint(SDL_Renderer *aRnd) {
 //============================================================================
 //	AScanWnd
 //============================================================================
+AScanView::AScanView(Window *aWnd, int aX, int aY, int aW, int aH) :
+		Control(aX, aY, aW, aH) {
+	m_Wnd = aWnd;
+
+	for (int i = 0; i < 1024; i++) {
+		m_Data[i] = 0;
+	}
+}
+
+AScanView::~AScanView() {
+}
+
+void AScanView::Render(SDL_Renderer *aRnd) {
+	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
+	SDL_Rect r = { 0, 0, m_W, m_H };
+	SDL_RenderFillRect(aRnd, &r);
+
+	SDL_SetRenderDrawColor(aRnd, 255, 255, 255, 255);
+	SDL_RenderDrawRect(aRnd, &r);
+
+	SDL_SetRenderDrawColor(aRnd, 64, 64, 64, 255);
+	int tick_count = 10;
+	for (int i = 1; i < tick_count; i++) {
+		int x = (float) m_W / (float) tick_count * (float) i;
+		SDL_RenderDrawLine(aRnd, x, 1, x, m_H - 1);
+	}
+	for (int i = 1; i < tick_count; i++) {
+		int y = (float) m_H / (float) tick_count * (float) i;
+		SDL_RenderDrawLine(aRnd, 1, y, m_W - 1, y);
+	}
+}
+
+//============================================================================
+//	AScanWnd
+//============================================================================
 AScanWnd::AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
 	m_LAmpOne = NULL;
@@ -523,23 +556,26 @@ void AScanWnd::Init(void) {
 	m_BtnQuit = new Button(330, 5, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
+	AScanView *v = new AScanView(this, 100, 50, 650, 350);
+	AddControl(v);
 
-	Menu *sub_menu = new Menu(110, 110, 420, 340, L"SubMenu", m_MainMenu);
-	sub_menu->AddMenuItem("Item One", 11);
-	sub_menu->AddMenuItem("Item Two", 12);
-	sub_menu->AddMenuItem("Item Three", 13);
-
-	m_MainMenu->AddMenuItem("Sub Menu", sub_menu);
-	m_MainMenu->AddMenuItem("BScan tape", 1);
-	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
-	m_MainMenu->AddMenuItem(imi);
-	m_MainMenu->AddMenuItem("WayMeter tape", 2);
-	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
-	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
-	m_MainMenu->AddMenuItem("Configure", 5);
-	m_MainMenu->AddMenuItem("Hide menu", 6);
-	AddControl(m_MainMenu);
+//	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
+//
+//	Menu *sub_menu = new Menu(110, 110, 420, 340, L"SubMenu", m_MainMenu);
+//	sub_menu->AddMenuItem("Item One", 11);
+//	sub_menu->AddMenuItem("Item Two", 12);
+//	sub_menu->AddMenuItem("Item Three", 13);
+//
+//	m_MainMenu->AddMenuItem("Sub Menu", sub_menu);
+//	m_MainMenu->AddMenuItem("BScan tape", 1);
+//	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
+//	m_MainMenu->AddMenuItem(imi);
+//	m_MainMenu->AddMenuItem("WayMeter tape", 2);
+//	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
+//	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
+//	m_MainMenu->AddMenuItem("Configure", 5);
+//	m_MainMenu->AddMenuItem("Hide menu", 6);
+//	AddControl(m_MainMenu);
 }
 
 void AScanWnd::Done(void) {
@@ -555,10 +591,12 @@ void AScanWnd::UpdateControls(void) {
 
 	if (NULL != m_Button) {
 		if (m_Button->OnClick()) {
-			if (m_MainMenu->GetHideState()) {
-				m_MainMenu->Show();
-			} else {
-				m_MainMenu->Hide();
+			if (NULL != m_MainMenu) {
+				if (m_MainMenu->GetHideState()) {
+					m_MainMenu->Show();
+				} else {
+					m_MainMenu->Hide();
+				}
 			}
 		}
 	}

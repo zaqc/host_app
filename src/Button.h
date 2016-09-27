@@ -40,5 +40,6 @@ public:
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);
 };
+//----------------------------------------------------------------------------
 
 #endif /* SRC_BUTTON_H_ */

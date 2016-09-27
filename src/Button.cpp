@@ -11,6 +11,7 @@
 #include <SDL_ttf.h>
 #include <string>
 #include <iostream>
+//----------------------------------------------------------------------------
 
 Button::Button(int aX, int aY, int aW, int aH, std::string aText) :
 		Control(aX, aY, aW, aH) {
@@ -22,10 +23,12 @@ Button::Button(int aX, int aY, int aW, int aH, std::string aText) :
 	m_Down = false;
 	m_OnClick = false;
 }
+//----------------------------------------------------------------------------
 
 Button::~Button() {
 	TTF_CloseFont(m_Font);
 }
+//----------------------------------------------------------------------------
 
 bool Button::OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY) {
 	if (aX >= m_X && aX < m_X + m_W && aY >= m_Y && aY < m_Y + m_H) {
@@ -35,6 +38,7 @@ bool Button::OnMouseDown(uint8_t aButton, int32_t aX, int32_t aY) {
 	}
 	return false;
 }
+//----------------------------------------------------------------------------
 
 bool Button::OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY) {
 	if (m_Down) {
@@ -48,6 +52,7 @@ bool Button::OnMouseUp(uint8_t aButton, int32_t aX, int32_t aY) {
 
 	return false;
 }
+//----------------------------------------------------------------------------
 
 bool Button::OnMouseMove(int32_t aX, int32_t aY) {
 	if (m_Down)
@@ -55,6 +60,7 @@ bool Button::OnMouseMove(int32_t aX, int32_t aY) {
 
 	return false;
 }
+//----------------------------------------------------------------------------
 
 bool Button::OnClick(void) {
 	if (m_OnClick) {
@@ -64,6 +70,7 @@ bool Button::OnClick(void) {
 
 	return false;
 }
+//----------------------------------------------------------------------------
 
 void Button::Render(SDL_Renderer *aRnd) {
 	if (m_Down) {
@@ -73,6 +80,9 @@ void Button::Render(SDL_Renderer *aRnd) {
 	}
 	SDL_Rect r = { 0, 0, m_W, m_H };
 	SDL_RenderFillRect(aRnd, &r);
+
+	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
+	SDL_RenderDrawRect(aRnd, &r);
 
 	SDL_Color c = { 0, 0, 0, 255 };
 	SDL_Surface *surf = TTF_RenderText_Blended(m_Font, m_Text.c_str(), c);
@@ -108,7 +118,9 @@ void Button::Render(SDL_Renderer *aRnd) {
 	SDL_DestroyTexture(txt);
 	SDL_FreeSurface(surf);
 }
+//----------------------------------------------------------------------------
 
 bool Button::ProcessEvent(SDL_Event aEvent) {
 	return false;
 }
+//----------------------------------------------------------------------------

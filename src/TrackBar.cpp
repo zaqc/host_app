@@ -8,8 +8,8 @@
 #include "TrackBar.h"
 
 #include <iostream>
-
 #include <SDL.h>
+//----------------------------------------------------------------------------
 
 TrackBar::TrackBar(int aX, int aY, int aW, int aH) :
 		Control(aX, aY, aW, aH) {

@@ -57,5 +57,6 @@ public:
 
 	virtual void Render(SDL_Renderer *aRnd);
 };
+//----------------------------------------------------------------------------
 
 #endif /* SRC_TRACKBAR_H_ */

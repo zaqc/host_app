@@ -82,7 +82,7 @@ public:
 		return m_ModalResult;
 	}
 
-	virtual bool OnKeyDown(SDL_Scancode aScanCode){
+	virtual bool OnKeyDown(SDL_Scancode aScanCode) {
 		return false;
 	}
 
@@ -149,7 +149,7 @@ public:
 	Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent);
 	virtual ~Menu();
 
-	void CloseModal(){
+	void CloseModal() {
 		m_ItemCaptureEvent = false;
 	}
 
@@ -176,6 +176,18 @@ public:
 
 	virtual void Render(SDL_Renderer *aRnd);
 	virtual bool ProcessEvent(SDL_Event aEvent);
+};
+//----------------------------------------------------------------------------
+
+class AScanView: public Control {
+protected:
+	Window *m_Wnd;
+	int m_Data[1024];
+public:
+	AScanView(Window *aWnd, int aX, int aY, int aW, int aH);
+	virtual ~AScanView();
+
+	virtual void Render(SDL_Renderer *aRnd);
 };
 //----------------------------------------------------------------------------
 
