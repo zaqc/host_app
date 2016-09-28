@@ -17,8 +17,10 @@ struct ColorMap {
 };
 
 struct Channel {
-	bool UseIt;
-	int ColorIndex;
+	bool UseIt;		// Use this chennel for rendering
+	int ColorIndex;	// Color index in CLUT
+	int DataIndex;	// start data in data buffer returned by GetData(void)
+	int DataSize;	// size of channel data
 };
 
 struct Track {
@@ -46,7 +48,7 @@ struct Tape {
 	int TrackCount;		// Tracks Count on tape (max=10)
 	struct Track Track[10];
 	int PPCount;		// PreParseed point count
-	struct Preparser PP[4096];
+	struct Preparser PP[4096]; // max screen height (480)
 };
 //----------------------------------------------------------------------------
 
