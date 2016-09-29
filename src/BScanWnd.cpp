@@ -141,6 +141,35 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 //----------------------------------------------------------------------------
 
 void RealTapeScroller::PrepareDrawBuffer(void) {
+	unsigned char *buf = GetData();
+	Preparser **pp = m_Index;
+	Channel *ch = m_Channel;
+	for (int ch_num = 0; ch_num < 32; ch_num++) {
+		if (ch->UseIt) {
+			unsigned char *pbuf = buf + ch->DataIndex;
+			for (int i = 0; i < ch->DataSize; i++) {
+				int val = *pbuf;
+				Preparser *pr = *pp;
+				while (NULL != pr) {
+					if (pr->Value1 < val) {
+						pr->Value2 = pr->Value1;
+						pr->Index2 = pr->Index1;
+						pr->Value1 = val;
+						pr->Index1 = ch->ColorIndex;
+					} else {
+						if (pr->Value2 < val) {
+							pr->Value2 = val;
+							pr->Index2 = ch->ColorIndex;
+						}
+					}
+					pr = pr->Next;
+				}
+				pbuf++;
+				(*pp)++;
+			}
+		}
+		ch++;
+	}
 }
 //----------------------------------------------------------------------------
 

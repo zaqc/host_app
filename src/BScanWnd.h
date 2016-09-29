@@ -18,6 +18,7 @@ struct ColorMap {
 
 struct Channel {
 	bool UseIt;		// Use this chennel for rendering
+	int ColorIndex;	// Color index
 	int Side;		// Side 1-left 2-right
 	int DataIndex;	// start data in data buffer returned by GetData(void)
 	int DataSize;	// size of channel data (tick count)
@@ -43,7 +44,7 @@ struct Preparser {
 	int Index2;
 	int Y;				// tape vertical position
 	int H;				// from 1 to N (depends of height zoom)
-	Preparser *Next;	// next item if it used for channel more then one
+	Preparser *Next;	// next item if it used for channel more than once (usually NULL)
 };
 
 struct Tape {
@@ -65,7 +66,6 @@ protected:
 	Channel m_Channel[32];
 	Tape m_Tape;
 	Preparser *m_Index[4096];	// for each channel data point
-	int m_ColorIndex[4096];		// color index for each data point
 public:
 	RealTapeScroller(int aW, int aH);
 	virtual ~RealTapeScroller();
