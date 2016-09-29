@@ -18,19 +18,20 @@ struct ColorMap {
 
 struct Channel {
 	bool UseIt;		// Use this chennel for rendering
-	int ColorIndex;	// Color index in CLUT
+	int Side;		// Side 1-left 2-right
 	int DataIndex;	// start data in data buffer returned by GetData(void)
-	int DataSize;	// size of channel data
+	int DataSize;	// size of channel data (tick count)
 };
 
 struct Track {
 	bool ShowIt;		// show this track on tape
+	int Side;			// 1-left 2-right
 	int DefaultHeight;	// Real height of track (default value is 128 tick's)
 	int RealHeight;		// Real height of Track on Tape (calculate at real time)
 	int TrackTop;		// Y position of Track on Tape
 	int MinTrackHeight;	// Minimal track height (default 8 pixels)
 	bool AutoHeight;	// Auto Calculate track height
-	int Channel[4];		// Channel number
+	struct Channel *Channel[4];		// Channel number
 };
 
 struct Preparser {
@@ -40,7 +41,9 @@ struct Preparser {
 	int Index1;
 	int Value2;
 	int Index2;
-	int DisplayHeight;	// from 1 to N (depends of height zoom)
+	int Y;				// tape vertical position
+	int H;				// from 1 to N (depends of height zoom)
+	Preparser *Next;	// next item if it used for channel more then one
 };
 
 struct Tape {
@@ -48,7 +51,7 @@ struct Tape {
 	int TrackCount;		// Tracks Count on tape (max=10)
 	struct Track Track[10];
 	int PPCount;		// PreParseed point count
-	struct Preparser PP[4096]; // max screen height (480)
+	struct Preparser PP[1024]; // max screen height (480)
 };
 //----------------------------------------------------------------------------
 
@@ -59,7 +62,10 @@ protected:
 	int m_W;
 	int m_H;
 
+	Channel m_Channel[32];
 	Tape m_Tape;
+	Preparser *m_Index[4096];	// for each channel data point
+	int m_ColorIndex[4096];		// color index for each data point
 public:
 	RealTapeScroller(int aW, int aH);
 	virtual ~RealTapeScroller();

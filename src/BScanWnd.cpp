@@ -14,13 +14,10 @@
 //============================================================================
 BScanWnd::BScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
-	// TODO Auto-generated constructor stub
-
 }
 //----------------------------------------------------------------------------
 
 BScanWnd::~BScanWnd() {
-	// TODO Auto-generated destructor stub
 }
 //----------------------------------------------------------------------------
 
@@ -35,6 +32,24 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 
 	m_FB = new unsigned int[aW * aH];
 	m_DB = new unsigned int[aW * aH];
+
+	for (int i = 0; i < 32; i++) {
+		if (i < 28) {
+			m_Channel[i].UseIt = true;
+			m_Channel[i].DataIndex = i * 128;
+			m_Channel[i].DataSize = 128;
+			if (i < 14)
+				m_Channel[i].Side = 1;
+			else
+				m_Channel[i].Side = 2;
+		} else {
+			m_Channel[i].UseIt = false;
+		}
+	}
+
+	for (int i = 0; i < 4096; i++) {
+		m_Index[i] = NULL;
+	}
 }
 //----------------------------------------------------------------------------
 
@@ -66,6 +81,13 @@ void RealTapeScroller::CalcPreparserTable(void) {
 		t++;
 	}
 
+	for (int i = 0; i < 1024; i++)
+		m_Tape.PP[i].Next = NULL;
+
+	for (int i = 0; i < 4096; i++)
+		m_Index[i] = NULL;
+
+	m_Tape.PPCount = 0;
 	if (fixed_space + min_stretch_space < m_H) {
 		Track *t = m_Tape.Track;
 		for (int track = 0; track < m_Tape.TrackCount; track++) {
@@ -74,6 +96,28 @@ void RealTapeScroller::CalcPreparserTable(void) {
 					t->RealHeight = (float) t->DefaultHeight
 							/ (float) (stretch_space)
 							* (float) (m_H - fixed_space);
+					if (t->RealHeight < t->DefaultHeight) {
+						for (int n = 0; n < t->DefaultHeight; n++) {
+							int pos = (float) t->RealHeight
+									/ (float) t->DefaultHeight * (float) n;
+							for (int ch = 0; ch < 4; ch++) {
+								if (NULL != t->Channel[ch]) {
+									if (NULL
+											== m_Index[t->Channel[ch]->DataIndex]) {
+										m_Index[t->Channel[ch]->DataIndex] =
+												&m_Tape.PP[pos + t->TrackTop];
+									} else {
+										Preparser *pp =
+												m_Index[t->Channel[ch]->DataIndex];
+										m_Index[t->Channel[ch]->DataIndex] =
+												&m_Tape.PP[pos + t->TrackTop];
+										m_Index[t->Channel[ch]->DataIndex]->Next =
+												pp;
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
