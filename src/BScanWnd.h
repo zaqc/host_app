@@ -82,6 +82,7 @@ public:
 	void PrepareDrawBuffer(void);
 	void ScrollAndDraw(void);
 };
+//----------------------------------------------------------------------------
 
 class BScanWnd: public Window {
 public:
