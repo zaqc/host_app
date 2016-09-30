@@ -5,9 +5,55 @@
  *      Author: zaqc
  */
 
+#include <iostream>
+
 #include "BScanWnd.h"
 #include "Window.h"
 //----------------------------------------------------------------------------
+
+SDL_Color CLUT[256][256];
+
+SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
+
+	int a1 = aC1.r;
+	int a2 = aC1.g;
+	int a3 = aC1.b;
+	int a4 = aC1.a;
+
+	int b1 = aC2.r;
+	int b2 = aC2.g;
+	int b3 = aC2.b;
+	int b4 = aC2.a;
+
+	unsigned char r = (int) (a1
+			+ (float) (b1 - a1) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char g = (int) (a2
+			+ (float) (b2 - a2) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char b = (int) (a3
+			+ (float) (b3 - a3) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char a = (int) (a4
+			+ (float) (b4 - a4) / (float) aMax * (float) aVal) & 0xFF;
+
+	SDL_Color ret = { r, g, b, a };
+	return ret;
+}
+
+void InitCLUT(SDL_Color aC1, SDL_Color aC2, SDL_Color aXX, SDL_Color aBG) {
+	for (int j = 0; j < 256; j++) {
+		for (int i = 0; i < 256; i++) {
+			CLUT[i][j] = (SDL_Color ) { 0, 0, 0, 0 };
+		}
+	}
+	for (int i = 0; i < 256; i++) {
+		CLUT[i][i] = GetMdlColor(aBG, aXX, i, 255);
+		CLUT[i][0] = GetMdlColor(aBG, aC1, i, 255);
+		CLUT[0][i] = GetMdlColor(aBG, aC2, i, 255);
+		for (int n = 1; n < i; n++) {
+			CLUT[i][n] = GetMdlColor(CLUT[i][0], CLUT[i][i], n, i);
+			CLUT[n][i] = GetMdlColor(CLUT[0][i], CLUT[i][i], n, i);
+		}
+	}
+}
 
 //============================================================================
 //	BScanWnd
@@ -153,6 +199,12 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 
 	m_DataGenerator = new DataGenerator();
 	m_Txt = NULL;
+
+	SDL_Color c1 = { 255, 255, 0, 255 };
+	SDL_Color c2 = { 0, 255, 255, 255 };
+	SDL_Color xx = { 255, 0, 0, 255 };
+	SDL_Color bg = { 0, 32, 0, 255 };
+	InitCLUT(c1, c2, xx, bg);
 }
 //----------------------------------------------------------------------------
 
@@ -276,6 +328,13 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 				memset(pptr + m_W * 4 - 4, data[i], 4);
 				pptr += pitch;
 			}
+
+			for (int j = 0; j < 256; j++) {
+				for (int i = 0; i < 256; i++) {
+					p[i + j * m_W] = *(unsigned int*) &CLUT[i][j];
+				}
+			}
+
 			SDL_UnlockTexture(m_Txt);
 		}
 		SDL_Rect dr = { aX, aY, m_W, m_H };
