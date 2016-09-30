@@ -10,6 +10,7 @@
 
 #include "Desktop.h"
 #include "AScanWnd.h"
+#include "BScanWnd.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -223,7 +224,7 @@ void Desktop::Init(void) {
 	m_IL->AddItem(L"->+", iaRight, 80);
 	m_IL->AddItem(L"abc", iaCenter, 80);
 
-	m_ActiveWindow = new AScanWnd(m_Rnd, 0, 30, 800, 450);
+	m_ActiveWindow = new BScanWnd(m_Rnd, 0, 30, 800, 450);
 	m_ActiveWindow->Init();
 }
 //----------------------------------------------------------------------------

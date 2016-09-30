@@ -44,7 +44,7 @@ struct Preparser {
 	int Index2;
 	int Y;				// tape vertical position
 	int H;				// from 1 to N (depends of height zoom)
-	Preparser *Next;	// next item if it used for channel more than once (usually NULL)
+	Preparser *Next;// next item if it used for channel more than once (usually NULL)
 };
 
 struct Tape {
@@ -53,6 +53,28 @@ struct Tape {
 	struct Track Track[10];
 	int PPCount;		// PreParseed point count
 	struct Preparser PP[1024]; // max screen height (480)
+};
+//----------------------------------------------------------------------------
+
+#define MAX_GEN_LINE	256
+
+struct LineGenStruct {
+	float DX;
+	float CurX;
+	int YCount;
+	int YMaxCount;
+	bool Valid;
+};
+
+class DataGenerator {
+protected:
+	std::vector<LineGenStruct> m_Gen;
+	unsigned char m_OutData[4096];
+public:
+	DataGenerator();
+	virtual ~DataGenerator();
+
+	unsigned char *GetData(void);
 };
 //----------------------------------------------------------------------------
 
@@ -66,6 +88,9 @@ protected:
 	Channel m_Channel[32];
 	Tape m_Tape;
 	Preparser *m_Index[4096];	// for each channel data point
+
+	DataGenerator *m_DataGenerator;
+	SDL_Texture *m_Txt;
 public:
 	RealTapeScroller(int aW, int aH);
 	virtual ~RealTapeScroller();
@@ -85,9 +110,16 @@ public:
 //----------------------------------------------------------------------------
 
 class BScanWnd: public Window {
+protected:
+	RealTapeScroller *m_RTS;
 public:
 	BScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~BScanWnd();
+
+	virtual void Init(void);
+	virtual void Done(void);
+
+	virtual void PaintWindow(void);
 };
 //----------------------------------------------------------------------------
 
