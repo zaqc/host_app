@@ -5,6 +5,10 @@
  *      Author: zaqc
  */
 
+#include <unistd.h>
+#include <sys/time.h>
+#include <iostream>
+
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -85,32 +89,32 @@ void InfoItem::Render(SDL_Renderer *aRnd) {
 					dh = sh;
 				}
 				switch (m_InfoAlign) {
-				case iaCenter:
-					if (sw > dw) {
-						sx += (sw - dw) / 2;
-						sw = dw;
-					} else if (sw < dw) {
-						dx += (dw - sw) / 2;
-						dw = sw;
-					}
-					break;
+					case iaCenter:
+						if (sw > dw) {
+							sx += (sw - dw) / 2;
+							sw = dw;
+						} else if (sw < dw) {
+							dx += (dw - sw) / 2;
+							dw = sw;
+						}
+						break;
 
-				case iaLeft:
-					if (sw > dw)
-						sw = dw;
-					break;
+					case iaLeft:
+						if (sw > dw)
+							sw = dw;
+						break;
 
-				case iaRight:
-					if (sw > dw)
-						sw = dw;
-					else {
-						dx += dw - sw;
-						dw = sw;
-					}
-					break;
+					case iaRight:
+						if (sw > dw)
+							sw = dw;
+						else {
+							dx += dw - sw;
+							dw = sw;
+						}
+						break;
 
-				default:
-					break;
+					default:
+						break;
 				}
 				SDL_Rect src_rect = { sx, sy, sw, sh };
 				SDL_Rect dst_rect = { dx, dy, dw, dh };
@@ -256,6 +260,11 @@ void Desktop::ShowModal(Window *aWindow) {
 //----------------------------------------------------------------------------
 
 void Desktop::Run(void) {
+	timeval ts, ts_prev;
+	gettimeofday(&ts, 0);
+	int fc = 0;
+	ts_prev = ts;
+
 	while (true) {
 		SDL_Event e;
 		while (SDL_PollEvent(&e)) {
@@ -282,6 +291,18 @@ void Desktop::Run(void) {
 		}
 
 		SDL_RenderPresent(m_Rnd);
+
+		gettimeofday(&ts, 0);
+		float delta = (ts.tv_sec * 1000000 + ts.tv_usec)
+				- (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
+
+		if (delta >= 1000000.0f) {
+			std::cout << (float) fc * 1000000.0 / delta << std::endl;
+
+			fc = 0;
+			ts_prev = ts;
+		}
+		fc++;
 	}
 }
 //----------------------------------------------------------------------------

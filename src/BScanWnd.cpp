@@ -11,7 +11,7 @@
 #include "Window.h"
 //----------------------------------------------------------------------------
 
-SDL_Color CLUT[256][256];
+SDL_Color CLUT[256 * 256 * 4];
 
 SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
 
@@ -38,19 +38,32 @@ SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
 	return ret;
 }
 
-void InitCLUT(SDL_Color aC1, SDL_Color aC2, SDL_Color aXX, SDL_Color aBG) {
+void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
+		SDL_Color aBG) {
+
+	for (int index = 0; index < 4; index++) {
+		for (int color = 0; color < 256; color += 16) {
+			int ndx = (color << ((index & 1) << 3))
+					+ (((index >> 1) & 1) << 16);
+			std::cout << ndx << " ";
+		}
+		std::cout << std::endl;
+	}
+
 	for (int j = 0; j < 256; j++) {
 		for (int i = 0; i < 256; i++) {
-			CLUT[i][j] = (SDL_Color ) { 0, 0, 0, 0 };
+			aTab[i << 8 | j] = (SDL_Color ) { 0, 0, 0, 0 };
 		}
 	}
+
 	for (int i = 0; i < 256; i++) {
-		CLUT[i][i] = GetMdlColor(aBG, aXX, i, 255);
-		CLUT[i][0] = GetMdlColor(aBG, aC1, i, 255);
-		CLUT[0][i] = GetMdlColor(aBG, aC2, i, 255);
+		aTab[i << 8 | i] = GetMdlColor(aBG, aXX, i, 255);
+		aTab[i << 8] = GetMdlColor(aBG, aC1, i, 255);
+		aTab[i] = GetMdlColor(aBG, aC2, i, 255);
 		for (int n = 1; n < i; n++) {
-			CLUT[i][n] = GetMdlColor(CLUT[i][0], CLUT[i][i], n, i);
-			CLUT[n][i] = GetMdlColor(CLUT[0][i], CLUT[i][i], n, i);
+			aTab[i << 8 | n] = GetMdlColor(aTab[i << 8], aTab[i << 8 | i], n,
+					i);
+			aTab[n << 8 | i] = GetMdlColor(aTab[i], aTab[i << 8 | i], n, i);
 		}
 	}
 }
@@ -200,11 +213,17 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 	m_DataGenerator = new DataGenerator();
 	m_Txt = NULL;
 
+	SDL_Color ww = { 255, 255, 255, 255 };
 	SDL_Color c1 = { 255, 255, 0, 255 };
 	SDL_Color c2 = { 0, 255, 255, 255 };
+	SDL_Color c3 = { 255, 0, 255, 255 };
+	SDL_Color c4 = { 0, 255, 0, 255 };
 	SDL_Color xx = { 255, 0, 0, 255 };
-	SDL_Color bg = { 0, 32, 0, 255 };
-	InitCLUT(c1, c2, xx, bg);
+	SDL_Color bg = { 0, 0, 32, 255 };
+	InitCLUT(CLUT, c1, ww, xx, bg);
+	InitCLUT(CLUT + 256 * 256, c2, ww, xx, bg);
+	InitCLUT(CLUT + 256 * 256 * 2, c3, ww, xx, bg);
+	InitCLUT(CLUT + 256 * 256 * 3, c4, ww, xx, bg);
 }
 //----------------------------------------------------------------------------
 
@@ -330,8 +349,8 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 			}
 
 			for (int j = 0; j < 256; j++) {
-				for (int i = 0; i < 256; i++) {
-					p[i + j * m_W] = *(unsigned int*) &CLUT[i][j];
+				for (int i = 0; i < 256 * 3; i++) {
+					p[i + (j + 2) * m_W] = *(unsigned int*) &CLUT[i << 8 | j];
 				}
 			}
 
