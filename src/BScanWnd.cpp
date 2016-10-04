@@ -15,6 +15,9 @@ SDL_Color CLUT[256 * 256 * 4];
 
 SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
 
+	if (aVal > 255)
+		aVal = 255;
+
 	int a1 = aC1.r;
 	int a2 = aC1.g;
 	int a3 = aC1.b;
@@ -52,7 +55,7 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 
 	for (int j = 0; j < 256; j++) {
 		for (int i = 0; i < 256; i++) {
-			aTab[i << 8 | j] = (SDL_Color ) { 0, 0, 0, 0 };
+			aTab[i << 8 | j] = (SDL_Color ) {0, 0, 0, 0};
 		}
 	}
 
@@ -95,7 +98,7 @@ void BScanWnd::PaintWindow(void) {
 	SDL_SetRenderDrawColor(m_Rnd, 192, 192, 192, 255);
 	SDL_RenderClear(m_Rnd);
 
-	m_RTS->Show(m_Rnd, 10, 10);
+	m_RTS->Show(m_Rnd, 50, 10);
 }
 //----------------------------------------------------------------------------
 
@@ -213,17 +216,19 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 	m_DataGenerator = new DataGenerator();
 	m_Txt = NULL;
 
-	SDL_Color ww = { 255, 255, 255, 255 };
-	SDL_Color c1 = { 255, 255, 0, 255 };
-	SDL_Color c2 = { 0, 255, 255, 255 };
-	SDL_Color c3 = { 255, 0, 255, 255 };
-	SDL_Color c4 = { 0, 255, 0, 255 };
-	SDL_Color xx = { 255, 0, 0, 255 };
-	SDL_Color bg = { 0, 0, 32, 255 };
+	SDL_Color ww = { 255, 255, 255, 255 }; // white
+	SDL_Color c1 = { 255, 255, 0, 255 }; // yellow
+	SDL_Color c2 = { 0, 255, 255, 255 }; // cyan
+	SDL_Color c3 = { 255, 0, 255, 255 }; // fuchsia
+	SDL_Color c4 = { 0, 255, 0, 255 }; // lime
+	SDL_Color xx = { 255, 0, 0, 255 }; // red
+	SDL_Color bg = { 0, 0, 0, 255 }; // black
 	InitCLUT(CLUT, c1, ww, xx, bg);
 	InitCLUT(CLUT + 256 * 256, c2, ww, xx, bg);
 	InitCLUT(CLUT + 256 * 256 * 2, c3, ww, xx, bg);
 	InitCLUT(CLUT + 256 * 256 * 3, c4, ww, xx, bg);
+
+	CalcPreparserTable();
 }
 //----------------------------------------------------------------------------
 
@@ -333,26 +338,34 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 		}
 	}
 
+	int step = 4;
+
 	if (NULL != m_Txt) {
 		SDL_Rect r = { 0, 0, m_W, m_H };
 		unsigned int *p;
 		int pitch;
 		if (0 == SDL_LockTexture(m_Txt, &r, (void**) &p, &pitch)) {
 			unsigned char *pptr = (unsigned char*) p;
-			unsigned char *data = GetData();
 			for (int i = 0; i < m_H; i++) {
-				for (int n = 0; n < m_W - 1; n++)
-					p[i * m_W + n] = p[i * m_W + n + 1];
+				for (int n = 0; n < m_W - step; n++)
+					p[i * m_W + n] = p[i * m_W + n + step];
 				//memcpy(&p[i * m_W], &p[i * m_W + 1], m_W * 4 -4);
-				memset(pptr + m_W * 4 - 4, data[i], 4);
 				pptr += pitch;
 			}
-
-			for (int j = 0; j < 256; j++) {
-				for (int i = 0; i < 256 * 3; i++) {
-					p[i + (j + 2) * m_W] = *(unsigned int*) &CLUT[i << 8 | j];
+			for (int n = 0; n < step; n++) {
+				unsigned char *data = GetData();
+				pptr = (unsigned char*) p;
+				for (int i = 0; i < m_H; i++) {
+					memset(pptr + m_W * 4 - (step - n) * 4, data[i], 4);
+					pptr += pitch;
 				}
 			}
+
+//			for (int j = 0; j < 256; j++) {
+//				for (int i = 0; i < 256 * 3; i++) {
+//					p[i + (j + 2) * m_W] = *(unsigned int*) &CLUT[i << 8 | j];
+//				}
+//			}
 
 			SDL_UnlockTexture(m_Txt);
 		}

@@ -297,7 +297,7 @@ void Desktop::Run(void) {
 				- (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
 
 		if (delta >= 1000000.0f) {
-			std::cout << (float) fc * 1000000.0 / delta << std::endl;
+			std::cout << (float) fc * 1000000.0 / delta << " "; //std::endl;
 
 			fc = 0;
 			ts_prev = ts;

@@ -52,7 +52,7 @@ struct Tape {
 	int TrackCount;		// Tracks Count on tape (max=10)
 	struct Track Track[10];
 	int PPCount;		// PreParseed point count
-	struct Preparser PP[1024]; // max screen height (480)
+	struct Preparser PP[1024]; // max screen height (in our case is 480)
 };
 //----------------------------------------------------------------------------
 
