@@ -55,7 +55,7 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 
 	for (int j = 0; j < 256; j++) {
 		for (int i = 0; i < 256; i++) {
-			aTab[i << 8 | j] = (SDL_Color ) {0, 0, 0, 0};
+			aTab[i << 8 | j] = (SDL_Color ) { 0, 0, 0, 0 };
 		}
 	}
 
@@ -300,6 +300,25 @@ void RealTapeScroller::CalcPreparserTable(void) {
 												pp;
 									}
 								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		for (int ch = 0; ch < 32; ch++) {
+			Channel *channel = &m_Channel[ch];
+			for (int track = 0; track < 10; track++) {
+				Track *t = &m_Tape.Track[track];
+				if (t->ShowIt) {
+					for (int ich = 0; ich < 4; ich++) {
+						if (t->Channel[ich] == channel) {
+							for (int n = 0; n < channel->DataSize; n++) {
+								int n_top = t->TrackTop
+										+ (float) n / (float) channel->DataSize
+												* (float) t->RealHeight;
+								m_Index[channel->DataIndex + n] = &m_Tape.PP[n_top];
 							}
 						}
 					}
