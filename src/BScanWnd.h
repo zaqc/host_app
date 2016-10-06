@@ -27,7 +27,7 @@ struct Channel {
 struct Track {
 	bool ShowIt;		// show this track on tape
 	int Side;			// 1-left 2-right
-	int DefaultHeight;	// Real height of track (default value is 128 tick's)
+	int DefaultHeight;	// Default height of track (default value is 128 tick's)
 	int RealHeight;		// Real height of Track on Tape (calculate at real time)
 	int TrackTop;		// Y position of Track on Tape
 	int MinTrackHeight;	// Minimal track height (default 8 pixels)
@@ -41,18 +41,18 @@ struct Preparser {
 	int Value1;
 	int Index1;
 	int Value2;
-	int Index2;
+	int Index2;			// ? do not use it maybe
 	int Y;				// tape vertical position
-	int H;				// from 1 to N (depends of height zoom)
-	Preparser *Next;// next item if it used for channel more than once (usually NULL)
+	int H;				// from 1 to N (depends of h-zoom, more then one if real height greater defaults)
+	Preparser *Next;	// next item if it used for channel more than once (usually NULL)
 };
 
 struct Tape {
-	SDL_Color BkColor;	// Color of track dividers
-	int TrackCount;		// Tracks Count on tape (max=10)
+	SDL_Color BkColor;			// Color of track dividers
+	int TrackCount;				// Tracks Count on tape (max=10)
 	struct Track Track[10];
-	int PPCount;		// PreParseed point count
-	struct Preparser PP[1024]; // max screen height (in our case is 480)
+	int PPCount;				// PreParseed point count
+	struct Preparser PP[1024];	// max screen height (in our case is 480)
 };
 //----------------------------------------------------------------------------
 
