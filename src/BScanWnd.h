@@ -31,52 +31,25 @@ struct Track {
 	int RealHeight;		// Real height of Track on Tape (calculate at real time)
 	int TrackTop;		// Y position of Track on Tape
 	int MinTrackHeight;	// Minimal track height (default 8 pixels)
-	bool AutoHeight;	// Auto Calculate track height
+	bool AutoHeight;	// Auto Calculate or Fixed track height
 	struct Channel *Channel[4];		// Channel number
 };
 
-struct Preparser {
+struct ScreenOut {
 	bool UseIt;			// use data from this channel for draw or not
 	bool FirstUse;		// use this TapePoint in first time (clear data if true)
-	int Value1;
-	int Index1;
-	int Value2;
-	int Index2;			// ? do not use it maybe
-	int Y;				// tape vertical position
-	int H;				// from 1 to N (depends of h-zoom, more then one if real height greater defaults)
-	Preparser *Next;	// next item if it used for channel more than once (usually NULL)
-};
-
-struct Tape {
-	SDL_Color BkColor;			// Color of track dividers
-	int TrackCount;				// Tracks Count on tape (max=10)
-	struct Track Track[10];
-	int PPCount;				// PreParseed point count
-	struct Preparser PP[1024];	// max screen height (in our case is 480)
+	int Value1;			// Maximum Value
+	int Value2;			// Value equal or less then Value1
+	int Index;			// Color Index of Value1 (maximum value)
+	int Y;				// tape vertical position (use for draw)
+	int H;// from 1 to N (depends of h-zoom, more then one if real height greater defaults)
 };
 //----------------------------------------------------------------------------
 
-#define MAX_GEN_LINE	256
-
-struct LineGenStruct {
-	float DX;
-	float CurX;
-	int YCount;
-	int YMaxCount;
-	bool Valid;
-};
-
-class DataGenerator {
-protected:
-	std::vector<LineGenStruct> m_Gen;
-	unsigned char m_OutData[4096];
-public:
-	DataGenerator();
-	virtual ~DataGenerator();
-
-	unsigned char *GetData(void);
-};
-//----------------------------------------------------------------------------
+#define MAX_CHANNEL_COUNT	32
+#define	MAX_TRACK_COUNT		10
+#define	MAX_TAPE_HEIGHT		1024
+#define	MAX_DATA_SIZE		4096
 
 class RealTapeScroller {
 protected:
@@ -85,11 +58,12 @@ protected:
 	int m_W;
 	int m_H;
 
-	Channel m_Channel[32];
-	Tape m_Tape;
-	Preparser *m_Index[4096];	// for each channel data point
+	Channel m_Channel[MAX_CHANNEL_COUNT];
+	Track m_Track[MAX_TRACK_COUNT];
+	ScreenOut m_SO[MAX_TAPE_HEIGHT];
+	ScreenOut *m_Index[MAX_DATA_SIZE];	// for each Data element
 
-	DataGenerator *m_DataGenerator;
+	class DataGenerator *m_DataGenerator;
 	SDL_Texture *m_Txt;
 public:
 	RealTapeScroller(int aW, int aH);
@@ -120,6 +94,31 @@ public:
 	virtual void Done(void);
 
 	virtual void PaintWindow(void);
+};
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+//	Test routines stuff
+//----------------------------------------------------------------------------
+#define MAX_GEN_LINE	256
+
+struct LineGenStruct {
+	float DX;
+	float CurX;
+	int YCount;
+	int YMaxCount;
+	bool Valid;
+};
+
+class DataGenerator {
+protected:
+	std::vector<LineGenStruct> m_Gen;
+	unsigned char m_OutData[4096];
+public:
+	DataGenerator();
+	virtual ~DataGenerator();
+
+	unsigned char *GetData(void);
 };
 //----------------------------------------------------------------------------
 

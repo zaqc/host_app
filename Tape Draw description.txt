@@ -1,0 +1,35 @@
+Lookup Color Table
+	Color1 - Maximum value of tracks channels (each channel has own color for draw from LUC table [256x256])
+	Color2 - Value of channel that has value less or equal of channel with Color1
+	Index - Index of channel that has is maximum value(index of LUCT)
+	
+each element of data (get it by GetData() function) linked with output screen array
+is two case (various of vertical zoom)
+1. one element of data appropriate of one or more point of screen array
+2. in one point of screen appropriate of one or more element of data
+	
+for each iteration of data array
+1. Take data value (Value)
+2. Compare it with ScreenOut item
+3. If Value greate then Color1 then Color2 <= Color1; Color1 <= Value; Index <= Index Of Value
+
+for output data to screen
+1. Take value from LUCT[Index] [Color1 + Color2 << 8]
+2. Draw to screen
+
+Show surface on screen
+Surface One + Surface Two
+size like a screen
+
+  +------+ <- Visible part
+  v      v
++-----++-----+
+|     ||     |
++-----++-----+
+         ^
+         | <- Current position for draw data
+
+when current drawing position arrive a right margin of second buffer
+the buffers are swap vice versa around
+first buffer contains picture for full screen
+second buffer is empty and ready for draw
