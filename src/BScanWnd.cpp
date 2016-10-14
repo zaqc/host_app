@@ -202,8 +202,10 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 			m_Track[i].MinTrackHeight = 16;
 			m_Track[i].Side = i < 3 ? 1 : 2;
 			m_Track[i].TrackTop = i * 10;
-			for (int ch = 0; ch < 4; ch++)
+			for (int ch = 0; ch < 4; ch++) {
 				m_Track[i].Channel[ch] = &m_Channel[i * 4 + ch];
+				m_Track[i].Channel[ch]->ColorIndex = ch;
+			}
 		} else {
 			m_Track[i].ShowIt = false;
 		}
@@ -367,7 +369,7 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 		}
 	}
 
-	int step = 10;
+	int step = 2;
 
 	if (NULL != m_Txt) {
 		SDL_Rect r = { 0, 0, m_W, m_H };
@@ -391,9 +393,11 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 				PrepareDrawBuffer();
 
 				pptr = (unsigned char*) p;
-				for(int i = 0; i < m_H; i++){
-					if(m_SO[i].UseIt){
-						memset(pptr + m_W * 4 - (step - n) * 4, m_SO[i].Value1, 4);
+				for (int i = 0; i < m_H; i++) {
+					if (m_SO[i].UseIt) {
+						SDL_Color c = CLUT[(m_SO[i].Value1 << 8)
+								| (m_SO[i].Value2) | (m_SO[i].Index << 16)];
+						*(SDL_Color*) (pptr + m_W * 4 - (step - n) * 4) = c;
 					}
 					pptr += pitch;
 				}
@@ -420,7 +424,7 @@ void RealTapeScroller::PrepareDrawBuffer(void) {
 		m_SO[i].Index = 0;
 	}
 
-	int m_Zoom = 4;	//TODO:	export it to header
+	int m_Zoom = 8;	//TODO:	export it to header
 	for (int zoom = 0; zoom < m_Zoom; zoom++) {
 		unsigned char *buf = GetData();
 		ScreenOut **pp = m_Index;
