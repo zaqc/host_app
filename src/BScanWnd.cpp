@@ -261,9 +261,9 @@ void RealTapeScroller::CalcPreparserTable(void) {
 	for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 		if (t->ShowIt) {
 			if (t->AutoHeight)
-				stretch_space += t->DefaultHeight;
+				stretch_space += t->DefaultHeight + 1;	//TODO: add track bevel (1 line)
 			else {
-				fixed_space += t->DefaultHeight;
+				fixed_space += t->DefaultHeight + 1;
 				min_stretch_space += t->MinTrackHeight;
 			}
 		}
@@ -283,7 +283,7 @@ void RealTapeScroller::CalcPreparserTable(void) {
 		ScreenOut *pso = m_SO;
 		for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 			if (t->ShowIt) {
-				if (t->AutoHeight)
+				if (t->AutoHeight) //TODO: add more code for fixed size track & track greate then channel DefaultHeight (where pso->H > 1)
 					t->RealHeight = (float) t->DefaultHeight
 							/ (float) (stretch_space)
 							* (float) (m_H - fixed_space);
@@ -302,7 +302,7 @@ void RealTapeScroller::CalcPreparserTable(void) {
 				}
 
 				t->TrackTop = track_top;
-				track_top += t->RealHeight;
+				track_top += t->RealHeight + 1;
 			}
 			t++;
 		}
@@ -369,7 +369,7 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 		}
 	}
 
-	int step = 2;
+	int step = 4;
 
 	if (NULL != m_Txt) {
 		SDL_Rect r = { 0, 0, m_W, m_H };
@@ -394,10 +394,13 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 
 				pptr = (unsigned char*) p;
 				for (int i = 0; i < m_H; i++) {
-					if (m_SO[i].UseIt) {
+					if (m_SO[i].UseIt && m_SO[i].Index >= 0) {
 						SDL_Color c = CLUT[(m_SO[i].Value1 << 8)
 								| (m_SO[i].Value2) | (m_SO[i].Index << 16)];
 						*(SDL_Color*) (pptr + m_W * 4 - (step - n) * 4) = c;
+					} else {
+						*(SDL_Color*) (pptr + m_W * 4 - (step - n) * 4) =
+								(SDL_Color ) { 255, 255, 255, 255 };
 					}
 					pptr += pitch;
 				}
@@ -421,7 +424,7 @@ void RealTapeScroller::PrepareDrawBuffer(void) {
 	for (int i = 0; i < MAX_TAPE_HEIGHT; i++) {
 		m_SO[i].Value1 = 0;
 		m_SO[i].Value2 = 0;
-		m_SO[i].Index = 0;
+		m_SO[i].Index = -1;
 	}
 
 	int m_Zoom = 8;	//TODO:	export it to header
@@ -436,13 +439,18 @@ void RealTapeScroller::PrepareDrawBuffer(void) {
 					int val = *pbuf;
 					ScreenOut *p = m_Index[ch->DataIndex + i];
 					if (NULL != p) {
-						if (p->Value1 < val) {
-							p->Value2 = p->Value1;
-							p->Value1 = val;
-							p->Index = ch->ColorIndex;
+						if (ch->ColorIndex != p->Index) {
+							if (p->Value1 < val) {
+								p->Value2 = p->Value1;
+								p->Value1 = val;
+								p->Index = ch->ColorIndex;
+							} else {
+								if (p->Value2 < val)
+									p->Value2 = val;
+							}
 						} else {
-							if (p->Value2 < val)
-								p->Value2 = val;
+							if (p->Value1 < val)
+								p->Value1 = val;
 						}
 					}
 					pbuf++;
