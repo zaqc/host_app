@@ -32,7 +32,7 @@ struct Track {
 	int TrackTop;		// Y position of Track on Tape
 	int MinTrackHeight;	// Minimal track height (default 8 pixels)
 	bool AutoHeight;	// Auto Calculate or Fixed track height
-	struct Channel *Channel[4];		// Channel number
+	struct Channel *Channel[4];	// Channel number
 };
 
 struct ScreenOut {

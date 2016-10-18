@@ -224,7 +224,7 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 	SDL_Color c3 = { 255, 0, 255, 255 }; // fuchsia
 	SDL_Color c4 = { 0, 255, 0, 255 }; // lime
 	SDL_Color xx = { 255, 0, 0, 255 }; // red
-	SDL_Color bg = { 0, 0, 0, 255 }; // black
+	SDL_Color bg = { 0, 0, 128, 255 }; // black
 	InitCLUT(CLUT, c1, ww, xx, bg);
 	InitCLUT(CLUT + 256 * 256, c2, ww, xx, bg);
 	InitCLUT(CLUT + 256 * 256 * 2, c3, ww, xx, bg);
@@ -261,7 +261,7 @@ void RealTapeScroller::CalcPreparserTable(void) {
 	for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 		if (t->ShowIt) {
 			if (t->AutoHeight)
-				stretch_space += t->DefaultHeight + 1;	//TODO: add track bevel (1 line)
+				stretch_space += t->DefaultHeight + 1; //TODO: add track bevel (1 line)
 			else {
 				fixed_space += t->DefaultHeight + 1;
 				min_stretch_space += t->MinTrackHeight;
@@ -271,6 +271,10 @@ void RealTapeScroller::CalcPreparserTable(void) {
 	}
 
 	// clear Preparser table & Index table
+
+	for (int i = 0; i < MAX_TAPE_HEIGHT; i++) {
+		m_SO[i].UseIt = false;
+	}
 
 	for (int i = 0; i < MAX_DATA_SIZE; i++) {
 		m_Index[i] = NULL;
@@ -393,16 +397,21 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 				PrepareDrawBuffer();
 
 				pptr = (unsigned char*) p;
-				for (int i = 0; i < m_H; i++) {
-					if (m_SO[i].UseIt && m_SO[i].Index >= 0) {
-						SDL_Color c = CLUT[(m_SO[i].Value1 << 8)
-								| (m_SO[i].Value2) | (m_SO[i].Index << 16)];
-						*(SDL_Color*) (pptr + m_W * 4 - (step - n) * 4) = c;
-					} else {
-						*(SDL_Color*) (pptr + m_W * 4 - (step - n) * 4) =
-								(SDL_Color ) { 255, 255, 255, 255 };
+				ScreenOut *so = m_SO;
+				while (so->UseIt) {
+					if (so->Y >= 0 && so->Y < m_H) {
+						if (so->Index >= 0) {
+							SDL_Color c = CLUT[(so->Value1 << 8) | (so->Value2)
+									| (so->Index << 16)];
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
+									- (step - n) * 4) = c;
+						} else {
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
+									- (step - n) * 4) = (SDL_Color ) { 0, 0, 0,
+											255 };
+						}
 					}
-					pptr += pitch;
+					so++;
 				}
 			}
 
@@ -440,7 +449,7 @@ void RealTapeScroller::PrepareDrawBuffer(void) {
 					ScreenOut *p = m_Index[ch->DataIndex + i];
 					if (NULL != p) {
 						if (ch->ColorIndex != p->Index) {
-							if (p->Value1 < val) {
+							if (p->Value1 <= val) {
 								p->Value2 = p->Value1;
 								p->Value1 = val;
 								p->Index = ch->ColorIndex;
