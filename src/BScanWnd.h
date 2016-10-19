@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------------
 
 #include "Window.h"
+#include <libxml/parser.h>
 //----------------------------------------------------------------------------
 
 struct ColorMap {
@@ -43,6 +44,15 @@ struct ScreenOut {
 	int Index;			// Color Index of Value1 (maximum value)
 	int Y;				// tape vertical position (use for draw)
 	int H;// from 1 to N (depends of h-zoom, more then one if real height greater defaults)
+};
+//----------------------------------------------------------------------------
+
+class TapeConfig {
+public:
+	TapeConfig();
+	virtual ~TapeConfig();
+
+	void LoadConfig();
 };
 //----------------------------------------------------------------------------
 
