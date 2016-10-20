@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<tape bk_color="0x001000FF">
+		<track number="0" default_height="128" min_height="16" auto_size="true" show_it="true">
+			<channel number="0"></channel>
+			<channel number="1"></channel>
+			<channel number="2"></channel>
+			<channel number="3"></channel>
+		</track>
+	</tape>
+</root>

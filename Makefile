@@ -1,8 +1,6 @@
-TARGET=host_app
-CFLAGS=-g3 -Wall -I src/
-PKG_NAME=pkg-config sdl2 SDL2_ttf libxml-2.0 SDL2_gfx
-#PKG=$(shell pkg-config sdl2 SDL2_ttf libxml-2.0 SDL2_gfx --cflags)
-#LNK=$(shell pkg-config sdl2 SDL2_ttf libxml-2.0 SDL2_gfx --libs)
+TARGET := host_app
+CFLAGS := -g3 -Wall -I src/
+PKG_NAME := pkg-config sdl2 SDL2_ttf libxml-2.0 SDL2_gfx
 
 #OBJ = main.o obj/TrackBar.o obj/Label.o obj/Button.o obj/Window.o obj/AScanWnd.o obj/BScanWnd.o obj/Desktop.o
 
@@ -16,12 +14,11 @@ all: $(TARGET)
 
 #$(OBJ) : $(SRC) $(HDR)
 obj/%.o : src/%.cpp $(HDR)
-	@echo Compile $<
 	g++ -c $< -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
 #	g++ -c $(patsubst obj/%.o,src/%.cpp,$@) -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
 
 %.o : %.cpp $(HDR)
-	@echo Compile $<
+	@echo Compile Project [$(TARGET)]...
 	g++ -c $< -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
 	
 #	
@@ -46,7 +43,7 @@ obj/%.o : src/%.cpp $(HDR)
 #obj/Desktop.o: src/Desktop.cpp src/Desktop.h
 #	g++ -c src/Desktop.cpp -o obj/Desktop.o $(CFLAGS) $(shell $(PKG_NAME) --cflags)
 	
-$(TARGET): $(OBJ) main.o
+$(TARGET): $(OBJ)
 	@echo Linking project...
 	g++ -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs)
 	

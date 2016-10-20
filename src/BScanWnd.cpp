@@ -7,6 +7,10 @@
 
 #include <iostream>
 
+#include <stdio.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 #include "BScanWnd.h"
 #include "Window.h"
 //----------------------------------------------------------------------------
@@ -72,11 +76,49 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 }
 
 //============================================================================
+//	XML Routine
+//============================================================================
+
+void print_node(xmlNode *aNode) {
+	xmlNode *p = aNode;
+	while (NULL != p) {
+		std::cout << "ELEMENT name: " << p->name << " type:" << p->type
+				<< std::endl;
+
+		if (p->type == XML_ELEMENT_NODE) {
+			xmlAttr *attr = p->properties;
+			while (NULL != attr) {
+				std::cout << "ATTR name:" << attr->name << " type" << attr->type << std::endl;
+				if(attr->children && attr->children->content)
+					std::cout << attr->children->content << std::endl;
+				attr = attr->next;
+			}
+		}
+		print_node(p->children);
+		p = p->next;
+	}
+
+}
+
+//============================================================================
 //	BScanWnd
 //============================================================================
 BScanWnd::BScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
 	m_RTS = NULL;
+
+	xmlDoc *doc;
+	xmlNode *root;
+	doc = xmlReadFile("default_tape_config.xml", NULL, 0);
+	if (NULL != doc) {
+		root = xmlDocGetRootElement(doc);
+		xmlNode *p = root;
+		print_node(p);
+
+		xmlFreeDoc(doc);
+	}
+
+	xmlCleanupParser();
 }
 //----------------------------------------------------------------------------
 
