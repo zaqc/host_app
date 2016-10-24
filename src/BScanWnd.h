@@ -11,6 +11,8 @@
 
 #include "Window.h"
 #include <libxml/parser.h>
+
+#include <vector>
 //----------------------------------------------------------------------------
 
 struct ColorMap {
@@ -18,41 +20,58 @@ struct ColorMap {
 };
 
 struct Channel {
-	bool UseIt;		// Use this chennel for rendering
-	int ColorIndex;	// Color index
-	int Side;		// Side 1-left 2-right
-	int DataIndex;	// start data in data buffer returned by GetData(void)
-	int DataSize;	// size of channel data (tick count)
+	bool UseIt; // Use this chennel for rendering
+	int Number;
+	int ColorIndex; // Color index
+	int Side; // Side 1-left 2-right
+	int DataIndex; // start data in data buffer returned by GetData(void)
+	int DataSize; // size of channel data (tick count)
 };
 
 struct Track {
-	bool ShowIt;		// show this track on tape
-	int Side;			// 1-left 2-right
-	int DefaultHeight;	// Default height of track (default value is 128 tick's)
-	int RealHeight;		// Real height of Track on Tape (calculate at real time)
-	int TrackTop;		// Y position of Track on Tape
-	int MinTrackHeight;	// Minimal track height (default 8 pixels)
-	bool AutoHeight;	// Auto Calculate or Fixed track height
-	struct Channel *Channel[4];	// Channel number
+	bool ShowIt; // show this track on tape
+	int Side; // 1-left 2-right
+	int DefaultHeight; // Default height of track (default value is 128 tick's)
+	int RealHeight; // Real height of Track on Tape (calculate at real time)
+	int TrackTop; // Y position of Track on Tape
+	int MinTrackHeight; // Minimal track height (default 8 pixels)
+	bool AutoHeight; // Auto Calculate or Fixed track height
+	std::vector<struct Channel*> Channel; // Channel number
 };
 
 struct ScreenOut {
-	bool UseIt;			// use data from this channel for draw or not
-	bool FirstUse;		// use this TapePoint in first time (clear data if true)
-	int Value1;			// Maximum Value
-	int Value2;			// Value equal or less then Value1
-	int Index;			// Color Index of Value1 (maximum value)
-	int Y;				// tape vertical position (use for draw)
-	int H;// from 1 to N (depends of h-zoom, more then one if real height greater defaults)
+	bool UseIt; // use data from this channel for draw or not
+	bool FirstUse; // use this TapePoint in first time (clear data if true)
+	int Value1; // Maximum Value
+	int Value2; // Value equal or less then Value1
+	int Index; // Color Index of Value1 (maximum value)
+	int Y; // tape vertical position (use for draw)
+	int H; // from 1 to N (depends of h-zoom, more then one if real height greater defaults)
 };
 //----------------------------------------------------------------------------
 
+enum NodeLevel {
+	nlNone, nlRoot, nlChannel, nlTape, nlTrackOfTape, nlChannelOfTrack
+};
+
 class TapeConfig {
+protected:
+	xmlDoc *m_Doc;
+	xmlNode *m_RootNode;
+
+	Track * m_CurrentTrack;
+
+	std::vector<Channel*> m_Channel;
+	std::vector<Track*> m_Track;
 public:
 	TapeConfig();
 	virtual ~TapeConfig();
 
-	void LoadConfig();
+	Channel *ParseChannel(xmlAttr *aAttr);
+	Track *ParseTrack(xmlAttr *aAttr);
+	void ProcessNode(xmlNode *aNode, NodeLevel aNodeLevel);
+
+	void LoadConfig(void);
 };
 //----------------------------------------------------------------------------
 
@@ -63,15 +82,15 @@ public:
 
 class RealTapeScroller {
 protected:
-	unsigned int *m_FB;		// Frame Buffer
-	unsigned int *m_DB;		// Draw Buffer
+	unsigned int *m_FB; // Frame Buffer
+	unsigned int *m_DB; // Draw Buffer
 	int m_W;
 	int m_H;
 
 	Channel m_Channel[MAX_CHANNEL_COUNT];
 	Track m_Track[MAX_TRACK_COUNT];
 	ScreenOut m_SO[MAX_TAPE_HEIGHT];
-	ScreenOut *m_Index[MAX_DATA_SIZE];	// for each Data element
+	ScreenOut *m_Index[MAX_DATA_SIZE]; // for each Data element
 
 	class DataGenerator *m_DataGenerator;
 	SDL_Texture *m_Txt;

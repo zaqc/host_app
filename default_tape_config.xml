@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <root>
+	<layer>
+		<item value="0" name="none"/>
+		<item value="1" name="head"/>
+		<item value="2" name="web"/>
+		<item value="3" name="foot"/>
+	</layer>
+	
+	<direction>
+		<item value="0" name="none"/>
+		<item value="1" name="forward"/>
+		<item value="2" name="backward"/>
+		<item value="3" name="straight"/>
+	</direction>
+
+	<channel>
+		<item number="0" data_offset="0" data_size="128" direction="1" angle="58" rotate="34" work_edge="true"/>
+		<item number="1" data_offset="128" data_size="128" direction="1" angle="58" rotate="34" work_edge="false"/>
+		<item number="2" data_offset="256" data_size="128" direction="2" angle="58" rotate="34" work_edge="true"/>
+		<item number="3" data_offset="384" data_size="128" direction="2" angle="58" rotate="34" work_edge="false"/>
+	</channel>
+	
 	<tape bk_color="0x001000FF">
 		<track number="0" default_height="128" min_height="16" auto_size="true" show_it="true">
-			<channel number="0"></channel>
-			<channel number="1"></channel>
-			<channel number="2"></channel>
-			<channel number="3"></channel>
+			<channel number="0"/>
+			<channel number="1"/>
+		</track>
+		<track number="1" default_height="128" min_height="16" auto_size="true" show_it="true">
+			<channel number="2"/>
+			<channel number="3"/>
 		</track>
 	</tape>
 </root>
