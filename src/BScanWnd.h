@@ -20,12 +20,27 @@ struct ColorMap {
 };
 
 struct Channel {
-	bool UseIt; // Use this chennel for rendering
+	bool UseIt; // Use this channel for rendering
+
 	int Number;
 	int ColorIndex; // Color index
 	int Side; // Side 1-left 2-right
 	int DataIndex; // start data in data buffer returned by GetData(void)
 	int DataSize; // size of channel data (tick count)
+
+	int Delay; // Delay after probing signal before start ADC in nSec
+	int PhyDelay; // Delay in prism nSec
+	int TickTime; // Time of one ADC tick in nSec
+	int TickCount; // Count of ADC tick in one data item
+
+	int Angle; // Input angle
+	int Rotate; // Probe rotate
+	bool WorkEdge; // Rotate to working edge or not
+
+	int Shift; // Offset from ski central axis
+	int Direction; // Direction of UltraSonic emission (Forward, Backward of Straight)
+
+	int TxRx; // Transmitter, Receiver or both
 };
 
 struct Track {
@@ -59,7 +74,7 @@ protected:
 	xmlDoc *m_Doc;
 	xmlNode *m_RootNode;
 
-	Track * m_CurrentTrack;
+	Track *m_CurrentTrack;
 
 	std::vector<Channel*> m_Channel;
 	std::vector<Track*> m_Track;
