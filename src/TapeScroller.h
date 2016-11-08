@@ -16,11 +16,17 @@ protected:
 	int m_Position;
 	SDL_Texture *m_T1;
 	SDL_Texture *m_T2;
+	int m_W;
+	int m_H;
 public:
-	TapeScroller();
+	TapeScroller(SDL_Renderer *aRnd, int aW, int aH);
 	virtual ~TapeScroller();
 
+	virtual void PaintTape(SDL_Texture *aT, int aX, int aW);
 
+	void ScrollTo(int aDX);
+
+	void Flip(SDL_Renderer *aRnd);
 };
 //----------------------------------------------------------------------------
 

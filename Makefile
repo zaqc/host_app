@@ -1,20 +1,27 @@
 TARGET := host_app
 CFLAGS := -g3 -Wall -I src/
-PKG_NAME := pkg-config sdl2 SDL2_ttf libxml-2.0 SDL2_gfx
+PKG_NAME := pkg-config libftdi1 sdl2 SDL2_ttf libxml-2.0 SDL2_gfx
 
 #OBJ = main.o obj/TrackBar.o obj/Label.o obj/Button.o obj/Window.o obj/AScanWnd.o obj/BScanWnd.o obj/Desktop.o
 
 SRC := $(wildcard src/*.cpp)
+SRC += $(wildcard src/hw/*.cpp)
 HDR := $(patsubst %.cpp,%.h,$(SRC))
 OBJ := main.o
 OBJ += $(patsubst src/%.cpp,obj/%.o,$(SRC))
 #SRC += main.cpp
 
 all: $(TARGET)
-
+	
 #$(OBJ) : $(SRC) $(HDR)
-obj/%.o : src/%.cpp $(HDR)
+obj/hw/%.o : src/hw/%.cpp $(HDR)
+	@if [ ! -d obj/hw ]; then mkdir obj/hw; fi
 	g++ -c $< -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
+	
+obj/%.o : src/%.cpp $(HDR)
+	@if [ ! -d obj ]; then mkdir obj; fi
+	g++ -c $< -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
+
 #	g++ -c $(patsubst obj/%.o,src/%.cpp,$@) -o $@ $(CFLAGS) $(shell $(PKG_NAME) --cflags)
 
 %.o : %.cpp $(HDR)
@@ -45,7 +52,7 @@ obj/%.o : src/%.cpp $(HDR)
 	
 $(TARGET): $(OBJ)
 	@echo Linking project...
-	g++ -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs)
+	g++ -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs) -lpthread
 	
 clean:
-	rm -f *.o obj/*.o
+	rm -f *.o obj/*.o obj/hw/*.o

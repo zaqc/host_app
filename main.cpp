@@ -25,10 +25,18 @@
 #include "AScanWnd.h"
 #include "Desktop.h"
 
+#include "hw/Transmitter.h"
+
 int main(void) {
 //	int fd = open("/dev/fb0", O_RDWR);
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
+
+
+	Transmitter *tr = new Transmitter();
+	tr->Done();
+	delete tr;
+
 	Desktop *dt = new Desktop();
 	dt->Init();
 	dt->Run();
