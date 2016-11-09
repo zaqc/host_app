@@ -5,6 +5,8 @@
  *      Author: zaqc
  */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <linux/fb.h>
 #include <fcntl.h>
@@ -32,10 +34,12 @@ int main(void) {
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
 
-
 	Transmitter *tr = new Transmitter();
+	tr->Init();
 	tr->Done();
 	delete tr;
+
+	return 0;
 
 	Desktop *dt = new Desktop();
 	dt->Init();
