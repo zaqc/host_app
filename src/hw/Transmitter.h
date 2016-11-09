@@ -8,13 +8,18 @@
 #ifndef TRANSMITTER_H_
 #define TRANSMITTER_H_
 
+#include "StreamLayer.h"
+
 #include <pthread.h>
 
 class Transmitter {
 protected:
-	pthread_t m_RecvThread;
+	int m_Sock;
+	pthread_t m_Thread;
 	pthread_mutex_t m_Lock;
 	bool m_Running;
+
+	StreamLayer *m_SL;
 public:
 	Transmitter();
 	virtual ~Transmitter();

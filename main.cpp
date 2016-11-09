@@ -36,6 +36,9 @@ int main(void) {
 
 	Transmitter *tr = new Transmitter();
 	tr->Init();
+	while (true) {
+		usleep(1000);
+	}
 	tr->Done();
 	delete tr;
 
