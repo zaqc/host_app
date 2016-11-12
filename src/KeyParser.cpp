@@ -7,8 +7,8 @@
 
 #include "KeyParser.h"
 
-KeyParser::KeyParser() :
-		Window(NULL, 0, 0, 0, 0) {
+KeyParser::KeyParser(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
+		Window(aRnd, aX, aY, aW, aH) {
 }
 
 KeyParser::~KeyParser() {

@@ -32,9 +32,19 @@ enum SpecialKey {
 // f3 - VGA - Amp2
 // f4 - VRCLen
 
+enum MainState {
+	msMainMenu, msAScan, msBScan
+};
+
+class GlobalState {
+protected:
+	MainState m_MainState;
+	bool m_ShowMenu;
+};
+
 class KeyParser: public Window {
 public:
-	KeyParser();
+	KeyParser(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~KeyParser();
 };
 

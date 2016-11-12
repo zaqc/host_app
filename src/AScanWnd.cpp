@@ -41,42 +41,55 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 	SDL_Rect r = { 0, 0, aW, aH };
 	SDL_RenderFillRect(aRnd, &r);
 
-	setlocale(LC_ALL, "ru_RU.utf8");
+	char *res = setlocale(LC_ALL, "ru_RU.utf8");
+	if (NULL == res) {
+		std::cout << "Can't set ru_RU.utf8 locale...." << std::endl
+				<< "use sudo locale-gen ru_RU" << std::endl
+				<< "use sudo locale-gen ru_RU.UTF-8" << std::endl
+				<< "use sudo update-locale" << std::endl;
+	}
 	char buf[128];
 	memset(buf, 0, 128);
 	wcstombs(buf, aCaption.c_str(), 128);
 
 	SDL_Surface *surf = TTF_RenderUTF8_Blended(aFont, buf, aColor);
 
-	SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
+	if (NULL != surf) {
+		SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
 
-	int sx = 0;
-	int sy = 0;
-	int sw = surf->w;
-	int sh = surf->h;
-	int dx = 0;
-	int dy = 0;
-	int dw = aW;
-	int dh = aH;
-	if (sh > dh) {
-		sy += (sh - dh) / 2;
-		sh = dh;
-	} else if (sh < dh) {
-		dy += (dh - sh) / 2;
-		dh = sh;
+		SDL_FreeSurface(surf);
+
+		if (NULL != txt) {
+
+			int sx = 0;
+			int sy = 0;
+			int sw = surf->w;
+			int sh = surf->h;
+			int dx = 0;
+			int dy = 0;
+			int dw = aW;
+			int dh = aH;
+			if (sh > dh) {
+				sy += (sh - dh) / 2;
+				sh = dh;
+			} else if (sh < dh) {
+				dy += (dh - sh) / 2;
+				dh = sh;
+			}
+
+			if (sw > dw) {
+				sx += (sw - dw) / 2;
+				sw = dw;
+			} else if (sw < dw) {
+				dx += (dw - sw) / 2;
+				dw = sw;
+			}
+
+			SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+			SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+			SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
+		}
 	}
-
-	if (sw > dw) {
-		sx += (sw - dw) / 2;
-		sw = dw;
-	} else if (sw < dw) {
-		dx += (dw - sw) / 2;
-		dw = sw;
-	}
-
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
-	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, save_txt);
 
@@ -156,41 +169,43 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_Surface *surf = TTF_RenderText_Blended(font, m_Caption.c_str(),
 			m_Menu->GetItemColor());
 
-	SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
+	if (NULL != surf) {
+		SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
 
-	int sx = 0;
-	int sy = 0;
-	int sw = surf->w;
-	int sh = surf->h;
-	int dx = 0;
-	int dy = 0;
-	int dw = m_W;
-	int dh = m_H;
-	if (sh > dh) {
-		sy += (sh - dh) / 2;
-		sh = dh;
-	} else if (sh < dh) {
-		dy += (dh - sh) / 2;
-		dh = sh;
+		int sx = 0;
+		int sy = 0;
+		int sw = surf->w;
+		int sh = surf->h;
+		int dx = 0;
+		int dy = 0;
+		int dw = m_W;
+		int dh = m_H;
+		if (sh > dh) {
+			sy += (sh - dh) / 2;
+			sh = dh;
+		} else if (sh < dh) {
+			dy += (dh - sh) / 2;
+			dh = sh;
+		}
+
+		if (sw > dw) {
+			sx += (sw - dw) / 2;
+			sw = dw;
+		} else if (sw < dw) {
+			dx += (dw - sw) / 2;
+			dw = sw;
+		}
+
+		SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+		SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
+		SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
+
+		SDL_DestroyTexture(txt);
+		SDL_FreeSurface(surf);
 	}
-
-	if (sw > dw) {
-		sx += (sw - dw) / 2;
-		sw = dw;
-	} else if (sw < dw) {
-		dx += (dw - sw) / 2;
-		dw = sw;
-	}
-
-	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
-	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
-	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
 	SDL_SetRenderTarget(aRnd, save_txt);
-
-	SDL_DestroyTexture(txt);
-	SDL_FreeSurface(surf);
 }
 
 void MenuItem::Paint(SDL_Renderer *aRnd, int aX, int aY) {
@@ -575,26 +590,27 @@ void AScanWnd::Init(void) {
 	m_BtnQuit = new Button(330, 5, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	m_AScanView = new AScanView(this, 100, 50, 650, 350);
-	AddControl(m_AScanView);
+	m_AScanView = NULL;
+//	m_AScanView = new AScanView(this, 100, 50, 650, 350);
+//	AddControl(m_AScanView);
 
-//	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
-//
-//	Menu *sub_menu = new Menu(110, 110, 420, 340, L"SubMenu", m_MainMenu);
-//	sub_menu->AddMenuItem("Item One", 11);
-//	sub_menu->AddMenuItem("Item Two", 12);
-//	sub_menu->AddMenuItem("Item Three", 13);
-//
-//	m_MainMenu->AddMenuItem("Sub Menu", sub_menu);
-//	m_MainMenu->AddMenuItem("BScan tape", 1);
-//	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
-//	m_MainMenu->AddMenuItem(imi);
-//	m_MainMenu->AddMenuItem("WayMeter tape", 2);
-//	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
-//	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
-//	m_MainMenu->AddMenuItem("Configure", 5);
-//	m_MainMenu->AddMenuItem("Hide menu", 6);
-//	AddControl(m_MainMenu);
+	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
+
+	Menu *sub_menu = new Menu(110, 110, 420, 340, L"SubMenu", m_MainMenu);
+	sub_menu->AddMenuItem("Item One", 11);
+	sub_menu->AddMenuItem("Item Two", 12);
+	sub_menu->AddMenuItem("Item Three", 13);
+
+	m_MainMenu->AddMenuItem("", sub_menu);
+	m_MainMenu->AddMenuItem("BScan tape", 1);
+	IntMenuItem *imi = new IntMenuItem(m_MainMenu, "IncDec Item", 0, 0, 100);
+	m_MainMenu->AddMenuItem(imi);
+	m_MainMenu->AddMenuItem("WayMeter tape", 2);
+	m_MainMenu->AddMenuItem("AScan TuneMaster", 3);
+	m_MainMenu->AddMenuItem("Calibrate WayMeter", 4);
+	m_MainMenu->AddMenuItem("Configure", 5);
+	m_MainMenu->AddMenuItem("Hide menu", 6);
+	AddControl(m_MainMenu);
 }
 
 void AScanWnd::Done(void) {
