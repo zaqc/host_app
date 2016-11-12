@@ -52,11 +52,18 @@ StreamLayer::StreamLayer() {
 	m_Buf = new unsigned char[4096];
 	pthread_mutex_init(&m_Lock, NULL);
 
-	pthread_create(&m_RecvThread, NULL, &stream_layer_recv_thread_proc, this);
+	pthread_mutex_lock(&m_Lock);
+	m_Running = false;
+	if (0
+			== pthread_create(&m_RecvThread, NULL,
+					&stream_layer_recv_thread_proc, this))
+		m_Running = true;
+	pthread_mutex_unlock(&m_Lock);
 }
 //----------------------------------------------------------------------------
 
 StreamLayer::~StreamLayer() {
+	ftdi_usb_close(m_FTDI);
 	pthread_join(m_RecvThread, NULL);
 
 	pthread_mutex_destroy(&m_Lock);
@@ -86,8 +93,12 @@ void StreamLayer::read_buf(unsigned char *buf, int size) {
 	int bc;
 	while (s < size) {
 		bc = ftdi_read_data(m_FTDI, &(buf[s]), size - s);
-		if (bc < 0)
+		if (bc < 0) {
+			pthread_mutex_lock(&m_Lock);
+			m_Running = false;
+			pthread_mutex_unlock(&m_Lock);
 			break;
+		}
 		if (bc == 0)
 			usleep(100);
 		else
@@ -135,6 +146,12 @@ void StreamLayer::RecvThreadProc(void) {
 	while (true) {
 		unsigned char b;
 		unsigned int w;
+
+		pthread_mutex_lock(&m_Lock);
+		bool running = m_Running;
+		pthread_mutex_unlock(&m_Lock);
+		if (!running)
+			break;
 
 		switch (state) {
 		case SS_WAIT_PREAMBLE:
@@ -197,8 +214,6 @@ void StreamLayer::RecvThreadProc(void) {
 			if ((w & 0xFF) == END_FRAME_MARKER) {
 				real_size += (w & 0x0000FF00) >> 8;
 
-				// printf("%i ", real_size);
-
 				pthread_mutex_lock(&m_Lock);
 				memcpy(m_Buf, buf, real_size * 4);
 				m_RealSize = real_size * 4;
@@ -224,7 +239,6 @@ void StreamLayer::RecvThreadProc(void) {
 		case SS_GET_PR_ALL:
 			read_buf(buf, 16);
 			state = SS_GET_MAGIC_WORD;
-			buf[14] = 0x55;
 			for (int i = 0; i < 4; i++) {
 				if (((unsigned int *) buf)[i] != PREAMBLE_ALL)
 					state = SS_ERROR;

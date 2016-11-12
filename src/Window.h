@@ -32,6 +32,10 @@ public:
 		return false;
 	}
 
+	void Invalidate() {
+		m_Invalidate = true;
+	}
+
 	void Hide() {
 		m_Hide = true;
 	}

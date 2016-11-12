@@ -36,19 +36,15 @@ int main(void) {
 
 	Transmitter *tr = new Transmitter();
 	tr->Init();
-	while (true) {
-		usleep(1000);
-	}
-	tr->Done();
-	delete tr;
-
-	return 0;
 
 	Desktop *dt = new Desktop();
 	dt->Init();
 	dt->Run();
 	dt->Done();
 	delete dt;
+
+	tr->Done();
+	delete tr;
 
 	return 0;
 

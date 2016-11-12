@@ -54,6 +54,7 @@ protected:
 
 	unsigned char *m_Buf;
 	int m_RealSize;
+	bool m_Running;
 	pthread_mutex_t m_Lock;
 
 public:

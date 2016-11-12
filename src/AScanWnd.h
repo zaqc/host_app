@@ -198,6 +198,7 @@ protected:
 	Button *m_Button;
 	Button *m_BtnQuit;
 	Menu *m_MainMenu;
+	AScanView *m_AScanView;
 public:
 	AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~AScanWnd();

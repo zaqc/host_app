@@ -12,6 +12,8 @@
 #include "Button.h"
 #include "Window.h"
 
+#include "hw/StreamLayer.h"
+
 #include <SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 
@@ -72,8 +74,8 @@ SDL_Texture *CreateText(SDL_Renderer *aRnd, TTF_Font *aFont,
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderTarget(aRnd, save_txt);
@@ -139,10 +141,10 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_BLEND);
 	SDL_Color c = m_Menu->GetItemBackground();
 	if (m_MouseOver) {
-		c = (SDL_Color ) { 0, 0, 255, 255 };
+		c = (SDL_Color ) {0, 0, 255, 255};
 	}
 	if (m_Focus) {
-		c = (SDL_Color ) { 255, 0, 0, 255 };
+		c = (SDL_Color ) {255, 0, 0, 255};
 	}
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 0);
 	SDL_RenderClear(aRnd);
@@ -180,8 +182,8 @@ void MenuItem::Render(SDL_Renderer *aRnd, int aW, int aH) {
 		dw = sw;
 	}
 
-	SDL_Rect src_rect = (SDL_Rect ) { sx, sy, sw, sh };
-	SDL_Rect dst_rect = (SDL_Rect ) { dx, dy, dw, dh };
+	SDL_Rect src_rect = (SDL_Rect ) {sx, sy, sw, sh};
+	SDL_Rect dst_rect = (SDL_Rect ) {dx, dy, dw, dh};
 	SDL_RenderCopy(aRnd, txt, &src_rect, &dst_rect);
 
 	SDL_SetRenderDrawBlendMode(aRnd, SDL_BLENDMODE_NONE);
@@ -250,8 +252,8 @@ Menu::Menu(int aX, int aY, int aW, int aH, std::wstring aCaption, Menu *aParent)
 	if (NULL == aParent) {
 		m_ItemFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
-		m_ItemColor = (SDL_Color ) { 255, 255, 0, 255 };
-		m_ItemBackground = (SDL_Color ) { 32, 32, 32, 192 };
+		m_ItemColor = (SDL_Color ) {255, 255, 0, 255};
+		m_ItemBackground = (SDL_Color ) {32, 32, 32, 192};
 
 		m_CaptionFont = TTF_OpenFont(
 				"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 18);
@@ -314,7 +316,7 @@ void Menu::CalcMenuRect(void) {
 	menu_height += m_BorderSize * 2;
 	menu_height += m_CaptionHeight;
 	menu_height += m_Items.size() * m_ItemHeight;
-	m_MenuRect = (SDL_Rect ) { 0, 0, m_W, menu_height };
+	m_MenuRect = (SDL_Rect ) {0, 0, m_W, menu_height};
 }
 
 void Menu::AddMenuItem(std::string aCaption, int aID) {
@@ -509,6 +511,8 @@ AScanView::AScanView(Window *aWnd, int aX, int aY, int aW, int aH) :
 AScanView::~AScanView() {
 }
 
+extern StreamLayer *stream_layer;
+
 void AScanView::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
 	SDL_Rect r = { 0, 0, m_W, m_H };
@@ -526,6 +530,20 @@ void AScanView::Render(SDL_Renderer *aRnd) {
 	for (int i = 1; i < tick_count; i++) {
 		int y = (float) m_H / (float) tick_count * (float) i;
 		SDL_RenderDrawLine(aRnd, 1, y, m_W - 1, y);
+	}
+
+	SDL_SetRenderDrawColor(aRnd, 255, 255, 255, 255);
+
+	unsigned char buf[4096];
+	stream_layer->GetLatestData(buf);
+	int prev_val = m_H;
+	int prev_x = 0;
+	for (int i = 0; i < 128; i++) {
+		int x = (int) ((float) i / 128.0f * (float) m_W);
+		int val = m_H - (int) ((float) buf[i] / 255.0f * (float) m_H);
+		SDL_RenderDrawLine(aRnd, prev_x, prev_val, x, val);
+		prev_val = val;
+		prev_x = x;
 	}
 }
 
@@ -548,6 +566,7 @@ void AScanWnd::Init(void) {
 	m_LAmpOne = new Label(10, 35, 64, 24, "Amp1");
 	AddControl(m_LAmpOne);
 	m_TBAmpOne = new TrackBar(10, 60, 64, 340);
+	m_TBAmpOne->SetValue(105, 0, 255);
 	AddControl(m_TBAmpOne);
 
 	m_Button = new Button(200, 5, 120, 40, "MainMenu");
@@ -556,8 +575,8 @@ void AScanWnd::Init(void) {
 	m_BtnQuit = new Button(330, 5, 120, 40, "Quit");
 	AddControl(m_BtnQuit);
 
-	AScanView *v = new AScanView(this, 100, 50, 650, 350);
-	AddControl(v);
+	m_AScanView = new AScanView(this, 100, 50, 650, 350);
+	AddControl(m_AScanView);
 
 //	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
 //
@@ -582,8 +601,16 @@ void AScanWnd::Done(void) {
 }
 
 void AScanWnd::UpdateControls(void) {
+	if (NULL != m_AScanView) {
+		m_AScanView->Invalidate();
+	}
+
 	if (NULL != m_TBAmpOne && NULL != m_LAmpOne) {
 		int val = m_TBAmpOne->GetValue();
+
+		unsigned int cmd = ds_addr(0, 7, 0) | val;
+		stream_layer->SendCommand(cmd, DS_SIDE_LEFT);
+
 		char str[128];
 		sprintf(str, "%idB", val);
 		m_LAmpOne->SetText(std::string(str));

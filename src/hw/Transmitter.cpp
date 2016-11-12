@@ -6,6 +6,7 @@
  */
 
 #include "Transmitter.h"
+#include "StreamLayer.h"
 
 #include <iostream>
 #include <pthread.h>
@@ -17,6 +18,8 @@
 #include <sys/types.h>
 
 #include <unistd.h>
+
+StreamLayer *stream_layer  = NULL;
 
 void * transmitter_thread_proc(void *arg) {
 	((Transmitter*) arg)->RecvThread();
@@ -40,6 +43,8 @@ Transmitter::~Transmitter() {
 
 void Transmitter::Init(void) {
 	m_SL = new StreamLayer();
+
+	stream_layer = m_SL;
 
 	m_Sock = socket(AF_INET, SOCK_DGRAM, 0);
 	std::cout << m_Sock << std::endl;
