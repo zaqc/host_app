@@ -178,65 +178,64 @@ bool Window::ProcessEvent(SDL_Event aEvent) {
 				return true;
 
 			switch (aEvent.type) {
-				case SDL_KEYDOWN:
-					if (NULL != m_ActiveControl
-							&& m_ActiveControl->OnKeyDown(
-									aEvent.key.keysym.scancode))
-						return true;
-					break;
-				case SDL_KEYUP:
-					if (NULL != m_ActiveControl
-							&& m_ActiveControl->OnKeyUp(
-									aEvent.key.keysym.scancode))
-						return true;
-					break;
-				case SDL_MOUSEBUTTONDOWN: {
-					int x = aEvent.button.x - m_X;
-					int y = aEvent.button.y - m_Y;
-					if (cnt->OnMouseDown(aEvent.button.button, x, y))
-						return true;
-					break;
-				}
-				case SDL_MOUSEBUTTONUP: {
-					int x = aEvent.button.x - m_X;
-					int y = aEvent.button.y - m_Y;
-					if (cnt->OnMouseUp(aEvent.button.button, x, y))
-						return true;
-					break;
-				}
-				case SDL_MOUSEMOTION: {
-					int x = aEvent.motion.x - m_X;
-					int y = aEvent.motion.y - m_Y;
-					if (cnt->OnMouseMove(x, y))
-						return true;
-					break;
-				}
+			case SDL_KEYDOWN:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyDown(
+								aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_KEYUP:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyUp(aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_MOUSEBUTTONDOWN: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseDown(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseUp(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEMOTION: {
+				int x = aEvent.motion.x - m_X;
+				int y = aEvent.motion.y - m_Y;
+				if (cnt->OnMouseMove(x, y))
+					return true;
+				break;
+			}
 			}
 		}
 	}
 
 	switch (aEvent.type) {
-		case SDL_MOUSEBUTTONDOWN: {
-			int x = aEvent.button.x - m_X;
-			int y = aEvent.button.y - m_Y;
-			if (OnMouseDown(aEvent.button.button, x, y))
-				return true;
-			break;
-		}
-		case SDL_MOUSEBUTTONUP: {
-			int x = aEvent.button.x - m_X;
-			int y = aEvent.button.y - m_Y;
-			if (OnMouseUp(aEvent.button.button, x, y))
-				return true;
-			break;
-		}
-		case SDL_MOUSEMOTION: {
-			int x = aEvent.motion.x - m_X;
-			int y = aEvent.motion.y - m_Y;
-			if (OnMouseMove(x, y))
-				return true;
-			break;
-		}
+	case SDL_MOUSEBUTTONDOWN: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseDown(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEBUTTONUP: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseUp(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEMOTION: {
+		int x = aEvent.motion.x - m_X;
+		int y = aEvent.motion.y - m_Y;
+		if (OnMouseMove(x, y))
+			return true;
+		break;
+	}
 	}
 
 	return false;

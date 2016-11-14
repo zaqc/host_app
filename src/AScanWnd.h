@@ -179,6 +179,21 @@ public:
 };
 //----------------------------------------------------------------------------
 
+class FormItem: public Control {
+public:
+	FormItem(Window *aWnd, int aX, int aY, int aW, int aH);
+	virtual ~FormItem();
+
+	virtual bool CanFocused(void) {
+		return true;
+	}
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode);
+
+	virtual void Render(SDL_Renderer *aRnd);
+};
+//----------------------------------------------------------------------------
+
 class AScanView: public Control {
 protected:
 	Window *m_Wnd;

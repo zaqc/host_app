@@ -89,32 +89,32 @@ void InfoItem::Render(SDL_Renderer *aRnd) {
 					dh = sh;
 				}
 				switch (m_InfoAlign) {
-					case iaCenter:
-						if (sw > dw) {
-							sx += (sw - dw) / 2;
-							sw = dw;
-						} else if (sw < dw) {
-							dx += (dw - sw) / 2;
-							dw = sw;
-						}
-						break;
+				case iaCenter:
+					if (sw > dw) {
+						sx += (sw - dw) / 2;
+						sw = dw;
+					} else if (sw < dw) {
+						dx += (dw - sw) / 2;
+						dw = sw;
+					}
+					break;
 
-					case iaLeft:
-						if (sw > dw)
-							sw = dw;
-						break;
+				case iaLeft:
+					if (sw > dw)
+						sw = dw;
+					break;
 
-					case iaRight:
-						if (sw > dw)
-							sw = dw;
-						else {
-							dx += dw - sw;
-							dw = sw;
-						}
-						break;
+				case iaRight:
+					if (sw > dw)
+						sw = dw;
+					else {
+						dx += dw - sw;
+						dw = sw;
+					}
+					break;
 
-					default:
-						break;
+				default:
+					break;
 				}
 				SDL_Rect src_rect = { sx, sy, sw, sh };
 				SDL_Rect dst_rect = { dx, dy, dw, dh };
@@ -148,8 +148,8 @@ InfoLine::InfoLine(int aX, int aY, int aW, int aH) {
 	m_H = aH;
 	m_Font = TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
 			20);
-	m_TextColor = (SDL_Color ) { 0, 0, 255, 255 };
-	m_BkColor = (SDL_Color ) { 255, 255, 0, 255 };
+	m_TextColor = (SDL_Color ) {0, 0, 255, 255};
+	m_BkColor = (SDL_Color ) {255, 255, 0, 255};
 }
 //----------------------------------------------------------------------------
 
@@ -210,9 +210,21 @@ Desktop::~Desktop() {
 }
 //----------------------------------------------------------------------------
 
+TTF_Font *g_ItemFont = NULL;
+SDL_Color g_ItemColor;
+SDL_Color g_ItemBackground;
+
 void Desktop::Init(void) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 	TTF_Init();
+
+	g_ItemFont = TTF_OpenFont(
+			"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
+	g_ItemColor = (SDL_Color) {0, 0, 32, 255};
+	g_ItemColor = (SDL_Color) {192, 192, 255, 255};
+
+	m_Wnd = NULL;
+	m_Rnd = NULL;
 	SDL_CreateWindowAndRenderer(800, 480, SDL_WINDOW_BORDERLESS, &m_Wnd,
 			&m_Rnd);
 	SDL_GL_SetSwapInterval(1);
@@ -230,6 +242,21 @@ void Desktop::Init(void) {
 
 	m_ActiveWindow = new AScanWnd(m_Rnd, 0, 30, 800, 450);
 	m_ActiveWindow->Init();
+}
+//----------------------------------------------------------------------------
+
+void Desktop::Done(void) {
+	if (NULL != m_Rnd)
+		SDL_DestroyRenderer(m_Rnd);
+
+	if (NULL != m_Wnd)
+		SDL_DestroyWindow(m_Wnd);
+
+	if (NULL != g_ItemFont)
+		TTF_CloseFont(g_ItemFont);
+
+	TTF_Quit();
+	SDL_Quit();
 }
 //----------------------------------------------------------------------------
 
@@ -304,15 +331,5 @@ void Desktop::Run(void) {
 		}
 		fc++;
 	}
-}
-//----------------------------------------------------------------------------
-
-void Desktop::Done(void) {
-	SDL_DestroyRenderer(m_Rnd);
-	SDL_DestroyWindow(m_Wnd);
-
-	TTF_Quit();
-
-	SDL_Quit();
 }
 //----------------------------------------------------------------------------

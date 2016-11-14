@@ -13,6 +13,9 @@
 #include <queue>
 #include <string>
 #include <vector>
+
+#include <SDL.h>
+#include <SDL_ttf.h>
 //----------------------------------------------------------------------------
 
 enum InfoAlign {
@@ -81,7 +84,7 @@ public:
 
 class Desktop {
 protected:
-	Window *m_ActiveWindow;
+	class Window *m_ActiveWindow;
 	SDL_Renderer *m_Rnd;
 	SDL_Window *m_Wnd;
 
@@ -101,5 +104,10 @@ public:
 	void Run(void);
 	void Done(void);
 };
+
+extern TTF_Font *g_ItemFont;
+extern SDL_Color g_ItemColor;
+extern SDL_Color g_ItemBackground;
+//----------------------------------------------------------------------------
 
 #endif /* DESKTOP_H_ */
