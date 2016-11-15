@@ -25,6 +25,7 @@ Control::Control(int aX, int aY, int aW, int aH) {
 	m_W = aW;
 	m_H = aH;
 	m_Invalidate = true;
+	m_Focused = false;
 	m_Hide = false;
 	m_ControlTexture = NULL;
 	m_ControlTextureWidth = 0;
@@ -138,12 +139,21 @@ void Window::PaintWindow(void) {
 bool Window::ProcessEvent(SDL_Event aEvent) {
 	if (aEvent.type == SDL_KEYDOWN) {
 		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB) {
+			std::vector<Control*>::iterator ii = m_Control.begin();
+			std::vector<Control*>::reverse_iterator ri = m_Control.rbegin();
+			bool ss = (aEvent.key.keysym.mod & KMOD_LSHIFT) == 0;
+
 			int step = 0;
-			for (std::vector<Control*>::iterator i = m_Control.begin();
-					i != m_Control.end(); i++) {
-				Control *ctl = *i;
+			while ((ss && ii != m_Control.end())
+					|| (!ss && ri != m_Control.rend())) {
+				Control *ctl = NULL;
+				if (ss)
+					ctl = *ii;
+				else
+					ctl = *ri;
 				if (NULL == m_ActiveControl) {
 					if (ctl->CanFocused()) {
+						ctl->SetFocused(true);
 						m_ActiveControl = ctl;
 						return true;
 					}
@@ -153,20 +163,113 @@ bool Window::ProcessEvent(SDL_Event aEvent) {
 							step = 1;
 					} else {
 						if (ctl->CanFocused()) {
+							m_ActiveControl->SetFocused(false);
+							ctl->SetFocused(true);
 							m_ActiveControl = ctl;
 							return true;
 						}
 					}
 				}
+				if (ss)
+					++ii;
+				else
+					++ri;
 			}
-			for (std::vector<Control*>::iterator i = m_Control.begin();
-					i != m_Control.end(); i++) {
-				Control *ctl = *i;
+			ii = m_Control.begin();
+			ri = m_Control.rbegin();
+			while ((ss && ii != m_Control.end())
+					|| (!ss && ri != m_Control.rend())) {
+				Control *ctl = NULL;
+				if (ss)
+					ctl = *ii;
+				else
+					ctl = *ri;
 				if (ctl->CanFocused()) {
+					if (NULL != m_ActiveControl)
+						m_ActiveControl->SetFocused(false);
 					m_ActiveControl = ctl;
+					m_ActiveControl->SetFocused(true);
 					return true;
 				}
+				if (ss)
+					++ii;
+				else
+					++ri;
 			}
+
+//			if ((aEvent.key.keysym.mod & KMOD_LSHIFT) == 0) {
+//				int step = 0;
+//				for (std::vector<Control*>::iterator i = m_Control.begin();
+//						i != m_Control.end(); i++) {
+//					Control *ctl = *i;
+//					if (NULL == m_ActiveControl) {
+//						if (ctl->CanFocused()) {
+//							ctl->SetFocused(true);
+//							m_ActiveControl = ctl;
+//							return true;
+//						}
+//					} else {
+//						if (step == 0) {
+//							if (m_ActiveControl == ctl)
+//								step = 1;
+//						} else {
+//							if (ctl->CanFocused()) {
+//								m_ActiveControl->SetFocused(false);
+//								ctl->SetFocused(true);
+//								m_ActiveControl = ctl;
+//								return true;
+//							}
+//						}
+//					}
+//				}
+//				for (std::vector<Control*>::iterator i = m_Control.begin();
+//						i != m_Control.end(); i++) {
+//					Control *ctl = *i;
+//					if (ctl->CanFocused()) {
+//						if (NULL != m_ActiveControl)
+//							m_ActiveControl->SetFocused(false);
+//						m_ActiveControl = ctl;
+//						m_ActiveControl->SetFocused(true);
+//						return true;
+//					}
+//				}
+//			} else {
+//				int step = 0;
+//				for (std::vector<Control*>::reverse_iterator i =
+//						m_Control.rbegin(); i != m_Control.rend(); i++) {
+//					Control *ctl = *i;
+//					if (NULL == m_ActiveControl) {
+//						if (ctl->CanFocused()) {
+//							ctl->SetFocused(true);
+//							m_ActiveControl = ctl;
+//							return true;
+//						}
+//					} else {
+//						if (step == 0) {
+//							if (m_ActiveControl == ctl)
+//								step = 1;
+//						} else {
+//							if (ctl->CanFocused()) {
+//								m_ActiveControl->SetFocused(false);
+//								ctl->SetFocused(true);
+//								m_ActiveControl = ctl;
+//								return true;
+//							}
+//						}
+//					}
+//				}
+//				for (std::vector<Control*>::reverse_iterator i =
+//						m_Control.rbegin(); i != m_Control.rend(); i++) {
+//					Control *ctl = *i;
+//					if (ctl->CanFocused()) {
+//						if (NULL != m_ActiveControl)
+//							m_ActiveControl->SetFocused(false);
+//						m_ActiveControl = ctl;
+//						m_ActiveControl->SetFocused(true);
+//						return true;
+//					}
+//				}
+//			}
 		}
 	}
 

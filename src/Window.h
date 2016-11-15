@@ -27,12 +27,23 @@ protected:
 	int m_Y;
 	int m_W;
 	int m_H;
+	bool m_Focused;
 public:
 	Control(int aX, int aY, int aW, int aH);
 	virtual ~Control();
 
 	virtual bool CanFocused(void) {
 		return false;
+	}
+
+	void SetFocused(bool aFocused) {
+		if (m_Focused != aFocused)
+			m_Invalidate = true;
+		m_Focused = aFocused;
+	}
+
+	bool GetFocused() {
+		return m_Focused;
 	}
 
 	void Invalidate() {

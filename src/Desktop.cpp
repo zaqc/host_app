@@ -221,7 +221,7 @@ void Desktop::Init(void) {
 	g_ItemFont = TTF_OpenFont(
 			"/usr/share/fonts/truetype/freefont/FreeSerif.ttf", 24);
 	g_ItemColor = (SDL_Color) {0, 0, 32, 255};
-	g_ItemColor = (SDL_Color) {192, 192, 255, 255};
+	g_ItemBackground = (SDL_Color) {128, 128, 255, 255};
 
 	m_Wnd = NULL;
 	m_Rnd = NULL;

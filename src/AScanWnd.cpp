@@ -5,6 +5,18 @@
  *      Author: zaqc
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <cwchar>
+#include <string>
+#include <strings.h>
+
+#include <wchar.h>
+
+#include <SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+
 #include "AScanWnd.h"
 
 #include "Label.h"
@@ -14,10 +26,6 @@
 
 #include "hw/StreamLayer.h"
 
-#include <SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-
-#include <iostream>
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -514,18 +522,27 @@ void Menu::Paint(SDL_Renderer *aRnd) {
 //============================================================================
 //	FormItem
 //============================================================================
-FormItem::FormItem(Window *aWnd, int aX, int aY, int aW, int aH) :
+FormItem::FormItem(Window *aWnd, int aX, int aY, int aW, int aH,
+		std::wstring aCaption, std::wstring aUnits, int aValue, int aMin,
+		int aMax) :
 		Control(aX, aY, aW, aH) {
-
+	m_Caption = aCaption;
+	m_Units = aUnits;
+	m_Value = 0;
+	m_Min = 0;
+	m_Max = 96;
 }
+//----------------------------------------------------------------------------
 
 FormItem::~FormItem() {
 
 }
+//----------------------------------------------------------------------------
 
 bool FormItem::OnKeyDown(SDL_Scancode aScanCode) {
 	return false;
 }
+//----------------------------------------------------------------------------
 
 void FormItem::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawColor(aRnd, 0, 0, 0, 255);
@@ -535,19 +552,22 @@ void FormItem::Render(SDL_Renderer *aRnd) {
 	SDL_SetRenderDrawColor(aRnd, 255, 255, 255, 255);
 	SDL_RenderDrawRect(aRnd, &r);
 
-	SDL_SetRenderDrawColor(aRnd, 64, 64, 64, 255);
-	int tick_count = 10;
-	for (int i = 1; i < tick_count; i++) {
-		int x = (float) m_W / (float) tick_count * (float) i;
-		SDL_RenderDrawLine(aRnd, x, 1, x, m_H - 1);
+	wchar_t str[128];
+	std::swprintf(str, 128, L"%ls%i%ls", m_Caption.c_str(), m_Value,
+			m_Units.c_str());
+
+	SDL_Color bk = g_ItemBackground;
+	if (GetFocused()) {
+		bk = (SDL_Color) {192, 192, 192, 255};
 	}
-	for (int i = 1; i < tick_count; i++) {
-		int y = (float) m_H / (float) tick_count * (float) i;
-		SDL_RenderDrawLine(aRnd, 1, y, m_W - 1, y);
-	}
+	SDL_Texture *txt = CreateText(aRnd, g_ItemFont, std::wstring(str), m_W, m_H,
+			g_ItemColor, bk);
+	SDL_Rect dst_rect = { 0, 0, m_W, m_H };
+	SDL_RenderCopy(aRnd, txt, &r, &dst_rect);
 
 	SDL_SetRenderDrawColor(aRnd, 255, 255, 255, 255);
 }
+//----------------------------------------------------------------------------
 
 //============================================================================
 //	AScanWnd
@@ -616,7 +636,7 @@ AScanWnd::~AScanWnd() {
 }
 
 void AScanWnd::Init(void) {
-	m_LAmpOne = new Label(10, 35, 64, 24, "Amp1");
+	m_LAmpOne = new Label(10, 35, 64, 24, L"Amp1");
 	AddControl(m_LAmpOne);
 	m_TBAmpOne = new TrackBar(10, 60, 64, 340);
 	m_TBAmpOne->SetValue(105, 0, 255);
@@ -631,6 +651,13 @@ void AScanWnd::Init(void) {
 	m_AScanView = NULL;
 	m_AScanView = new AScanView(this, 100, 50, 650, 350);
 	AddControl(m_AScanView);
+
+	int fn = 6;
+	for (int i = 0; i < fn; i++) {
+		FormItem *fi = new FormItem(this, 1 + i * 800 / 6, 410, 800 / 6 - 2, 40,
+				L"A1:", L"dB", 0, 0, 96);
+		AddControl(fi);
+	}
 
 //	m_MainMenu = new Menu(100, 50, 420, 380, L"Главное меню", NULL);
 //
@@ -665,9 +692,9 @@ void AScanWnd::UpdateControls(void) {
 		unsigned int cmd = ds_addr(0, 7, 0) | val;
 		stream_layer->SendCommand(cmd, DS_SIDE_LEFT);
 
-		char str[128];
-		sprintf(str, "%idB", val);
-		m_LAmpOne->SetText(std::string(str));
+		wchar_t str[128];
+		swprintf(str, 128, L"%idB", val);
+		m_LAmpOne->SetText(std::wstring(str));
 	}
 
 	if (NULL != m_Button) {

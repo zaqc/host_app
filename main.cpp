@@ -4,7 +4,6 @@
  *  Created on: Sep 12, 2016
  *      Author: zaqc
  */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -14,6 +13,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <locale.h>
+#include <bits/wchar.h>
 
 #include <iostream>
 #include <SDL.h>
@@ -33,6 +34,7 @@ int main(void) {
 //	int fd = open("/dev/fb0", O_RDWR);
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
+
 
 	Transmitter *tr = new Transmitter();
 	tr->Init();
@@ -67,7 +69,7 @@ int main(void) {
 
 	return 0;
 
-	Label *l = new Label(100, 5, 128, 28, "0%");
+	Label *l = new Label(100, 5, 128, 28, L"0%");
 	TrackBar *tb = new TrackBar(20, 20, 64, 400);
 	Button *btn = new Button(100, 40, 120, 40, "Button1");
 
@@ -88,9 +90,9 @@ int main(void) {
 			tb->ProcessEvent(e);
 			btn->ProcessEvent(e);
 			int val = tb->GetValue();
-			char str[128];
-			sprintf(str, "%i", val);
-			l->SetText(std::string(str));
+			wchar_t str[128];
+			swprintf(str, 128, L"%i", val);
+			l->SetText(std::wstring(str));
 		}
 
 		if (quit)
