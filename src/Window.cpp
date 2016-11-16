@@ -138,10 +138,13 @@ void Window::PaintWindow(void) {
 
 bool Window::ProcessEvent(SDL_Event aEvent) {
 	if (aEvent.type == SDL_KEYDOWN) {
-		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB) {
+		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB
+				|| aEvent.key.keysym.scancode == SDL_SCANCODE_LEFT
+				|| aEvent.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
 			std::vector<Control*>::iterator ii = m_Control.begin();
 			std::vector<Control*>::reverse_iterator ri = m_Control.rbegin();
-			bool ss = (aEvent.key.keysym.mod & KMOD_LSHIFT) == 0;
+			bool ss = (aEvent.key.keysym.mod & KMOD_LSHIFT) == 0
+					&& aEvent.key.keysym.scancode != SDL_SCANCODE_LEFT;
 
 			int step = 0;
 			while ((ss && ii != m_Control.end())
@@ -196,80 +199,6 @@ bool Window::ProcessEvent(SDL_Event aEvent) {
 				else
 					++ri;
 			}
-
-//			if ((aEvent.key.keysym.mod & KMOD_LSHIFT) == 0) {
-//				int step = 0;
-//				for (std::vector<Control*>::iterator i = m_Control.begin();
-//						i != m_Control.end(); i++) {
-//					Control *ctl = *i;
-//					if (NULL == m_ActiveControl) {
-//						if (ctl->CanFocused()) {
-//							ctl->SetFocused(true);
-//							m_ActiveControl = ctl;
-//							return true;
-//						}
-//					} else {
-//						if (step == 0) {
-//							if (m_ActiveControl == ctl)
-//								step = 1;
-//						} else {
-//							if (ctl->CanFocused()) {
-//								m_ActiveControl->SetFocused(false);
-//								ctl->SetFocused(true);
-//								m_ActiveControl = ctl;
-//								return true;
-//							}
-//						}
-//					}
-//				}
-//				for (std::vector<Control*>::iterator i = m_Control.begin();
-//						i != m_Control.end(); i++) {
-//					Control *ctl = *i;
-//					if (ctl->CanFocused()) {
-//						if (NULL != m_ActiveControl)
-//							m_ActiveControl->SetFocused(false);
-//						m_ActiveControl = ctl;
-//						m_ActiveControl->SetFocused(true);
-//						return true;
-//					}
-//				}
-//			} else {
-//				int step = 0;
-//				for (std::vector<Control*>::reverse_iterator i =
-//						m_Control.rbegin(); i != m_Control.rend(); i++) {
-//					Control *ctl = *i;
-//					if (NULL == m_ActiveControl) {
-//						if (ctl->CanFocused()) {
-//							ctl->SetFocused(true);
-//							m_ActiveControl = ctl;
-//							return true;
-//						}
-//					} else {
-//						if (step == 0) {
-//							if (m_ActiveControl == ctl)
-//								step = 1;
-//						} else {
-//							if (ctl->CanFocused()) {
-//								m_ActiveControl->SetFocused(false);
-//								ctl->SetFocused(true);
-//								m_ActiveControl = ctl;
-//								return true;
-//							}
-//						}
-//					}
-//				}
-//				for (std::vector<Control*>::reverse_iterator i =
-//						m_Control.rbegin(); i != m_Control.rend(); i++) {
-//					Control *ctl = *i;
-//					if (ctl->CanFocused()) {
-//						if (NULL != m_ActiveControl)
-//							m_ActiveControl->SetFocused(false);
-//						m_ActiveControl = ctl;
-//						m_ActiveControl->SetFocused(true);
-//						return true;
-//					}
-//				}
-//			}
 		}
 	}
 
