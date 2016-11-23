@@ -7,9 +7,9 @@
 
 #include "StreamLayer.h"
 
-#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 #include <unistd.h>
 #include <memory.h>
 #include <sys/types.h>
@@ -26,28 +26,28 @@ void * stream_layer_recv_thread_proc(void *arg) {
 
 StreamLayer::StreamLayer() {
 	if ((m_FTDI = ftdi_new()) == 0) {
-		printf("ftdi_new failed\n");
+		std::cout << "ftdi_new failed" << std::endl;
 		throw "ftdi_new failed";
 	}
 
 	ftdi_set_interface(m_FTDI, INTERFACE_A);
 	int f = ftdi_usb_open(m_FTDI, 0xEDA3, 0x2179); // 0x0403, 0x6010); //
 	if (f < 0 && f != -5) {
-		printf("unable to open ftdi device: %d (%s)\n", f,
-				ftdi_get_error_string(m_FTDI));
+		std::cout << "unable to open ftdi device: " << f
+				<< ftdi_get_error_string(m_FTDI) << std::endl;
 		ftdi_free(m_FTDI);
 		throw "ftdi_new failed";
 	}
-	printf("ftdi open succeeded(channel 1): %d\n", f);
+	std::cout << "ftdi open succeeded(channel 1): " << f << std::endl;
 
 	int res = ftdi_set_bitmode(m_FTDI, 0xFF, BITMODE_SYNCFF);
-	printf("ftdi_set_bitmode res=%i\n", res);
+	std::cout << "ftdi_set_bitmode res=" << res << std::endl;
 
 	res = ftdi_read_data_set_chunksize(m_FTDI, 64 * 1024);
-	printf("ftdi_read_data_set_chunksize res=%i\n", res);
+	std::cout << "ftdi_read_data_set_chunksize res=" << res << std::endl;
 
 	res = ftdi_usb_purge_buffers(m_FTDI);
-	printf("ftdi_usb_purge_buffers res=%i\n", res);
+	std::cout << "ftdi_usb_purge_buffers res=%i\n" << res << std::endl;
 
 	m_Buf = new unsigned char[4096];
 	pthread_mutex_init(&m_Lock, NULL);
