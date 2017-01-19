@@ -3,11 +3,7 @@ To make project
 =======================================================
 
 install some libraries (root privilege is needed):
-sudo apt-get install libsdl2-dev
-sudo apt-get install libsdl2-ttf-dev
-sudo apt-get install libsdl2-gfx-dev
-sudo apt-get install libxml2-dev
-sudo apt-get install libftdi1-dev
+sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-gfx-dev libxml2-dev libftdi1-dev
 
 and just run make:
 make
