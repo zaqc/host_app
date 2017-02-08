@@ -33,26 +33,20 @@ SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
 	int b3 = aC2.b;
 	int b4 = aC2.a;
 
-	unsigned char r = (int) (a1
-			+ (float) (b1 - a1) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char g = (int) (a2
-			+ (float) (b2 - a2) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char b = (int) (a3
-			+ (float) (b3 - a3) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char a = (int) (a4
-			+ (float) (b4 - a4) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char r = (int) (a1 + (float) (b1 - a1) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char g = (int) (a2 + (float) (b2 - a2) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char b = (int) (a3 + (float) (b3 - a3) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char a = (int) (a4 + (float) (b4 - a4) / (float) aMax * (float) aVal) & 0xFF;
 
 	SDL_Color ret = { r, g, b, a };
 	return ret;
 }
 
-void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
-		SDL_Color aBG) {
+void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX, SDL_Color aBG) {
 
 	for (int index = 0; index < 4; index++) {
 		for (int color = 0; color < 256; color += 16) {
-			int ndx = (color << ((index & 1) << 3))
-					+ (((index >> 1) & 1) << 16);
+			int ndx = (color << ((index & 1) << 3)) + (((index >> 1) & 1) << 16);
 			std::cout << ndx << " ";
 		}
 		std::cout << std::endl;
@@ -60,7 +54,7 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 
 	for (int j = 0; j < 256; j++) {
 		for (int i = 0; i < 256; i++) {
-			aTab[i << 8 | j] = (SDL_Color ) {0, 0, 0, 0};
+			aTab[i << 8 | j] = (SDL_Color ) { 0, 0, 0, 0 };
 		}
 	}
 
@@ -69,8 +63,7 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 		aTab[i << 8] = GetMdlColor(aBG, aC1, i, 255);
 		aTab[i] = GetMdlColor(aBG, aC2, i, 255);
 		for (int n = 1; n < i; n++) {
-			aTab[i << 8 | n] = GetMdlColor(aTab[i << 8], aTab[i << 8 | i], n,
-					i);
+			aTab[i << 8 | n] = GetMdlColor(aTab[i << 8], aTab[i << 8 | i], n, i);
 			aTab[n << 8 | i] = GetMdlColor(aTab[i], aTab[i << 8 | i], n, i);
 		}
 	}
@@ -200,13 +193,11 @@ void print_node(xmlNode *aNode) {
 	xmlNode *p = aNode;
 	while (NULL != p) {
 		if (p->type == XML_ELEMENT_NODE) {
-			std::cout << "ELEMENT name: " << p->name << " type:" << p->type
-					<< std::endl;
+			std::cout << "ELEMENT name: " << p->name << " type:" << p->type << std::endl;
 
 			xmlAttr *attr = p->properties;
 			while (NULL != attr) {
-				std::cout << "ATTR name:" << attr->name << " type" << attr->type
-						<< std::endl;
+				std::cout << "ATTR name:" << attr->name << " type" << attr->type << std::endl;
 
 				if (attr->children && attr->children->content)
 					std::cout << attr->children->content << std::endl;
@@ -320,8 +311,7 @@ unsigned char *DataGenerator::GetData(void) {
 		m_Gen.push_back(lgs);
 	}
 
-	for (std::vector<LineGenStruct>::iterator i = m_Gen.begin();
-			i != m_Gen.end(); i++) {
+	for (std::vector<LineGenStruct>::iterator i = m_Gen.begin(); i != m_Gen.end(); i++) {
 		if (i->CurX >= 0 && i->CurX < 4096 && i->YCount < i->YMaxCount) {
 			if (i->YCount >= 0) {
 				m_OutData[(int) i->CurX] = rand() % 256;
@@ -464,9 +454,7 @@ void RealTapeScroller::CalcPreparserTable(void) {
 		for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 			if (t->ShowIt) {
 				if (t->AutoHeight) //TODO: add more code for fixed size track & track greate then channel DefaultHeight (where pso->H > 1)
-					t->RealHeight = (float) t->DefaultHeight
-							/ (float) (stretch_space)
-							* (float) (m_H - fixed_space);
+					t->RealHeight = (float) t->DefaultHeight / (float) (stretch_space) * (float) (m_H - fixed_space);
 				else
 					t->RealHeight = t->DefaultHeight;
 
@@ -495,19 +483,14 @@ void RealTapeScroller::CalcPreparserTable(void) {
 			Track *t = m_Track;
 			for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 				if (t->ShowIt) {
-					for (std::vector<Channel*>::iterator ich =
-							t->Channel.begin(); ich != t->Channel.end();
-							ich++) {
+					for (std::vector<Channel*>::iterator ich = t->Channel.begin(); ich != t->Channel.end(); ich++) {
 						if (*ich == channel) {
 							for (int n = 0; n < channel->DataSize; n++) {
-								int n_top = t->TrackTop
-										+ (float) n / (float) channel->DataSize
-												* (float) t->RealHeight;
+								int n_top = t->TrackTop + (float) n / (float) channel->DataSize * (float) t->RealHeight;
 
 								for (int i = 0; i < MAX_TAPE_HEIGHT; i++) {
 									if (m_SO[i].UseIt && m_SO[i].Y == n_top) {
-										m_Index[channel->DataIndex + n] =
-												&m_SO[i];
+										m_Index[channel->DataIndex + n] = &m_SO[i];
 										break;
 									}
 								}
@@ -536,8 +519,7 @@ unsigned char * RealTapeScroller::GetData(void) {
 
 void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 	if (NULL == m_Txt) {
-		m_Txt = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888,
-				SDL_TEXTUREACCESS_STREAMING, m_W, m_H);
+		m_Txt = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, m_W, m_H);
 		SDL_Rect r = { 0, 0, m_W, m_H };
 		unsigned int *p;
 		int pitch;
@@ -579,14 +561,11 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 				while (so->UseIt) {
 					if (so->Y >= 0 && so->Y < m_H) {
 						if (so->Index >= 0) {
-							SDL_Color c = CLUT[(so->Value1 << 8) | (so->Value2)
-									| (so->Index << 16)];
-							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
-									- (step - n) * 4) = c;
+							SDL_Color c = CLUT[(so->Value1 << 8) | (so->Value2) | (so->Index << 16)];
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4 - (step - n) * 4) = c;
 						} else {
-							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
-									- (step - n) * 4) = (SDL_Color ) {0, 0, 0,
-								255};
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4 - (step - n) * 4) = (SDL_Color ) { 0, 0, 0,
+											255 };
 						}
 					}
 					so++;

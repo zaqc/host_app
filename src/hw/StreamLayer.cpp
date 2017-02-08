@@ -101,8 +101,11 @@ void StreamLayer::read_buf(unsigned char *buf, int size) {
 		}
 		if (bc == 0)
 			usleep(100);
-		else
+		else {
+			for(int i = 0; i < bc; i++)
+				printf("0x%02X ", buf[s + i]);
 			s += bc;
+		}
 	}
 }
 //----------------------------------------------------------------------------
