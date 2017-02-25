@@ -37,6 +37,16 @@ public:
 		return m_Pos;
 	}
 
+	void SetValue(int aPos, int aMin, int aMax) {
+		m_Pos = aPos;
+		m_Min = aMin;
+		m_Max = aMax;
+		if (m_Pos > m_Max)
+			m_Pos = m_Max;
+		if (m_Pos < m_Min)
+			m_Pos = m_Min;
+	}
+
 	virtual bool CanFocused(void) {
 		return true;
 	}

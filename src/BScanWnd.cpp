@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <string.h>
 
 #include <stdio.h>
 #include <libxml/parser.h>
@@ -32,26 +33,20 @@ SDL_Color GetMdlColor(SDL_Color aC1, SDL_Color aC2, int aVal, int aMax) {
 	int b3 = aC2.b;
 	int b4 = aC2.a;
 
-	unsigned char r = (int) (a1
-			+ (float) (b1 - a1) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char g = (int) (a2
-			+ (float) (b2 - a2) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char b = (int) (a3
-			+ (float) (b3 - a3) / (float) aMax * (float) aVal) & 0xFF;
-	unsigned char a = (int) (a4
-			+ (float) (b4 - a4) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char r = (int) (a1 + (float) (b1 - a1) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char g = (int) (a2 + (float) (b2 - a2) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char b = (int) (a3 + (float) (b3 - a3) / (float) aMax * (float) aVal) & 0xFF;
+	unsigned char a = (int) (a4 + (float) (b4 - a4) / (float) aMax * (float) aVal) & 0xFF;
 
 	SDL_Color ret = { r, g, b, a };
 	return ret;
 }
 
-void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
-		SDL_Color aBG) {
+void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX, SDL_Color aBG) {
 
 	for (int index = 0; index < 4; index++) {
 		for (int color = 0; color < 256; color += 16) {
-			int ndx = (color << ((index & 1) << 3))
-					+ (((index >> 1) & 1) << 16);
+			int ndx = (color << ((index & 1) << 3)) + (((index >> 1) & 1) << 16);
 			std::cout << ndx << " ";
 		}
 		std::cout << std::endl;
@@ -68,11 +63,131 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 		aTab[i << 8] = GetMdlColor(aBG, aC1, i, 255);
 		aTab[i] = GetMdlColor(aBG, aC2, i, 255);
 		for (int n = 1; n < i; n++) {
-			aTab[i << 8 | n] = GetMdlColor(aTab[i << 8], aTab[i << 8 | i], n,
-					i);
+			aTab[i << 8 | n] = GetMdlColor(aTab[i << 8], aTab[i << 8 | i], n, i);
 			aTab[n << 8 | i] = GetMdlColor(aTab[i], aTab[i << 8 | i], n, i);
 		}
 	}
+}
+
+//============================================================================
+//	TapeConfig
+//============================================================================
+<<<<<<< HEAD
+void print_node(xmlNode *aNode) {
+=======
+TapeConfig::TapeConfig() {
+	m_CurrentTrack = NULL;
+	m_Doc = xmlReadFile("default_tape_config.xml", NULL, 0);
+	if (NULL != m_Doc) {
+		m_RootNode = xmlDocGetRootElement(m_Doc);
+	}
+}
+
+TapeConfig::~TapeConfig() {
+	if (NULL != m_Doc)
+		xmlFreeDoc(m_Doc);
+
+	xmlCleanupParser();
+}
+
+int StrToInt(xmlChar *str) {
+	return 1;
+}
+
+Channel *TapeConfig::ParseChannel(xmlAttr *aAttr) {
+	Channel *ch = new Channel();
+	for (xmlAttr *attr = aAttr; NULL != attr; attr = attr->next) {
+		if (0 == xmlStrcmp(attr->name, (xmlChar*) "number")) {
+			std::cout << "\t number" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->Number = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "data_offset")) {
+			std::cout << "\t data_offset" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "data_size")) {
+			std::cout << "\t data_size" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "direction")) {
+			std::cout << "\t direction" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "angle")) {
+			std::cout << "\t angle" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "rotate")) {
+			std::cout << "\t rotate" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		} else if (0 == xmlStrcmp(attr->name, (xmlChar*) "work_edge")) {
+			std::cout << "\t work_edge" << std::endl;
+			if (NULL != attr->children && NULL != attr->children->content)
+				ch->DataIndex = StrToInt(attr->children->content);
+		}
+	}
+	return ch;
+}
+
+Track *TapeConfig::ParseTrack(xmlAttr *aAttr) {
+	Track *tr = new Track();
+	return tr;
+}
+
+void TapeConfig::ProcessNode(xmlNode *aNode, NodeLevel aNodeLevel) {
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
+	xmlNode *p = aNode;
+	while (NULL != p) {
+		if (p->type == XML_ELEMENT_NODE) {
+			switch (aNodeLevel) {
+			case nlNone:
+				if (0 == xmlStrcmp(p->name, (xmlChar*) "root"))
+					ProcessNode(p->children, nlRoot);
+				break;
+
+			case nlRoot:
+				if (0 == xmlStrcmp(p->name, (xmlChar*) "channel"))
+					ProcessNode(p->children, nlChannel);
+				else if (0 == xmlStrcmp(p->name, (xmlChar*) "tape"))
+					ProcessNode(p->children, nlTape);
+				break;
+
+			case nlChannel:
+				if (0 == xmlStrcmp(p->name, (xmlChar*) "item")) {
+					std::cout << "Process Channel Item" << std::endl;
+					if (NULL != p->properties) {
+						Channel *ch = ParseChannel(p->properties);
+						m_Channel.push_back(ch);
+					}
+				}
+				break;
+
+			case nlTape:
+				if (0 == xmlStrcmp(p->name, (xmlChar*) "track")) {
+					std::cout << "Process Track Of Tape Item" << std::endl;
+					m_CurrentTrack = ParseTrack(p->properties);
+					ProcessNode(p->children, nlChannelOfTrack);
+				}
+				break;
+
+			case nlChannelOfTrack:
+				if (0 == xmlStrcmp(p->name, (xmlChar*) "channel")) {
+					std::cout << "Process Channel Of Track Item" << std::endl;
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		p = p->next;
+	}
+}
+
+void TapeConfig::LoadConfig(void) {
+	ProcessNode(m_RootNode, nlNone);
 }
 
 //============================================================================
@@ -81,22 +196,39 @@ void InitCLUT(SDL_Color *aTab, SDL_Color aC1, SDL_Color aC2, SDL_Color aXX,
 void print_node(xmlNode *aNode) {
 	xmlNode *p = aNode;
 	while (NULL != p) {
-		std::cout << "ELEMENT name: " << p->name << " type:" << p->type
-				<< std::endl;
-
 		if (p->type == XML_ELEMENT_NODE) {
+			std::cout << "ELEMENT name: " << p->name << " type:" << p->type << std::endl;
+
 			xmlAttr *attr = p->properties;
 			while (NULL != attr) {
+<<<<<<< HEAD
 				std::cout << "ATTR name:" << attr->name << " type" << attr->type
 						<< std::endl;
+=======
+				std::cout << "ATTR name:" << attr->name << " type" << attr->type << std::endl;
+
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 				if (attr->children && attr->children->content)
 					std::cout << attr->children->content << std::endl;
 				attr = attr->next;
 			}
+
+			if (0 == xmlStrcmp(p->name, (xmlChar*) "root"))
+				print_node(p->children);
+			else if (0 == xmlStrcmp(p->name, (xmlChar*) "tape")) {
+				std::cout << "---=== TAPE ===---" << std::endl;
+				print_node(p->children);
+			} else if (0 == xmlStrcmp(p->name, (xmlChar*) "track")) {
+				std::cout << "-= Track =-" << std::endl;
+				print_node(p->children);
+			} else {
+				std::cout << "p->name = " << p->name << std::endl;
+			}
 		}
-		print_node(p->children);
+
 		p = p->next;
 	}
+<<<<<<< HEAD
 }
 
 //============================================================================
@@ -114,6 +246,8 @@ TapeConfig::~TapeConfig() {
 		xmlFreeDoc(m_Doc);
 
 	xmlCleanupParser();
+=======
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 }
 //----------------------------------------------------------------------------
 
@@ -165,18 +299,22 @@ BScanWnd::BScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH) :
 		Window(aRnd, aX, aY, aW, aH) {
 	m_RTS = NULL;
 
-	xmlDoc *doc;
-	xmlNode *root;
-	doc = xmlReadFile("default_tape_config.xml", NULL, 0);
-	if (NULL != doc) {
-		root = xmlDocGetRootElement(doc);
-		xmlNode *p = root;
-		print_node(p);
+	TapeConfig *tc = new TapeConfig();
+	tc->LoadConfig();
+	delete tc;
 
-		xmlFreeDoc(doc);
-	}
-
-	xmlCleanupParser();
+//	xmlDoc *doc;
+//	xmlNode *root;
+//	doc = xmlReadFile("default_tape_config.xml", NULL, 0);
+//	if (NULL != doc) {
+//		root = xmlDocGetRootElement(doc);
+//		xmlNode *p = root;
+//		print_node(p);
+//
+//		xmlFreeDoc(doc);
+//	}
+//
+//	xmlCleanupParser();
 }
 //----------------------------------------------------------------------------
 
@@ -244,8 +382,7 @@ unsigned char *DataGenerator::GetData(void) {
 		m_Gen.push_back(lgs);
 	}
 
-	for (std::vector<LineGenStruct>::iterator i = m_Gen.begin();
-			i != m_Gen.end(); i++) {
+	for (std::vector<LineGenStruct>::iterator i = m_Gen.begin(); i != m_Gen.end(); i++) {
 		if (i->CurX >= 0 && i->CurX < 4096 && i->YCount < i->YMaxCount) {
 			if (i->YCount >= 0) {
 				m_OutData[(int) i->CurX] = rand() % 256;
@@ -303,8 +440,8 @@ RealTapeScroller::RealTapeScroller(int aW, int aH) {
 			m_Track[i].Side = i < 3 ? 1 : 2;
 			m_Track[i].TrackTop = i * 10;
 			for (int ch = 0; ch < 4; ch++) {
-				m_Track[i].Channel[ch] = &m_Channel[i * 4 + ch];
-				m_Track[i].Channel[ch]->ColorIndex = ch;
+				m_Track[i].Channel.push_back(&m_Channel[i * 4 + ch]);
+				m_Channel[i * 4 + ch].ColorIndex = ch;
 			}
 		} else {
 			m_Track[i].ShowIt = false;
@@ -388,9 +525,7 @@ void RealTapeScroller::CalcPreparserTable(void) {
 		for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 			if (t->ShowIt) {
 				if (t->AutoHeight) //TODO: add more code for fixed size track & track greate then channel DefaultHeight (where pso->H > 1)
-					t->RealHeight = (float) t->DefaultHeight
-							/ (float) (stretch_space)
-							* (float) (m_H - fixed_space);
+					t->RealHeight = (float) t->DefaultHeight / (float) (stretch_space) * (float) (m_H - fixed_space);
 				else
 					t->RealHeight = t->DefaultHeight;
 
@@ -419,17 +554,14 @@ void RealTapeScroller::CalcPreparserTable(void) {
 			Track *t = m_Track;
 			for (int track = 0; track < MAX_TRACK_COUNT; track++) {
 				if (t->ShowIt) {
-					for (int ich = 0; ich < 4; ich++) {
-						if (t->Channel[ich] == channel) {
+					for (std::vector<Channel*>::iterator ich = t->Channel.begin(); ich != t->Channel.end(); ich++) {
+						if (*ich == channel) {
 							for (int n = 0; n < channel->DataSize; n++) {
-								int n_top = t->TrackTop
-										+ (float) n / (float) channel->DataSize
-												* (float) t->RealHeight;
+								int n_top = t->TrackTop + (float) n / (float) channel->DataSize * (float) t->RealHeight;
 
 								for (int i = 0; i < MAX_TAPE_HEIGHT; i++) {
 									if (m_SO[i].UseIt && m_SO[i].Y == n_top) {
-										m_Index[channel->DataIndex + n] =
-												&m_SO[i];
+										m_Index[channel->DataIndex + n] = &m_SO[i];
 										break;
 									}
 								}
@@ -458,8 +590,7 @@ unsigned char * RealTapeScroller::GetData(void) {
 
 void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 	if (NULL == m_Txt) {
-		m_Txt = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888,
-				SDL_TEXTUREACCESS_STREAMING, m_W, m_H);
+		m_Txt = SDL_CreateTexture(aRnd, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, m_W, m_H);
 		SDL_Rect r = { 0, 0, m_W, m_H };
 		unsigned int *p;
 		int pitch;
@@ -501,14 +632,17 @@ void RealTapeScroller::Show(SDL_Renderer *aRnd, int aX, int aY) {
 				while (so->UseIt) {
 					if (so->Y >= 0 && so->Y < m_H) {
 						if (so->Index >= 0) {
-							SDL_Color c = CLUT[(so->Value1 << 8) | (so->Value2)
-									| (so->Index << 16)];
-							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
-									- (step - n) * 4) = c;
+							SDL_Color c = CLUT[(so->Value1 << 8) | (so->Value2) | (so->Index << 16)];
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4 - (step - n) * 4) = c;
 						} else {
+<<<<<<< HEAD
 							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4
 									- (step - n) * 4) = (SDL_Color ) {0, 0, 0,
 								255};
+=======
+							*(SDL_Color*) (pptr + so->Y * pitch + m_W * 4 - (step - n) * 4) = (SDL_Color ) { 0, 0, 0,
+											255 };
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 						}
 					}
 					so++;

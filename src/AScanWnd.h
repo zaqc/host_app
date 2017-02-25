@@ -179,6 +179,29 @@ public:
 };
 //----------------------------------------------------------------------------
 
+class FormItem: public Control {
+protected:
+	int m_Min;
+	int m_Max;
+	int m_Value;
+	std::wstring m_Caption;
+	std::wstring m_Units;
+public:
+	FormItem(Window *aWnd, int aX, int aY, int aW, int aH,
+			std::wstring aCaption, std::wstring aUnits, int aValue, int aMin,
+			int aMax);
+	virtual ~FormItem();
+
+	virtual bool CanFocused(void) {
+		return true;
+	}
+
+	virtual bool OnKeyDown(SDL_Scancode aScanCode);
+
+	virtual void Render(SDL_Renderer *aRnd);
+};
+//----------------------------------------------------------------------------
+
 class AScanView: public Control {
 protected:
 	Window *m_Wnd;
@@ -198,6 +221,7 @@ protected:
 	Button *m_Button;
 	Button *m_BtnQuit;
 	Menu *m_MainMenu;
+	AScanView *m_AScanView;
 public:
 	AScanWnd(SDL_Renderer *aRnd, int aX, int aY, int aW, int aH);
 	virtual ~AScanWnd();

@@ -5,12 +5,13 @@
  *      Author: zaqc
  */
 
-#include <Label.h>
+#include "Label.h"
+
+#include <stdlib.h>
+#include <iostream>
 #include <SDL_ttf.h>
 
-#include <iostream>
-
-Label::Label(int aX, int aY, int aW, int aH, std::string aText) :
+Label::Label(int aX, int aY, int aW, int aH, std::wstring aText) :
 		Control(aX, aY, aW, aH) {
 	m_Text = aText;
 
@@ -24,7 +25,7 @@ Label::~Label() {
 	TTF_CloseFont(m_Font);
 }
 
-void Label::SetText(std::string aStr) {
+void Label::SetText(std::wstring aStr) {
 	m_Text = aStr;
 	m_Invalidate = true;
 }
@@ -35,7 +36,12 @@ bool Label::ProcessEvent(SDL_Event aEvent) {
 
 void Label::Render(SDL_Renderer *aRnd) {
 	SDL_Color fc = { 192, 168, 1, 255 };
-	SDL_Surface *surf = TTF_RenderText_Blended(m_Font, m_Text.c_str(), fc);
+
+	char buf[128];
+	memset(buf, 0, 128);
+	wcstombs(buf, m_Text.c_str(), 128);
+
+	SDL_Surface *surf = TTF_RenderUTF8_Blended(m_Font, buf, fc);
 	SDL_Texture *txt = SDL_CreateTextureFromSurface(aRnd, surf);
 	int sx = 0;
 	int sy = 0;

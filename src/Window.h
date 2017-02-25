@@ -10,7 +10,10 @@
 //----------------------------------------------------------------------------
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <vector>
+
+#include "Desktop.h"
 //----------------------------------------------------------------------------
 
 class Control {
@@ -24,12 +27,27 @@ protected:
 	int m_Y;
 	int m_W;
 	int m_H;
+	bool m_Focused;
 public:
 	Control(int aX, int aY, int aW, int aH);
 	virtual ~Control();
 
 	virtual bool CanFocused(void) {
 		return false;
+	}
+
+	void SetFocused(bool aFocused) {
+		if (m_Focused != aFocused)
+			m_Invalidate = true;
+		m_Focused = aFocused;
+	}
+
+	bool GetFocused() {
+		return m_Focused;
+	}
+
+	void Invalidate() {
+		m_Invalidate = true;
 	}
 
 	void Hide() {
@@ -72,6 +90,11 @@ public:
 };
 //----------------------------------------------------------------------------
 
+extern TTF_Font *g_ItemFont;
+extern SDL_Color g_ItemColor;
+extern SDL_Color g_ItemBackground;
+//----------------------------------------------------------------------------
+
 class Window: public Control {
 protected:
 	SDL_Renderer *m_Rnd;
@@ -82,6 +105,16 @@ public:
 	virtual ~Window();
 
 	//void NextControl(void);
+
+	virtual TTF_Font *GetItemFont(void) {
+		return g_ItemFont;
+	}
+	virtual SDL_Color GetItemColor(void) {
+		return g_ItemColor;
+	}
+	virtual SDL_Color GetItemBackground(void) {
+		return g_ItemBackground;
+	}
 
 	virtual void ProcessMessage(int aID);
 

@@ -19,12 +19,12 @@
 class Label: public Control {
 protected:
 	TTF_Font *m_Font;
-	std::string m_Text;
+	std::wstring m_Text;
 public:
-	Label(int aX, int aY, int aW, int aH, std::string aText);
+	Label(int aX, int aY, int aW, int aH, std::wstring aText);
 	virtual ~Label();
 
-	void SetText(std::string aStr);
+	void SetText(std::wstring aStr);
 
 	virtual bool ProcessEvent(SDL_Event aEvent);
 	virtual void Render(SDL_Renderer *aRnd);

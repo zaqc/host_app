@@ -25,6 +25,7 @@ Control::Control(int aX, int aY, int aW, int aH) {
 	m_W = aW;
 	m_H = aH;
 	m_Invalidate = true;
+	m_Focused = false;
 	m_Hide = false;
 	m_ControlTexture = NULL;
 	m_ControlTextureWidth = 0;
@@ -137,13 +138,25 @@ void Window::PaintWindow(void) {
 
 bool Window::ProcessEvent(SDL_Event aEvent) {
 	if (aEvent.type == SDL_KEYDOWN) {
-		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB) {
+		if (aEvent.key.keysym.scancode == SDL_SCANCODE_TAB
+				|| aEvent.key.keysym.scancode == SDL_SCANCODE_LEFT
+				|| aEvent.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+			std::vector<Control*>::iterator ii = m_Control.begin();
+			std::vector<Control*>::reverse_iterator ri = m_Control.rbegin();
+			bool ss = (aEvent.key.keysym.mod & KMOD_LSHIFT) == 0
+					&& aEvent.key.keysym.scancode != SDL_SCANCODE_LEFT;
+
 			int step = 0;
-			for (std::vector<Control*>::iterator i = m_Control.begin();
-					i != m_Control.end(); i++) {
-				Control *ctl = *i;
+			while ((ss && ii != m_Control.end())
+					|| (!ss && ri != m_Control.rend())) {
+				Control *ctl = NULL;
+				if (ss)
+					ctl = *ii;
+				else
+					ctl = *ri;
 				if (NULL == m_ActiveControl) {
 					if (ctl->CanFocused()) {
+						ctl->SetFocused(true);
 						m_ActiveControl = ctl;
 						return true;
 					}
@@ -153,19 +166,38 @@ bool Window::ProcessEvent(SDL_Event aEvent) {
 							step = 1;
 					} else {
 						if (ctl->CanFocused()) {
+							m_ActiveControl->SetFocused(false);
+							ctl->SetFocused(true);
 							m_ActiveControl = ctl;
 							return true;
 						}
 					}
 				}
+				if (ss)
+					++ii;
+				else
+					++ri;
 			}
-			for (std::vector<Control*>::iterator i = m_Control.begin();
-					i != m_Control.end(); i++) {
-				Control *ctl = *i;
+			ii = m_Control.begin();
+			ri = m_Control.rbegin();
+			while ((ss && ii != m_Control.end())
+					|| (!ss && ri != m_Control.rend())) {
+				Control *ctl = NULL;
+				if (ss)
+					ctl = *ii;
+				else
+					ctl = *ri;
 				if (ctl->CanFocused()) {
+					if (NULL != m_ActiveControl)
+						m_ActiveControl->SetFocused(false);
 					m_ActiveControl = ctl;
+					m_ActiveControl->SetFocused(true);
 					return true;
 				}
+				if (ss)
+					++ii;
+				else
+					++ri;
 			}
 		}
 	}
@@ -178,65 +210,64 @@ bool Window::ProcessEvent(SDL_Event aEvent) {
 				return true;
 
 			switch (aEvent.type) {
-				case SDL_KEYDOWN:
-					if (NULL != m_ActiveControl
-							&& m_ActiveControl->OnKeyDown(
-									aEvent.key.keysym.scancode))
-						return true;
-					break;
-				case SDL_KEYUP:
-					if (NULL != m_ActiveControl
-							&& m_ActiveControl->OnKeyUp(
-									aEvent.key.keysym.scancode))
-						return true;
-					break;
-				case SDL_MOUSEBUTTONDOWN: {
-					int x = aEvent.button.x - m_X;
-					int y = aEvent.button.y - m_Y;
-					if (cnt->OnMouseDown(aEvent.button.button, x, y))
-						return true;
-					break;
-				}
-				case SDL_MOUSEBUTTONUP: {
-					int x = aEvent.button.x - m_X;
-					int y = aEvent.button.y - m_Y;
-					if (cnt->OnMouseUp(aEvent.button.button, x, y))
-						return true;
-					break;
-				}
-				case SDL_MOUSEMOTION: {
-					int x = aEvent.motion.x - m_X;
-					int y = aEvent.motion.y - m_Y;
-					if (cnt->OnMouseMove(x, y))
-						return true;
-					break;
-				}
+			case SDL_KEYDOWN:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyDown(
+								aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_KEYUP:
+				if (NULL != m_ActiveControl
+						&& m_ActiveControl->OnKeyUp(aEvent.key.keysym.scancode))
+					return true;
+				break;
+			case SDL_MOUSEBUTTONDOWN: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseDown(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				int x = aEvent.button.x - m_X;
+				int y = aEvent.button.y - m_Y;
+				if (cnt->OnMouseUp(aEvent.button.button, x, y))
+					return true;
+				break;
+			}
+			case SDL_MOUSEMOTION: {
+				int x = aEvent.motion.x - m_X;
+				int y = aEvent.motion.y - m_Y;
+				if (cnt->OnMouseMove(x, y))
+					return true;
+				break;
+			}
 			}
 		}
 	}
 
 	switch (aEvent.type) {
-		case SDL_MOUSEBUTTONDOWN: {
-			int x = aEvent.button.x - m_X;
-			int y = aEvent.button.y - m_Y;
-			if (OnMouseDown(aEvent.button.button, x, y))
-				return true;
-			break;
-		}
-		case SDL_MOUSEBUTTONUP: {
-			int x = aEvent.button.x - m_X;
-			int y = aEvent.button.y - m_Y;
-			if (OnMouseUp(aEvent.button.button, x, y))
-				return true;
-			break;
-		}
-		case SDL_MOUSEMOTION: {
-			int x = aEvent.motion.x - m_X;
-			int y = aEvent.motion.y - m_Y;
-			if (OnMouseMove(x, y))
-				return true;
-			break;
-		}
+	case SDL_MOUSEBUTTONDOWN: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseDown(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEBUTTONUP: {
+		int x = aEvent.button.x - m_X;
+		int y = aEvent.button.y - m_Y;
+		if (OnMouseUp(aEvent.button.button, x, y))
+			return true;
+		break;
+	}
+	case SDL_MOUSEMOTION: {
+		int x = aEvent.motion.x - m_X;
+		int y = aEvent.motion.y - m_Y;
+		if (OnMouseMove(x, y))
+			return true;
+		break;
+	}
 	}
 
 	return false;
