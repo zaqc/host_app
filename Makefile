@@ -45,7 +45,7 @@ obj/%.o : src/%.cpp $(HDR)
 	
 $(TARGET): $(OBJ)
 	@echo Linking project...
-	g++ -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs)
+	g++ -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs) -lpthread -lftdi1
 	
 clean:
 	rm -f *.o obj/*.o
