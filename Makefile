@@ -55,7 +55,7 @@ obj/%.o : src/%.cpp $(HDR)
 $(TARGET): $(OBJ)
 	@echo Linking project...
 	$(GPP) -o $(TARGET) $(OBJ) $(shell $(PKG_NAME) --libs) -lpthread
-	sshpass -p odroid scp $(TARGET) odroid@10.0.0.44:/home/odroid/work/host_app/
+#	sshpass -p odroid scp $(TARGET) odroid@10.0.0.44:/home/odroid/work/host_app/
 	
 clean:
 	rm -f *.o obj/*.o obj/hw/*.o
