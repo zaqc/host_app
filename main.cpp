@@ -30,8 +30,11 @@
 
 #include "hw/Transmitter.h"
 
+#include "DScopeStream.h"
+
 #include <zlib.h>
 #include <ftdi.h>
+
 //----------------------------------------------------------------------------
 
 #define clear() printf("\033[H\033[J")
@@ -124,26 +127,45 @@ int ch_error = 0;
 
 #define REV_BYTE_ORDER(a)	(((unsigned int)(a & 0xFF) << 24) | ((unsigned int)(a & 0xFF00) << 8) | ((unsigned int)(a & 0xFF0000) >> 8) | ((unsigned int)(a & 0xFF000000) >> 24))
 
+int ch_count_1[16];
+int ch_count_2[16];
+int ch_err_1[16];
+int ch_err_2[16];
+
 void decode_buf(unsigned char *aBuf, int aSize) {
 	int len = aSize / 5;
 	unsigned char *buf = aBuf;
 	for (int i = 0; i < len; i++) {
 		if ((*buf & 0xF0) == 0xA0) {
+			ch_count_1[(*buf & 0x0F)]++;
 			if ((*buf & 0x0F) == 0x0F) {
-				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int*) (buf + 1));
+				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int* ) (buf + 1));
 
 				if (pkt_cntr_1 + 1 != pkt_cntr)
 					pkt_cntr_err++;
 				pkt_cntr_1 = pkt_cntr;
+
+				for (int n = 0; n < 14; n++) {
+					if (ch_count_1[n] != 32)
+						ch_err_1[n]++;
+					ch_count_1[n] = 0;
+				}
 			}
 		}
 		else if ((*buf & 0xF0) == 0x50) {
+			ch_count_2[(*buf & 0x0F)]++;
 			if ((*buf & 0x0F) == 0x0F) {
-				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int*) (buf + 1));
+				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int* ) (buf + 1));
 
 				if (pkt_cntr_2 + 1 != pkt_cntr)
 					pkt_cntr_err++;
 				pkt_cntr_2 = pkt_cntr;
+
+				for (int n = 0; n < 14; n++) {
+					if (ch_count_2[n] != 32)
+						ch_err_2[n]++;
+					ch_count_2[n] = 0;
+				}
 			}
 		}
 		else
@@ -155,6 +177,13 @@ void decode_buf(unsigned char *aBuf, int aSize) {
 
 void * decode_thread_0(void * context) {
 	ftdi_context *ftdi;
+
+	for (int i = 0; i < 16; i++) {
+		ch_count_1[i] = 0;
+		ch_count_2[i] = 0;
+		ch_err_1[i] = 0;
+		ch_err_2[i] = 0;
+	}
 
 	clear();
 
@@ -254,14 +283,23 @@ void * decode_thread_0(void * context) {
 			}
 
 			case get_data_buf: {
-				if (get_data(ftdi, data_buf, 100) == 100) {
-					decode_buf(data_buf, 100);
-					if (pk_counter++ >= 100000) {
+				if (get_data(ftdi, data_buf, 1000) == 1000) {
+					decode_buf(data_buf, 1000);
+					if (pk_counter++ >= 10000) {
 						gotoxy(1, 1);
 						printf("error_counter=%i\n", err_count);
 						printf("data size=%i\n", fr_data_len);
 						printf("channel mask error=%i\n", ch_error);
 						printf("packet counter error=%i\n", pkt_cntr_err);
+
+						for (int n = 0; n < 14; n++)
+							printf("%i ", ch_err_1[n]);
+						printf("\n");
+
+						for (int n = 0; n < 14; n++)
+							printf("%i ", ch_err_2[n]);
+						printf("\n");
+
 						fr_data_len = 0;
 						pk_counter = 0;
 
@@ -409,7 +447,7 @@ void * decode_thread(void * context) {
 				pk_counter++;
 				if (pk_counter == 100) {
 					pk_counter = 100;
-					//gotoxy(0, 5);
+//gotoxy(0, 5);
 				}
 				if (get_data(ftdi, (unsigned char *) &pkt_cntr_1, 4) == 4) {
 //					if (pkt_cntr_1 != prev_pkt_cntr_1 + 1)
@@ -556,8 +594,8 @@ void * decode_thread(void * context) {
 					}
 					pkcnt++;
 
-					//if (pk_counter == 100)
-					//printf("error count = %i", err_count);
+//if (pk_counter == 100)
+//printf("error count = %i", err_count);
 					state = get_preamble;					// wait_preamble;
 				}
 				else
@@ -581,6 +619,24 @@ int main(void) {
 //	std::cout << "Hi! fd=" << fd << std::endl;
 //
 
+//	pthread_t thread;
+//	pthread_create(&thread, NULL, &decode_thread_0, NULL);
+//	pthread_join(thread, NULL);
+//	return 0;
+
+	DScopeStream *ds = new DScopeStream();
+	int cntr = 0;
+	while (1) {
+		DataFrame *df;
+		ds->GetFrame(df);
+		if (df) {
+			if (cntr++ >= 4000) {
+				printf("%i %i \n", df->m_LPktCounter, df->m_RPktCounter);
+				cntr = 0;
+			}
+		}
+	}
+
 	unsigned char buf[4];
 	buf[0] = '1';
 	buf[1] = '2';
@@ -589,7 +645,6 @@ int main(void) {
 	unsigned int val = crc32(0l, buf, 4);
 	printf("CRC32 = 0x%08X \n", val);
 
-	decode_thread_0(NULL);
 	decode_thread(NULL);
 
 	ftdi_context *m_FTDI;

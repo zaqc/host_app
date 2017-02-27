@@ -107,9 +107,21 @@ static const char txt_FS[] = "precision mediump float;\n"
 		"uniform sampler2D texture;\n"
 		"varying vec2 textureCord;\n"
 		"vec2 cc;\n"
+		"vec4 c; \n"
 		"void main()\n"
 		"{\n"
 		"    cc = vec2(textureCord.x, textureCord.y);\n"
+		"    c = texture2D(texture, cc); \n"
+		"    if(c.x > c.y) \n"
+		"      if(c.z > c.x) \n"
+		"        gl_FragColor = vec4(c.x, c.y, 1.0, 1.0); \n"
+		"      else \n"
+		"        gl_FragColor = vec4(1.0, c.y, c.z, 1.0); \n"
+		"    else \n"
+		"      if(c.y > c.z) \n"
+		"        gl_FragColor = vec4(c.x, 1.0, c.z, 1.0); \n"
+		"      else \n"
+		"        gl_FragColor = vec4(c.x, c.y, 1.0, 1.0); \n"
 //		"    cc.x = cc.x / 2.0f; \n"
 //		"    cc.x = (cc.x > 1.0f) ? 1.0f : cc.x; \n"
 //		"    cc.y = cc.y / 2.0f; \n"
@@ -175,7 +187,7 @@ void RenderToTxt(void) {
 			0);								// 5. mipmap level: 0(base)
 
 	//glViewport(0, 0, 128, 128);
-	glClearColor(1.0, 0.5, 0.5, 1.0);
+	glClearColor(0.75, 0.75, 0.75, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);

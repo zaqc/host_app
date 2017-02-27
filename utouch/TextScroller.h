@@ -32,6 +32,7 @@ public:
 	void Init(int aW, int aH);
 	void Scroll(int aDX);
 
+	void DrawData(int aW);
 	void RenderFrame(void);
 };
 //----------------------------------------------------------------------------
