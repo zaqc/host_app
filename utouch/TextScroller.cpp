@@ -52,9 +52,12 @@ void TextScroller::InitProgram(void) {
 	const char fs[] = "precision mediump float;\n"
 			"varying vec2 TextCoord;\n"
 			"uniform sampler2D Texture; \n"
+			"vec4 txtColor; \n"
 			"void main() \n"
 			"{ \n"
-			"    gl_FragColor = texture2D(Texture, TextCoord); \n"
+			"    txtColor = texture2D(Texture, TextCoord); \n"
+			"    gl_FragColor = txtColor; \n"
+//			"vec4(txtColor.x, txtColor.y, txtColor.z, 0.5f); \n"
 			"} \n";
 
 	m_Prog = createProgram(vs, fs);
@@ -97,7 +100,7 @@ void TextScroller::Init(int aW, int aH) {
 	glBindTexture(GL_TEXTURE_2D, m_BkText);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s, s, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);	// unBind texture
 
@@ -110,7 +113,7 @@ void TextScroller::Init(int aW, int aH) {
 	glBindTexture(GL_TEXTURE_2D, m_Text);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, s, s, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -154,7 +157,7 @@ void TextScroller::Scroll(int aDX) {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BkFB);
 
 	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 1024, 1024);
+	glViewport(0, 0, 1024, 512);
 
 	//glClearColor(1.0f, .5f, 0.0f, 1.0f);
 	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -162,7 +165,7 @@ void TextScroller::Scroll(int aDX) {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_Text);
 
-	glUniform1f(m_paramShiftX, 0.005f);
+	glUniform1f(m_paramShiftX, 0.0f);
 
 	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
 	glEnableVertexAttribArray(m_paramVertexPos);
@@ -174,23 +177,95 @@ void TextScroller::Scroll(int aDX) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
-	glGenerateMipmap(GL_TEXTURE_2D);
+	//glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	//glBindBuffer()
 	//glCopyTexImage2D(GL_)
 
-	GLuint tmp;
-	tmp = m_BkText;
-	m_BkText = m_Text;
-	m_Text = tmp;
-
-	tmp = m_BkFB;
-	m_BkFB = m_FB;
-	m_FB = tmp;
+//	GLuint tmp;
+//	tmp = m_BkText;
+//	m_BkText = m_Text;
+//	m_Text = tmp;
+//
+//	tmp = m_BkFB;
+//	m_BkFB = m_FB;
+//	m_FB = tmp;
 }
 //----------------------------------------------------------------------------
+
+GLubyte *_buf = NULL;
+
+void TextScroller::DrawData(int aW) {
+	if (!_buf)
+		_buf = new GLubyte[1024 * 512 * 4];
+
+	for (int j = 0; j < 480; j++) {
+		int n = j * aW * 4;
+		for (int i = 0; i < aW; i++) {
+			if ((rand() % 100) == 0) {
+				_buf[n++] = rand() % 255;
+				_buf[n++] = rand() % 255;
+				_buf[n++] = rand() % 255;
+				_buf[n++] = 255;
+			}
+			else {
+				_buf[n++] = 0;
+				_buf[n++] = 0;
+				_buf[n++] = 0;
+				_buf[n++] = 255;
+			}
+		}
+	}
+
+	GLfloat v[] = { /* vertexes */
+	-1.0f, -1.0f, 0.0f, /**/
+	-1.0f, 1.0f, 0.0f, /**/
+	1.0f, -1.0f, 0.0f, /**/
+	1.0f, 1.0f, 0.0f };
+
+	GLfloat txc[] = { /* texture coordinate */
+	0.0f, 0.0f, /**/
+	0.0f, 1.0f, /**/
+	1.0f, 0.0f, /**/
+	1.0f, 1.0f };
+
+	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, aW, 480);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_BkText);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, aW, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, _buf);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BkFB);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BkText, 0);
+
+	glUniform1f(m_paramShiftX, 0.0f);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glVertexAttribPointer(m_paramVerexTextCoord, 2, GL_FLOAT, GL_FALSE, 0, txc);
+	glEnableVertexAttribArray(m_paramVerexTextCoord);
+
+	glUniform1i(m_paramTexture, 2);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - aW, 0, 0, 0, aW, 480);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+//----------------------------------------------------------------------------
+
+int nnn = 0;
 
 void TextScroller::RenderFrame(void) {
 	Scroll(10);
@@ -198,10 +273,10 @@ void TextScroller::RenderFrame(void) {
 	glUseProgram(m_Prog);
 
 	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 1024, 1024);
+	glViewport(0, 0, 1024, 512);
 
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	glClear (GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	GLfloat v[] = { /* vertexes */
 	-1.0f, -1.0f, 0.0f, /**/
@@ -230,6 +305,19 @@ void TextScroller::RenderFrame(void) {
 	glUniform1i(m_paramTexture, 2);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
+
+	//if (nnn++ < 100) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_Text);
+		int ss = 4;
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		DrawData(ss);
+	//}
+	//nnn = 0;
 }
 //----------------------------------------------------------------------------
 
