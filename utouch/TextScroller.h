@@ -32,8 +32,8 @@ public:
 	void Init(int aW, int aH);
 	void Scroll(int aDX);
 
-	void DrawData(int aW);
-	void RenderFrame(void);
+	void DrawData(int aW, unsigned char *aBuf);
+	void RenderFrame(unsigned char *aBuf);
 };
 //----------------------------------------------------------------------------
 

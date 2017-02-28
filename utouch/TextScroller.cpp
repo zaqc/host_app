@@ -11,12 +11,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 #include <GLES2/gl2.h>
 //----------------------------------------------------------------------------
 
 //============================================================================
 //	TextScroller
 //============================================================================
+
+double t_log[256];
 
 TextScroller::TextScroller() {
 	m_paramVertexPos = 0;
@@ -29,6 +32,10 @@ TextScroller::TextScroller() {
 	m_BkText = 0;
 	m_BkFB = 0;
 	m_Data = NULL;
+
+	for (int i = 0; i < 256; i++) {
+		t_log[i] = pow(20, (double) i / 20.0);
+	}
 }
 //----------------------------------------------------------------------------
 
@@ -197,26 +204,20 @@ void TextScroller::Scroll(int aDX) {
 //----------------------------------------------------------------------------
 
 GLubyte *_buf = NULL;
-
-void TextScroller::DrawData(int aW) {
+int nnnn = 0;
+void TextScroller::DrawData(int aW, unsigned char *aBuf) {
 	if (!_buf)
 		_buf = new GLubyte[1024 * 512 * 4];
 
 	for (int j = 0; j < 480; j++) {
 		int n = j * aW * 4;
 		for (int i = 0; i < aW; i++) {
-			if ((rand() % 100) == 0) {
-				_buf[n++] = rand() % 255;
-				_buf[n++] = rand() % 255;
-				_buf[n++] = rand() % 255;
-				_buf[n++] = 255;
-			}
-			else {
-				_buf[n++] = 0;
-				_buf[n++] = 0;
-				_buf[n++] = 0;
-				_buf[n++] = 255;
-			}
+			unsigned char v = *aBuf; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
+			_buf[n++] = v;
+			_buf[n++] = v;
+			_buf[n++] = v;
+			_buf[n++] = 255;
+			aBuf++;
 		}
 	}
 
@@ -267,7 +268,7 @@ void TextScroller::DrawData(int aW) {
 
 int nnn = 0;
 
-void TextScroller::RenderFrame(void) {
+void TextScroller::RenderFrame(unsigned char *aBuf) {
 	Scroll(10);
 
 	glUseProgram(m_Prog);
@@ -307,15 +308,15 @@ void TextScroller::RenderFrame(void) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
 	//if (nnn++ < 100) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_Text);
-		int ss = 4;
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
-		//glGenerateMipmap(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	int ss = 1;
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-		DrawData(ss);
+	DrawData(ss, aBuf);
 	//}
 	//nnn = 0;
 }

@@ -148,6 +148,32 @@ DScopeStream::DScopeStream() {
 	res = ftdi_usb_purge_buffers(m_FTDI);
 	std::cout << "ftdi_usb_purge_buffers res=" << res << std::endl;
 
+	unsigned char buf[64];
+	buf[0] = 0x55;
+	buf[1] = 0x55;
+	buf[2] = 0x55;
+	buf[3] = 0xd5;
+
+	buf[4] = 0xFF;
+	buf[5] = 0x00;
+	buf[6] = 0x12;
+	buf[7] = 0xDE;
+
+	buf[8] = 0x00;
+	buf[9] = 0x00;
+	buf[10] = 0x00;
+	buf[11] = 0x01;
+
+	buf[12] = 0x00;
+	buf[13] = 0x00;
+	buf[14] = 0x00;
+	buf[15] = 0x00;
+
+	for (int i = 0; i < 10; i++) {
+		ftdi_write_data(m_FTDI, buf, 16);
+		usleep(1000 * 1000);
+	}
+
 	m_Q = new DataFrameQueue(16, true);
 
 	m_DataAccepted = false;
@@ -320,7 +346,8 @@ void DScopeStream::DecodeStream(void) {
 				if (0 == DecodeBuffer(ch, 1000)) {
 					m_StreamState = ssGetPreamble;
 					block_count++;
-				}else {
+				}
+				else {
 					m_StreamState = ssWaitPreamble;
 					error_count++;
 				}
