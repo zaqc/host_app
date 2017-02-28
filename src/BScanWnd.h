@@ -20,13 +20,19 @@ struct ColorMap {
 };
 
 struct Channel {
+<<<<<<< HEAD
+	bool UseIt; // Use this chennel for rendering
+=======
 	bool UseIt; // Use this channel for rendering
 
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 	int Number;
 	int ColorIndex; // Color index
 	int Side; // Side 1-left 2-right
 	int DataIndex; // start data in data buffer returned by GetData(void)
 	int DataSize; // size of channel data (tick count)
+<<<<<<< HEAD
+=======
 
 	int Delay; // Delay after probing signal before start ADC in nSec
 	int PhyDelay; // Delay in prism nSec
@@ -41,6 +47,7 @@ struct Channel {
 	int Direction; // Direction of UltraSonic emission (Forward, Backward of Straight)
 
 	int TxRx; // Transmitter, Receiver or both
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 };
 
 struct Track {
@@ -51,7 +58,11 @@ struct Track {
 	int TrackTop; // Y position of Track on Tape
 	int MinTrackHeight; // Minimal track height (default 8 pixels)
 	bool AutoHeight; // Auto Calculate or Fixed track height
+<<<<<<< HEAD
+	struct Channel *Channel[4]; // Channel number
+=======
 	std::vector<struct Channel*> Channel; // Channel number
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 };
 
 struct ScreenOut {
@@ -74,19 +85,39 @@ protected:
 	xmlDoc *m_Doc;
 	xmlNode *m_RootNode;
 
+<<<<<<< HEAD
+	std::vector<Channel> m_Channel;
+	std::vector<Track> m_Track;
+=======
 	Track *m_CurrentTrack;
 
 	std::vector<Channel*> m_Channel;
 	std::vector<Track*> m_Track;
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 public:
 	TapeConfig();
 	virtual ~TapeConfig();
 
+<<<<<<< HEAD
+	int GetChannelCount(void);
+	Channel GetChannel(int aIndex);
+
+	int GetTrackCount(void);
+	Track GetTrack(int aIndex);
+
+	void ParseChannelItem(xmlNode *aNode);
+	void DecodeChannelParam(xmlAttr *aParam);
+	void ParseTrackItem(xmlNode *aNode);
+	void DecodeTrackParam(xmlAttr *aParam);
+
+	void LoadConfig();
+=======
 	Channel *ParseChannel(xmlAttr *aAttr);
 	Track *ParseTrack(xmlAttr *aAttr);
 	void ProcessNode(xmlNode *aNode, NodeLevel aNodeLevel);
 
 	void LoadConfig(void);
+>>>>>>> abf8105a8e0df2d6c4b82d56f4b5690566140cf0
 };
 //----------------------------------------------------------------------------
 
