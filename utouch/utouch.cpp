@@ -22,6 +22,7 @@
 
 #include "Util.h"
 #include "TextScroller.h"
+#include "DScopeStream.h"
 
 bool setupGraphics(int w, int h);
 void renderFrame();
@@ -33,6 +34,8 @@ int main(void) {
 
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
+
+	DScopeStream *dss = new DScopeStream();
 
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
@@ -186,6 +189,8 @@ int main(void) {
 
 	if (txt)
 		delete[] txt;
+
+	delete dss;
 
 	return EXIT_SUCCESS;
 }

@@ -2,7 +2,7 @@ TARGET:=utouch
 
 CXXFLAGS:=-g3 -Wall -I/usr/include -fmessage-length=0
 
-PKG:=egl glesv2 x11 libpng
+PKG:=egl glesv2 x11 libpng libftdi1
 
 CC=g++
 
@@ -23,6 +23,7 @@ ifneq ($(shell if pkg-config --exists $(PKG); then echo "yes"; fi;),yes)
 else
 CXXFLAGS+=$(shell pkg-config $(PKG) --cflags)  
 LDFLAGS:=$(shell pkg-config $(PKG) --libs)
+LDFLAGS+= -lpthread
 all: $(TARGET)
 endif
 
@@ -31,7 +32,7 @@ endif
 
 $(TARGET): $(OBJS)
 	@echo "Linking project ["$(TARGET)"] with FLAGS="$(LDFLAGS)
-	$(CC) utouch.o Matrix.o Texture.o Native.o Util.o GlUtil.o TextScroller.o -o $(TARGET) $(LDFLAGS) 
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS) 
 
 clean:
 	rm -f *.o $(TARGET)

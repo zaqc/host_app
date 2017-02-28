@@ -130,7 +130,7 @@ void decode_buf(unsigned char *aBuf, int aSize) {
 	for (int i = 0; i < len; i++) {
 		if ((*buf & 0xF0) == 0xA0) {
 			if ((*buf & 0x0F) == 0x0F) {
-				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int*) (buf + 1));
+				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int* ) (buf + 1));
 
 				if (pkt_cntr_1 + 1 != pkt_cntr)
 					pkt_cntr_err++;
@@ -139,7 +139,7 @@ void decode_buf(unsigned char *aBuf, int aSize) {
 		}
 		else if ((*buf & 0xF0) == 0x50) {
 			if ((*buf & 0x0F) == 0x0F) {
-				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int*) (buf + 1));
+				unsigned int pkt_cntr = REV_BYTE_ORDER(*(unsigned int* ) (buf + 1));
 
 				if (pkt_cntr_2 + 1 != pkt_cntr)
 					pkt_cntr_err++;
@@ -254,21 +254,22 @@ void * decode_thread_0(void * context) {
 			}
 
 			case get_data_buf: {
-				if (get_data(ftdi, data_buf, 100) == 100) {
-					decode_buf(data_buf, 100);
-					if (pk_counter++ >= 100000) {
+				if (get_data(ftdi, data_buf, 1000) == 1000) {
+					decode_buf(data_buf, 1000);
+					if (pk_counter++ >= 10000) {
 						gotoxy(1, 1);
 						printf("error_counter=%i\n", err_count);
 						printf("data size=%i\n", fr_data_len);
 						printf("channel mask error=%i\n", ch_error);
 						printf("packet counter error=%i\n", pkt_cntr_err);
-						fr_data_len = 0;
-						pk_counter = 0;
 
 						gettimeofday(&ts, 0);
 						float delta = (ts.tv_sec * 1000000 + ts.tv_usec) - (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
-						printf("time elepsed=%6.4f\n", delta / 1000000.0);
+						printf("data rate=%6.3f kB/s\n", (float) fr_data_len / delta * 1000.0);
 						ts_prev = ts;
+
+						fr_data_len = 0;
+						pk_counter = 0;
 					}
 
 					state = get_preamble;
