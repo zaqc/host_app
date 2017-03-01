@@ -21,8 +21,7 @@
 //	DChannelBase
 //============================================================================
 
-DChannelBase::DChannelBase(alt_u32 aBaseAddr, int aChNum) {
-	m_BaseAddr = aBaseAddr;
+DChannelBase::DChannelBase(int aChNum) {
 	m_ChNum = aChNum;
 }
 //----------------------------------------------------------------------------
@@ -31,15 +30,13 @@ DChannelBase::~DChannelBase() {
 }
 //----------------------------------------------------------------------------
 
-void DChannelBase::send_cmd(alt_u32 aParamNum, alt_u32 aData) {
-	alt_u32 cmd;
+uint32_t DChannelBase::send_cmd(uint32_t aParamNum, uint32_t aData) {
+	uint32_t cmd;
 	cmd = (m_ChNum << 28) & 0xF0000000; // Channel number
 	cmd |= (aParamNum << 24) & 0x0F000000; // Parameter number
 	cmd |= aData & 0x0000FFFF; // Command Extended Data
-/*
-	int level = IORD_ALTERA_AVALON_FIFO_LEVEL(m_BaseAddr);
-	IOWR_ALTERA_AVALON_FIFO_DATA(m_BaseAddr, cmd);
-*/
+
+	return cmd;
 }
 //----------------------------------------------------------------------------
 
@@ -47,8 +44,8 @@ void DChannelBase::send_cmd(alt_u32 aParamNum, alt_u32 aData) {
 //	DChannel
 //============================================================================
 
-DChannel::DChannel(alt_u32 aBaseAddr, int aChNum) :
-		DChannelBase(aBaseAddr, aChNum) {
+DChannel::DChannel(int aChNum) :
+		DChannelBase(aChNum) {
 	m_isEnable = true;
 }
 //----------------------------------------------------------------------------
@@ -57,27 +54,28 @@ DChannel::~DChannel() {
 }
 //----------------------------------------------------------------------------
 
-alt_u32 DChannel::get_mpr1_value(void) {
+uint32_t DChannel::get_mpr1_value(void) {
 	return m_isEnable ? 0 : MPR1_CH_DISABLE;
 }
 //----------------------------------------------------------------------------
 
-void DChannel::update_mpr1(void) {
-	send_cmd(PARAM_MPR1, get_mpr1_value());
+uint32_t DChannel::update_mpr1(void) {
+	return send_cmd(PARAM_MPR1, get_mpr1_value());
 }
 //----------------------------------------------------------------------------
 
-void DChannel::SetEanble(bool aEnable) {
+uint32_t DChannel::SetEanble(bool aEnable) {
 	m_isEnable = aEnable;
-	update_mpr1();
+	return update_mpr1();
 }
 //----------------------------------------------------------------------------
 
 //============================================================================
 //	DLogChannel
 //============================================================================
-DLogChannel::DLogChannel(alt_u32 aBaseAddr, int aChNum) :
-		DChannel(aBaseAddr, aChNum) {
+
+DLogChannel::DLogChannel(int aChNum) :
+		DChannel(aChNum) {
 	m_isEnable = true;
 	m_isVGA = false;
 	m_ADCAccum = 31;
@@ -92,63 +90,68 @@ DLogChannel::~DLogChannel() {
 }
 //----------------------------------------------------------------------------
 
-alt_u32 DLogChannel::get_mpr1_value(void) {
-	alt_u32 data = DChannel::get_mpr1_value();
+uint32_t DLogChannel::get_mpr1_value(void) {
+	uint32_t data = DChannel::get_mpr1_value();
 	data |= m_isVGA ? MPR1_CH_TYPE_VGA : 0;
 	data |= m_PreAmp12dB ? MPR1_PRE_AMP_12_dB : 0;
 	return data;
 }
 //----------------------------------------------------------------------------
 
-void DLogChannel::SetDataLen(int aDataLen) {
+uint32_t DLogChannel::SetDataLen(int aDataLen) {
 	m_DataLen = (aDataLen >> 2) << 2;
-	send_cmd(PARAM_DATA_LEN, m_DataLen >> 2);
+	return send_cmd(PARAM_DATA_LEN, m_DataLen >> 2);
 }
 //----------------------------------------------------------------------------
 
-void DLogChannel::SetADCAccum(int aADCAccum) {
-	send_cmd(PARAM_ACCUM, aADCAccum);
+uint32_t DLogChannel::SetADCAccum(int aADCAccum) {
+	return send_cmd(PARAM_ACCUM, aADCAccum);
 }
 //----------------------------------------------------------------------------
 
-void DLogChannel::SetDelay(int aDelay) {
-	send_cmd(PARAM_DELAY, aDelay);
+uint32_t DLogChannel::SetDelay(int aDelay) {
+	return send_cmd(PARAM_DELAY, aDelay);
 }
 //----------------------------------------------------------------------------
 
-void DLogChannel::SetADCOffset(int aADCOffset) {
+uint32_t DLogChannel::SetADCOffset(int aADCOffset) {
 	m_ADCOffset =
 			(aADCOffset < 0) ? 0 : ((aADCOffset > 255) ? 255 : aADCOffset);
-	send_cmd(PARAM_LOG_OFFSET, m_ADCOffset | (m_ADCOffset << 8));
+	return send_cmd(PARAM_LOG_OFFSET, m_ADCOffset | (m_ADCOffset << 8));
 }
 //----------------------------------------------------------------------------
 
 //============================================================================
 //	DAScan
 //============================================================================
-DAScan::DAScan(alt_u32 aBaseAddr) :
-		DChannel(aBaseAddr, ASCAN_CHANNEL) {
+
+DAScan::DAScan() :
+		DChannel(ASCAN_CHANNEL) {
+	m_DataLen = 256;
+	m_AScanChannel = 0;
 }
+//----------------------------------------------------------------------------
 
 DAScan::~DAScan() {
 }
+//----------------------------------------------------------------------------
 
-alt_u32 DAScan::get_mpr1_value(void) {
-	alt_u32 data = DChannel::get_mpr1_value();
+uint32_t DAScan::get_mpr1_value(void) {
+	uint32_t data = DChannel::get_mpr1_value();
 	data |= MPR1_ASCAN_CH(m_AScanChannel);
 	return data;
 }
 //----------------------------------------------------------------------------
 
-void DAScan::SetDataLen(int aDataLen) {
+uint32_t DAScan::SetDataLen(int aDataLen) {
 	m_DataLen = (aDataLen >> 1) << 1;
-	send_cmd(PARAM_DATA_LEN, m_DataLen >> 1);
+	return send_cmd(PARAM_DATA_LEN, m_DataLen >> 1);
 }
 //----------------------------------------------------------------------------
 
-void DAScan::SetAScanChannel(int aAScanChannel) {
+uint32_t DAScan::SetAScanChannel(int aAScanChannel) {
 	m_AScanChannel = aAScanChannel;
-	update_mpr1();
+	return update_mpr1();
 }
 //----------------------------------------------------------------------------
 
@@ -156,13 +159,17 @@ void DAScan::SetAScanChannel(int aAScanChannel) {
 //	DPart
 //============================================================================
 
-DPart::DPart(alt_u32 aBaseAddr) :
-		DChannelBase(aBaseAddr, CONTROL_CHANNEL) {
+DPart::DPart() :
+		DChannelBase(CONTROL_CHANNEL) {
+
+	m_LedOn = false;
+	m_HV = hvOff;
+	m_PktCntrEnable = true;
 
 	for (int i = 0; i < 14; i++)
-		Channel[i] = new DLogChannel(aBaseAddr, i);
+		Channel[i] = new DLogChannel(i);
 
-	AScan = new DAScan(aBaseAddr);
+	AScan = new DAScan();
 }
 //----------------------------------------------------------------------------
 
@@ -173,8 +180,8 @@ DPart::~DPart() {
 }
 //----------------------------------------------------------------------------
 
-void DPart::update_mpr2(void) {
-	alt_u32 data = (m_LedOn ? MPR2_LED_BIT : 0)
+uint32_t DPart::update_mpr2(void) {
+	uint32_t data = (m_LedOn ? MPR2_LED_BIT : 0)
 			| (m_PktCntrEnable ? MPR2_COUNTER_EN : 0);
 	switch (m_HV) {
 	case hvOff:
@@ -191,38 +198,40 @@ void DPart::update_mpr2(void) {
 		break;
 	}
 
-	send_cmd(PARAM_MPR2, data);
+	return send_cmd(PARAM_MPR2, data);
 }
 //----------------------------------------------------------------------------
 
-void DPart::SendPulseCmd(void) {
-	send_cmd(PARAM_SEND_SYNC, 0);
+uint32_t DPart::SendPulseCmd(void) {
+	return send_cmd(PARAM_SEND_SYNC, 0);
 }
 //----------------------------------------------------------------------------
 
-void DPart::LightOn(bool aLedOn) {
+uint32_t DPart::LightOn(bool aLedOn) {
 	m_LedOn = aLedOn;
-	update_mpr2();
+	return update_mpr2();
 }
 //----------------------------------------------------------------------------
 
-void DPart::SetHightVoltage(HightVoltage aHV) {
+uint32_t DPart::SetHightVoltage(HightVoltage aHV) {
 	m_HV = aHV;
-	update_mpr2();
+	return update_mpr2();
 }
 //----------------------------------------------------------------------------
 
-void DPart::EnablePktCntr(bool aEnable) {
+uint32_t DPart::EnablePktCntr(bool aEnable) {
 	m_PktCntrEnable = aEnable;
-	update_mpr2();
+	return update_mpr2();
 }
 //----------------------------------------------------------------------------
 
 //============================================================================
 //	DScope
 //============================================================================
+
 DScope::DScope() {
 	LFish = new DPart(0);//CMD_FIFO_BASE);
+	RFish = NULL;
 }
 //----------------------------------------------------------------------------
 
@@ -230,12 +239,12 @@ DScope::~DScope() {
 }
 //----------------------------------------------------------------------------
 
-void DScope::SetSyncType(SyncType aSyncType) {
-
+uint32_t DScope::SetSyncType(SyncType aSyncType) {
+	return 0;
 }
 //----------------------------------------------------------------------------
 
-void DScope::SetIntSyncPeriod(int aPeriod) {
-
+uint32_t DScope::SetIntSyncPeriod(int aPeriod) {
+	return 0;
 }
 //----------------------------------------------------------------------------

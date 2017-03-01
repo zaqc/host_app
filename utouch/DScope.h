@@ -9,8 +9,7 @@
 #define DSCOPE_H_
 //----------------------------------------------------------------------------
 
-//#include "alt_types.h"
-#define	alt_u32		unsigned int
+#include <stdint.h>
 //----------------------------------------------------------------------------
 
 #define	ASCAN_CHANNEL		14
@@ -55,18 +54,16 @@ enum HightVoltage {
 
 class DChannelBase {
 protected:
-	alt_u32 m_BaseAddr;
 	int m_ChNum;
 
 public:
 	DChannelBase() {
-		m_BaseAddr = 0;
 		m_ChNum = 0;
 	}
-	DChannelBase(alt_u32 aBaseAddr, int aChNum);
+	DChannelBase(int aChNum);
 	virtual ~DChannelBase();
 
-	void send_cmd(alt_u32 aParamNum, alt_u32 aData);
+	uint32_t send_cmd(uint32_t aParamNum, uint32_t aData);
 };
 //----------------------------------------------------------------------------
 
@@ -74,13 +71,13 @@ class DChannel: public DChannelBase {
 protected:
 	bool m_isEnable;
 public:
-	DChannel(alt_u32 aBaseAddr, int aChNum);
+	DChannel(int aChNum);
 	virtual ~DChannel();
 
-	virtual alt_u32 get_mpr1_value(void);
-	void update_mpr1(void);
+	virtual uint32_t get_mpr1_value(void);
+	uint32_t update_mpr1(void);
 
-	void SetEanble(bool aEnable);
+	uint32_t SetEanble(bool aEnable);
 };
 //----------------------------------------------------------------------------
 
@@ -93,15 +90,15 @@ protected:
 	int m_PreAmp12dB;
 	int m_ADCOffset;
 public:
-	DLogChannel(alt_u32 aBaseAddr, int aChNum);
+	DLogChannel(int aChNum);
 	virtual ~DLogChannel();
 
-	virtual alt_u32 get_mpr1_value(void);
+	virtual uint32_t get_mpr1_value(void);
 
-	void SetDataLen(int aDataLen);
-	void SetADCAccum(int aADCAccum);
-	void SetDelay(int aDelay);
-	void SetADCOffset(int aADCOffset);
+	uint32_t SetDataLen(int aDataLen);
+	uint32_t SetADCAccum(int aADCAccum);
+	uint32_t SetDelay(int aDelay);
+	uint32_t SetADCOffset(int aADCOffset);
 };
 //----------------------------------------------------------------------------
 
@@ -110,19 +107,18 @@ protected:
 	int m_AScanChannel;
 	int m_DataLen; // in 2 Shorts (32 bit) (default (2048 * 2 == 4096))
 public:
-	DAScan(alt_u32 aBaseAddr);
+	DAScan();
 	virtual ~DAScan();
 
-	virtual alt_u32 get_mpr1_value(void);
+	virtual uint32_t get_mpr1_value(void);
 
-	void SetDataLen(int aDataLen);
-	void SetAScanChannel(int aAScanChannel);
+	uint32_t SetDataLen(int aDataLen);
+	uint32_t SetAScanChannel(int aAScanChannel);
 };
 //----------------------------------------------------------------------------
 
 class DPart: public DChannelBase {
 protected:
-	alt_u32 m_BaseAddr;
 	bool m_LedOn;
 	HightVoltage m_HV;
 	bool m_PktCntrEnable;
@@ -131,18 +127,16 @@ public:
 	DChannel *Channel[14];
 	DAScan *AScan;
 
-	DPart(alt_u32 aBaseAddr);
+	DPart();
 	virtual ~DPart();
 
-	void update_mpr2(void);
+	uint32_t update_mpr2(void);
 
-	void SendPulseCmd(void);
+	uint32_t SendPulseCmd(void);
 
-	void LightOn(bool aLedOn);
-	void SetHightVoltage(HightVoltage aHV);
-	void EnablePktCntr(bool aEnable);
-
-//	void ResetToDefaults(void);
+	uint32_t LightOn(bool aLedOn);
+	uint32_t SetHightVoltage(HightVoltage aHV);
+	uint32_t EnablePktCntr(bool aEnable);
 };
 //----------------------------------------------------------------------------
 
@@ -155,8 +149,8 @@ public:
 	DScope();
 	virtual ~DScope();
 
-	void SetSyncType(SyncType aSyncType);
-	void SetIntSyncPeriod(int aPeriod);
+	uint32_t SetSyncType(SyncType aSyncType);
+	uint32_t SetIntSyncPeriod(int aPeriod);
 };
 //----------------------------------------------------------------------------
 
