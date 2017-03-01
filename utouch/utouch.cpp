@@ -139,7 +139,7 @@ int main(void) {
 	int fc = 0;
 	ts_prev = ts;
 
-	eglSwapInterval(__egl_display, 1);
+	eglSwapInterval(__egl_display, 0);
 
 	XEvent x_event;
 	while (true) {

@@ -127,7 +127,7 @@ public:
 	DChannel *Channel[14];
 	DAScan *AScan;
 
-	DPart();
+	DPart(unsigned char *aAddr);
 	virtual ~DPart();
 
 	uint32_t update_mpr2(void);

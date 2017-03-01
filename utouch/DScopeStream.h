@@ -127,7 +127,7 @@ public:
 //----------------------------------------------------------------------------
 
 enum StreamState {
-	ssNone, ssWaitPreamble, ssGetPreamble, ssGetDataBlock, ssError
+	ssStateNone, ssWaitPreamble, ssGetPreamble, ssGetDataBlock, ssError
 };
 //----------------------------------------------------------------------------
 

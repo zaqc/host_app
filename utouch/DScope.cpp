@@ -44,8 +44,8 @@ uint32_t DChannelBase::send_cmd(uint32_t aParamNum, uint32_t aData) {
 //	DChannel
 //============================================================================
 
-DChannel::DChannel(int aChNum) :
-		DChannelBase(aChNum) {
+DChannel::DChannel(int aChNum)
+		: DChannelBase(aChNum) {
 	m_isEnable = true;
 }
 //----------------------------------------------------------------------------
@@ -74,8 +74,8 @@ uint32_t DChannel::SetEanble(bool aEnable) {
 //	DLogChannel
 //============================================================================
 
-DLogChannel::DLogChannel(int aChNum) :
-		DChannel(aChNum) {
+DLogChannel::DLogChannel(int aChNum)
+		: DChannel(aChNum) {
 	m_isEnable = true;
 	m_isVGA = false;
 	m_ADCAccum = 31;
@@ -115,8 +115,7 @@ uint32_t DLogChannel::SetDelay(int aDelay) {
 //----------------------------------------------------------------------------
 
 uint32_t DLogChannel::SetADCOffset(int aADCOffset) {
-	m_ADCOffset =
-			(aADCOffset < 0) ? 0 : ((aADCOffset > 255) ? 255 : aADCOffset);
+	m_ADCOffset = (aADCOffset < 0) ? 0 : ((aADCOffset > 255) ? 255 : aADCOffset);
 	return send_cmd(PARAM_LOG_OFFSET, m_ADCOffset | (m_ADCOffset << 8));
 }
 //----------------------------------------------------------------------------
@@ -125,8 +124,8 @@ uint32_t DLogChannel::SetADCOffset(int aADCOffset) {
 //	DAScan
 //============================================================================
 
-DAScan::DAScan() :
-		DChannel(ASCAN_CHANNEL) {
+DAScan::DAScan()
+		: DChannel(ASCAN_CHANNEL) {
 	m_DataLen = 256;
 	m_AScanChannel = 0;
 }
@@ -159,8 +158,8 @@ uint32_t DAScan::SetAScanChannel(int aAScanChannel) {
 //	DPart
 //============================================================================
 
-DPart::DPart() :
-		DChannelBase(CONTROL_CHANNEL) {
+DPart::DPart(unsigned char *aAddr)
+		: DChannelBase(CONTROL_CHANNEL) {
 
 	m_LedOn = false;
 	m_HV = hvOff;
@@ -181,21 +180,20 @@ DPart::~DPart() {
 //----------------------------------------------------------------------------
 
 uint32_t DPart::update_mpr2(void) {
-	uint32_t data = (m_LedOn ? MPR2_LED_BIT : 0)
-			| (m_PktCntrEnable ? MPR2_COUNTER_EN : 0);
+	uint32_t data = (m_LedOn ? MPR2_LED_BIT : 0) | (m_PktCntrEnable ? MPR2_COUNTER_EN : 0);
 	switch (m_HV) {
-	case hvOff:
-		data |= MPR2_HV_OFF;
-		break;
-	case hv30_1:
-		data |= MPR2_HV_30_1;
-		break;
-	case hv30_2:
-		data |= MPR2_HV_30_2;
-		break;
-	case hv60:
-		data |= MPR2_HV_60;
-		break;
+		case hvOff:
+			data |= MPR2_HV_OFF;
+			break;
+		case hv30_1:
+			data |= MPR2_HV_30_1;
+			break;
+		case hv30_2:
+			data |= MPR2_HV_30_2;
+			break;
+		case hv60:
+			data |= MPR2_HV_60;
+			break;
 	}
 
 	return send_cmd(PARAM_MPR2, data);
@@ -230,8 +228,10 @@ uint32_t DPart::EnablePktCntr(bool aEnable) {
 //============================================================================
 
 DScope::DScope() {
-	LFish = new DPart(0);//CMD_FIFO_BASE);
-	RFish = NULL;
+	unsigned char ls[] = { 0xFF, 0x00, 0x12, 0xDE };
+	LFish = new DPart(ls);
+	unsigned char rs[] = { 0XFF, 0x00, 0xF0, 0x72 };
+	RFish = new DPart(rs);
 }
 //----------------------------------------------------------------------------
 

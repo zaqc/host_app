@@ -13,6 +13,7 @@
 
 #include <iostream>
 
+#include "DScope.h"
 #include "DScopeStream.h"
 //----------------------------------------------------------------------------
 
@@ -113,7 +114,7 @@ void * recv_thread(void *context) {
 //----------------------------------------------------------------------------
 
 DScopeStream::DScopeStream() {
-	m_StreamState = ssNone;
+	m_StreamState = ssStateNone;
 	m_PreambleCount = 0;
 
 	m_ErrorCount = 0;
@@ -169,9 +170,27 @@ DScopeStream::DScopeStream() {
 	buf[14] = 0x00;
 	buf[15] = 0x00;
 
-	for (int i = 0; i < 10; i++) {
+	DScope *ds = new DScope();
+	bool l_on = true;
+	for (int i = 0; i < 2; i++) {
+		unsigned int v = ds->LFish->LightOn(l_on);
+		l_on = !l_on;
+
+		buf[11] = v & 0xFF;
+		buf[10] = (v >> 8) & 0xFF;
+		buf[9] = (v >> 16) & 0xFF;
+		buf[8] = (v >> 24) & 0xFF;
+
 		ftdi_write_data(m_FTDI, buf, 16);
-		usleep(1000 * 1000);
+		usleep(100 * 1000);
+	}
+	{
+		unsigned int v = ds->LFish->SetHightVoltage(hv60);
+		buf[11] = v & 0xFF;
+		buf[10] = (v >> 8) & 0xFF;
+		buf[9] = (v >> 16) & 0xFF;
+		buf[8] = (v >> 24) & 0xFF;
+		ftdi_write_data(m_FTDI, buf, 16);
 	}
 
 	m_Q = new DataFrameQueue(16, true);
