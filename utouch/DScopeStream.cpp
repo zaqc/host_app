@@ -207,7 +207,7 @@ DScopeStream::DScopeStream() {
 		buf[8] = 0x00;
 		buf[9] = 0x00;
 		buf[10] = 0x00;
-		buf[11] = 0x01;	// 0x01 - enable internal sync
+		buf[11] = 0x00;	// 0x01 - enable internal sync
 
 		ftdi_write_data(m_FTDI, buf, 16);
 	}
@@ -233,7 +233,7 @@ DScopeStream::~DScopeStream() {
 }
 //----------------------------------------------------------------------------
 
-int DScopeStream::RecvBuf(unsigned char *aBuf, int aSize) {
+int DScopeStream::RecvBuf(unsigned char *aBuf, int aSize, bool aWait) {
 	int s = 0;
 	int bc;
 	while (s < aSize) {
@@ -241,9 +241,11 @@ int DScopeStream::RecvBuf(unsigned char *aBuf, int aSize) {
 
 		if (bc < 0)
 			return -1;
-
-		else
+		else if (bc != 0)
 			s += bc;
+
+		if (!aWait)
+			break;
 	}
 
 	return s;
@@ -281,7 +283,11 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		buf++;
 		unsigned int w = *(unsigned int *) buf;
 		buf += 4;
-		if ((ch & 0xF0) == 0xC0) {
+		if (ch == 0x90) {
+			printf(".");
+			fflush(stdout);
+		}
+		else if (ch == 0xC0) {
 			printf("Key changed 0x%08X\n", w);
 		}
 		else if ((ch & 0xF0) == 0xA0) {
@@ -357,11 +363,21 @@ void DScopeStream::DecodeStream(void) {
 	unsigned char ch[1024];
 	switch (m_StreamState) {
 		case ssNone:
+			m_DecoLen = 0;
+			m_AlignShift = 0;
 			m_StreamState = ssWaitPreamble;
 			break;
 
 		case ssWaitPreamble: {
-			if (RecvBuf(ch, 1) == 1) {
+			if (RecvBuf(ch, 1, true) == 1) {
+				if ((ch[0] & 0xF0) == 0xC0) {
+					if (RecvBuf(ch, 4, true) == 4)
+						printf("Key changed 0x%08X\n", *(unsigned int *) ch);
+					break;
+				}
+
+				m_DecoLen = 0;
+				m_AlignShift = 0;
 				if (ch[0] == 0x55) {
 					m_PreambleCount++;
 				}
@@ -379,7 +395,10 @@ void DScopeStream::DecodeStream(void) {
 		}
 
 		case ssGetPreamble: {
-			if (RecvBuf(ch, 5) == 5) {
+			if (RecvBuf(ch, 5, true) == 5) {
+				m_DecoLen = 0;
+				m_AlignShift = 0;
+
 				m_StreamState = ssGetDataBlock;
 
 				for (int i = 0; i < 5; i++) {
@@ -396,19 +415,26 @@ void DScopeStream::DecodeStream(void) {
 		}
 
 		case ssGetDataBlock: {
-			if (RecvBuf(ch, 1000) == 1000) {
-				//res += shift;
-				//block_size += res;
-				if (0 == DecodeBuffer(ch, 1000)) {
-					m_StreamState = ssGetPreamble;
+			int res = RecvBuf(&ch[m_AlignShift], 1000 - m_AlignShift - m_DecoLen, false);
+			if (res > 0) {
+				res += m_AlignShift;
+				m_AlignShift = 0;
+
+				if (0 == DecodeBuffer(ch, res))
 					block_count++;
-				}
-				else {
-					m_StreamState = ssWaitPreamble;
+				else
 					error_count++;
-				}
+
+				int ald = (res / 5) * 5;
+				m_DecoLen += ald;
+				m_AlignShift = res - ald;
+				if (m_AlignShift)
+					memcpy(ch, &ch[ald], m_AlignShift);
+
+				if (m_DecoLen == 1000)
+					m_StreamState = ssGetPreamble;
 			}
-			else
+			else if (res < 0)
 				m_StreamState = ssError;
 
 			break;

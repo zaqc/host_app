@@ -205,12 +205,79 @@ void TextScroller::Scroll(int aDX) {
 }
 //----------------------------------------------------------------------------
 
-void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
+GLubyte *_buf = NULL;
 
+void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
+	if (!_buf)
+		_buf = new GLubyte[1024 * 512 * 4];
+
+	for (int i = 0; i < aW; i++) {
+		DataFrame *df = NULL;
+		aDSS->GetFrame(df);
+		unsigned char *aBuf = NULL;
+		if (df)
+			aBuf = df->m_RData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
+		int n = i * 4;
+		for (int j = 0; j < 480; j++) {
+			unsigned char v = j;
+			if (aBuf)
+				v = *aBuf;
+			_buf[n] = v;
+			_buf[n + 1] = v;
+			_buf[n + 2] = v;
+			_buf[n + 3] = 255;
+			n += aW * 4;
+			aBuf++;
+		}
+	}
+
+	GLfloat v[] = { /* vertexes */
+	-1.0f, -1.0f, 0.0f, /**/
+	-1.0f, 1.0f, 0.0f, /**/
+	1.0f, -1.0f, 0.0f, /**/
+	1.0f, 1.0f, 0.0f };
+
+	GLfloat txc[] = { /* texture coordinate */
+	0.0f, 0.0f, /**/
+	0.0f, 1.0f, /**/
+	1.0f, 0.0f, /**/
+	1.0f, 1.0f };
+
+	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, aW, 480);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_BkText);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, aW, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, _buf);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BkFB);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BkText, 0);
+
+	glUniform1f(m_paramShiftX, 0.0f);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glVertexAttribPointer(m_paramVerexTextCoord, 2, GL_FLOAT, GL_FALSE, 0, txc);
+	glEnableVertexAttribArray(m_paramVerexTextCoord);
+
+	glUniform1i(m_paramTexture, 2);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - aW, 0, 0, 0, aW, 480);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 //----------------------------------------------------------------------------
 
-GLubyte *_buf = NULL;
 int nnnn = 0;
 void TextScroller::DrawData(int aW, unsigned char *aBuf) {
 	if (!_buf)
@@ -366,14 +433,22 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_Text);
 	int ss = aDSS->GetFrameCount();
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if (ss) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_Text);
 
-	DrawData(ss, aDSS);
+		if (ss < 800) {
+			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
+			//glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
+		}
+		else
+			ss = 800;
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		DrawData(ss, aDSS);
+	}
 }
 //----------------------------------------------------------------------------
 

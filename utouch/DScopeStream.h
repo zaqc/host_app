@@ -168,6 +168,9 @@ protected:
 	unsigned int m_ErrorCount;
 	unsigned int m_RecvFrameCount;
 
+	int m_DecoLen;
+	int m_AlignShift;
+
 	void UpdateFrame(bool aPush);
 	/**
 	 * Decode received data (aligned by 5 bytes)
@@ -177,7 +180,7 @@ protected:
 	 */
 	int DecodeBuffer(unsigned char *aBuf, int aSize);
 	void DecodeStream(void);
-	int RecvBuf(unsigned char *aBuf, int aSize);
+	int RecvBuf(unsigned char *aBuf, int aSize, bool aWait);
 public:
 	DScopeStream();
 	virtual ~DScopeStream();

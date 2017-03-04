@@ -60,9 +60,9 @@ int main(void) {
 	//	Atom atom = XInternAtom(x_disp, "_NET_WM_STATE_FULLSCREEN", true);
 	//	XChangeProperty(x_disp, x_wnd, XInternAtom(x_disp, "_NET_WM_STATE", true), XA_ATOM, 32, PropModeReplace, (unsigned char *) &atom, 1);
 
-	Atom window_type = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE", False);
-	long value = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
+//	Atom window_type = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE", False);
+//	long value = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
+//	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
 
 	XMapWindow(x_disp, x_wnd);
 	XMoveWindow(x_disp, x_wnd, (attr.width - 800) / 2, (attr.height - 480) / 2);
@@ -139,7 +139,7 @@ int main(void) {
 	int fc = 0;
 	ts_prev = ts;
 
-	eglSwapInterval(__egl_display, 0);
+	eglSwapInterval(__egl_display, 1);
 
 	XEvent x_event;
 	while (true) {
@@ -160,15 +160,21 @@ int main(void) {
 
 		}
 
-		//renderFrame();
-		DataFrame *df;
-		dss->GetFrame(df);
-		tscroll->RenderFrame(df->m_RData);
+//		if (dss->GetFrameCount()) {
+//			DataFrame *df;
+//			dss->GetFrame(df);
+//			tscroll->RenderFrame(df->m_RData);
+//		}
+//		else
+//			usleep(10000);
 
-		//tscroll->RenderFrame(dss);
-
 		//renderFrame();
+
+		tscroll->RenderFrame(dss);
+
 		eglSwapBuffers(__egl_display, surf);
+
+		//renderFrame();
 
 		fc++;
 		gettimeofday(&ts, 0);
