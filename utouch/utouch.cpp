@@ -24,10 +24,8 @@
 #include "TextScroller.h"
 #include "DScopeStream.h"
 
-bool setupGraphics(int w, int h);
-void renderFrame();
-
-extern GLubyte *txt;
+//bool setupGraphics(int w, int h);
+//void renderFrame();
 
 int main(void) {
 	puts("!!!Hello World!!!");
@@ -121,7 +119,7 @@ int main(void) {
 
 	eglMakeCurrent(__egl_display, surf, surf, __egl_context);
 
-	setupGraphics(800, 480);
+	//setupGraphics(800, 480);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
@@ -132,7 +130,7 @@ int main(void) {
 
 	TextScroller *tscroll = new TextScroller();
 	tscroll->InitProgram();
-	tscroll->Init(800, 480);
+	tscroll->Init();
 
 	timeval ts, ts_prev;
 	gettimeofday(&ts, 0);
@@ -151,7 +149,7 @@ int main(void) {
 				break;
 			}
 			if (x_event.type == ButtonPress) {
-				//				printf("Trying to close full screen mode\n");
+				printf("Trying to close full screen mode\n");
 				//				Atom atom = XInternAtom(x_disp, "_NET_WM_DESKTOP", true);
 				//				XChangeProperty(x_disp, x_desktop, XInternAtom(x_disp, "_NET_WM_DESKTOP", false),
 				//				XA_ATOM, 32, PropModeReplace, (unsigned char *) &atom, 1);
@@ -188,6 +186,7 @@ int main(void) {
 		}
 	}
 
+	printf("try to delete TextScroller...\n");
 	delete tscroll;
 
 	usleep(100000);
@@ -198,10 +197,10 @@ int main(void) {
 
 	XDestroyWindow(x_disp, x_wnd);
 
-	if (txt)
-		delete[] txt;
-
+	printf("try to delete DScopeStream...\n");
 	delete dss;
+
+	usleep(100000);
 
 	return EXIT_SUCCESS;
 }

@@ -153,6 +153,8 @@ protected:
 	pthread_cond_t m_DataReady;
 	bool m_DataAccepted; // data accepted in GetFrame method
 	pthread_mutex_t m_FrameLock;
+	bool m_ThreadRunning;
+	pthread_mutex_t m_ReadLock;
 
 	DataFrame *m_Frame;
 

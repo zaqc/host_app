@@ -30,13 +30,10 @@ public:
 	virtual ~TextScroller();
 
 	void InitProgram(void);
-	void Init(int aW, int aH);
+	void Init(void);
 	void Scroll(int aDX);
 
-	void DrawData(int aW, unsigned char *aBuf);
 	void DrawData(int aW, DScopeStream *aDSS);
-
-	void RenderFrame(unsigned char *aBuf);
 	void RenderFrame(DScopeStream *aDSS);
 };
 //----------------------------------------------------------------------------

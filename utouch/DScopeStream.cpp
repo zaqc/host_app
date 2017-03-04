@@ -213,6 +213,9 @@ DScopeStream::DScopeStream() {
 	}
 	m_Q = new DataFrameQueue(800, true);
 
+	m_ThreadRunning = true;
+	pthread_mutex_init(&m_ReadLock, NULL);
+
 	m_DataAccepted = false;
 	pthread_mutex_init(&m_FrameLock, NULL);
 	pthread_cond_init(&m_DataReady, NULL);
@@ -222,14 +225,28 @@ DScopeStream::DScopeStream() {
 
 DScopeStream::~DScopeStream() {
 
-	delete m_Q;
+	printf("m_ThreadRunning = false;\n");
+	pthread_mutex_lock(&m_ReadLock);
+	m_ThreadRunning = false;
+	pthread_mutex_unlock(&m_ReadLock);
+	pthread_join(m_Thread, NULL);
 
-	if (NULL != m_FTDI) {
-		ftdi_usb_close(m_FTDI);
-		pthread_join(m_Thread, NULL);
-		ftdi_free(m_FTDI);
-		m_FTDI = NULL;
-	}
+	pthread_mutex_destroy(&m_ReadLock);
+
+	printf("close ftdi...\n");
+	ftdi_usb_close(m_FTDI);
+	ftdi_free(m_FTDI);
+
+	pthread_mutex_lock(&m_FrameLock);
+	pthread_cond_signal(&m_DataReady);
+	pthread_mutex_unlock(&m_FrameLock);
+
+	pthread_mutex_destroy(&m_FrameLock);
+	pthread_cond_destroy(&m_DataReady);
+
+	printf("delete m_Q...\n");
+
+	delete m_Q;
 }
 //----------------------------------------------------------------------------
 
@@ -237,7 +254,14 @@ int DScopeStream::RecvBuf(unsigned char *aBuf, int aSize, bool aWait) {
 	int s = 0;
 	int bc;
 	while (s < aSize) {
-		bc = ftdi_read_data(m_FTDI, &aBuf[s], aSize - s);
+		pthread_mutex_lock(&m_ReadLock);
+		bool run = m_ThreadRunning;
+		pthread_mutex_unlock(&m_ReadLock);
+
+		if (run)
+			bc = ftdi_read_data(m_FTDI, &aBuf[s], aSize - s);
+		else
+			return -1;
 
 		if (bc < 0)
 			return -1;
@@ -285,7 +309,7 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		buf += 4;
 		if (ch == 0x90) {
 			printf(".");
-			fflush(stdout);
+			//fflush(stdout);
 		}
 		else if (ch == 0xC0) {
 			printf("Key changed 0x%08X\n", w);
@@ -466,6 +490,8 @@ void DScopeStream::RecvThread(void) {
 //			n = 0;
 //		}
 	}
+
+	printf("Exit from thread...\n");
 }
 //----------------------------------------------------------------------------
 
