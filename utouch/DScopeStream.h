@@ -11,6 +11,7 @@
 
 #include <ftdi.h>
 #include <pthread.h>
+#include <memory.h>
 //----------------------------------------------------------------------------
 
 #define	DSCOPE_PID	0xEDA3
@@ -57,6 +58,8 @@ struct DataFrame {
 		m_RPktCounter = 0;
 //		m_LChMask = 0;
 //		m_RChMask = 0;
+		memset(m_LData, 0, 4096);
+		memset(m_RData, 0, 4096);
 		for (int i = 0; i < 16; i++) {
 			m_LChLen[i] = 0;
 			m_RChLen[i] = 0;
@@ -123,6 +126,14 @@ public:
 	bool IsEmpty(void) {
 		return m_QLen == 0;
 	}
+
+	/**
+	 * queue length
+	 * @return Length of queue (it's not size of queue (len < size))
+	 */
+	int GetLen(void) {
+		return m_QLen;
+	}
 };
 //----------------------------------------------------------------------------
 
@@ -181,6 +192,12 @@ public:
 	 * @param aDataFrame return data frame if data present (caller thread is paused if data are not ready yet)
 	 */
 	void GetFrame(DataFrame* &aDataFrame);
+
+	/**
+	 * Get frame count in Queue
+	 * @return count of frames that are stored in queue
+	 */
+	int GetFrameCount(void);
 };
 //----------------------------------------------------------------------------
 

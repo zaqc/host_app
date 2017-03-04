@@ -5,16 +5,9 @@
  *      Author: zaqc
  */
 #include <unistd.h>
+#include <stdint.h>
 
 #include "DScope.h"
-
-//#include "alt_types.h"
-
-//#include "system.h"
-
-//#include "altera_avalon_fifo.h"
-//#include "altera_avalon_fifo_regs.h"
-//#include "altera_avalon_fifo_util.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -164,6 +157,8 @@ DPart::DPart(unsigned char *aAddr)
 	m_LedOn = false;
 	m_HV = hvOff;
 	m_PktCntrEnable = true;
+
+	*(uint32_t*) m_Addr = *(uint32_t*) aAddr;
 
 	for (int i = 0; i < 14; i++)
 		Channel[i] = new DLogChannel(i);

@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------------
 
 #include <GLES2/gl2.h>
+#include "DScopeStream.h"
 //----------------------------------------------------------------------------
 
 class TextScroller {
@@ -33,7 +34,10 @@ public:
 	void Scroll(int aDX);
 
 	void DrawData(int aW, unsigned char *aBuf);
+	void DrawData(int aW, DScopeStream *aDSS);
+
 	void RenderFrame(unsigned char *aBuf);
+	void RenderFrame(DScopeStream *aDSS);
 };
 //----------------------------------------------------------------------------
 

@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <math.h>
 #include <GLES2/gl2.h>
+
+#include "DScopeStream.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -203,6 +205,11 @@ void TextScroller::Scroll(int aDX) {
 }
 //----------------------------------------------------------------------------
 
+void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
+
+}
+//----------------------------------------------------------------------------
+
 GLubyte *_buf = NULL;
 int nnnn = 0;
 void TextScroller::DrawData(int aW, unsigned char *aBuf) {
@@ -319,6 +326,54 @@ void TextScroller::RenderFrame(unsigned char *aBuf) {
 	DrawData(ss, aBuf);
 	//}
 	//nnn = 0;
+}
+//----------------------------------------------------------------------------
+
+void TextScroller::RenderFrame(DScopeStream *aDSS) {
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, 1024, 512);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+	GLfloat v[] = { /* vertexes */
+	-1.0f, -1.0f, 0.0f, /**/
+	-1.0f, 1.0f, 0.0f, /**/
+	1.0f, -1.0f, 0.0f, /**/
+	1.0f, 1.0f, 0.0f };
+
+	GLfloat txc[] = { /* texture coordinate */
+	0.0f, 0.0f, /**/
+	0.0f, 1.0f, /**/
+	1.0f, 0.0f, /**/
+	1.0f, 1.0f };
+
+	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
+
+	glUniform1f(m_paramShiftX, 0.0f);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glVertexAttribPointer(m_paramVerexTextCoord, 2, GL_FLOAT, GL_FALSE, 0, txc);
+	glEnableVertexAttribArray(m_paramVerexTextCoord);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	glUniform1i(m_paramTexture, 2);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	int ss = aDSS->GetFrameCount();
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	DrawData(ss, aDSS);
 }
 //----------------------------------------------------------------------------
 

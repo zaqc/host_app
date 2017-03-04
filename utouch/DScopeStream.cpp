@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <memory.h>
 
 #include <pthread.h>
 
@@ -83,18 +84,21 @@ DataFrame *DataFrameQueue::GetBack(void) {
 }
 //----------------------------------------------------------------------------
 
+int frame_drop = 0;
+
 void DataFrameQueue::Push(void) {
 	if (m_QLen < m_QSize || m_OverPush) {
 		if (m_QLen == m_QSize) {
 			m_GetPtr = (m_GetPtr + 1) % m_QSize;
 			m_QLen--;
+			frame_drop++;
 		}
-		DataFrame *tmp = m_Q[m_PutPtr];
-		m_Q[m_PutPtr] = m_NewFrame;
-		m_NewFrame = tmp;
-		m_PutPtr = (m_PutPtr + 1) % m_QSize;
-		m_QLen++;
 	}
+	DataFrame *tmp = m_Q[m_PutPtr];
+	m_Q[m_PutPtr] = m_NewFrame;
+	m_NewFrame = tmp;
+	m_PutPtr = (m_PutPtr + 1) % m_QSize;
+	m_QLen++;
 }
 //----------------------------------------------------------------------------
 
@@ -170,19 +174,21 @@ DScopeStream::DScopeStream() {
 	buf[14] = 0x00;
 	buf[15] = 0x00;
 
+	printf("size of (int*) = %i\n", (int) sizeof(int *));
+
 	DScope *ds = new DScope();
 	bool l_on = true;
 	for (int i = 0; i < 2; i++) {
 		unsigned int v = ds->LFish->LightOn(l_on);
 		l_on = !l_on;
 
-		buf[11] = v & 0xFF;
-		buf[10] = (v >> 8) & 0xFF;
-		buf[9] = (v >> 16) & 0xFF;
 		buf[8] = (v >> 24) & 0xFF;
+		buf[9] = (v >> 16) & 0xFF;
+		buf[10] = (v >> 8) & 0xFF;
+		buf[11] = v & 0xFF;
 
 		ftdi_write_data(m_FTDI, buf, 16);
-		usleep(100 * 1000);
+		usleep(100000);
 	}
 	{
 		unsigned int v = ds->LFish->SetHightVoltage(hv60);
@@ -192,8 +198,20 @@ DScopeStream::DScopeStream() {
 		buf[8] = (v >> 24) & 0xFF;
 		ftdi_write_data(m_FTDI, buf, 16);
 	}
+	//hFAA5EDA3
+	{
+		buf[4] = 0xFA;
+		buf[5] = 0xA5;
+		buf[6] = 0xED;
+		buf[7] = 0xA3;
+		buf[8] = 0x00;
+		buf[9] = 0x00;
+		buf[10] = 0x00;
+		buf[11] = 0x01;	// 0x01 - enable internal sync
 
-	m_Q = new DataFrameQueue(16, true);
+		ftdi_write_data(m_FTDI, buf, 16);
+	}
+	m_Q = new DataFrameQueue(800, true);
 
 	m_DataAccepted = false;
 	pthread_mutex_init(&m_FrameLock, NULL);
@@ -224,9 +242,6 @@ int DScopeStream::RecvBuf(unsigned char *aBuf, int aSize) {
 		if (bc < 0)
 			return -1;
 
-		if (bc == 0) {
-			//usleep(1);
-		}
 		else
 			s += bc;
 	}
@@ -239,8 +254,8 @@ void DScopeStream::UpdateFrame(bool aPush) {
 	pthread_mutex_lock(&m_FrameLock);
 	if (aPush) {
 		m_Q->Push();
-		if (m_DataAccepted) {
-			m_DataAccepted = false;
+		if (!m_DataAccepted) {
+			m_DataAccepted = true;
 			pthread_cond_signal(&m_DataReady);
 		}
 	}
@@ -251,6 +266,9 @@ void DScopeStream::UpdateFrame(bool aPush) {
 	m_RightEndMarker = false;
 }
 //----------------------------------------------------------------------------
+
+unsigned int prev_fcl;
+unsigned int prev_fcr;
 
 int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 	if (NULL == m_Frame)
@@ -263,11 +281,18 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		buf++;
 		unsigned int w = *(unsigned int *) buf;
 		buf += 4;
-		if ((ch & 0xF0) == 0xA0) {
+		if ((ch & 0xF0) == 0xC0) {
+			printf("Key changed 0x%08X\n", w);
+		}
+		else if ((ch & 0xF0) == 0xA0) {
 			//if (!m_LeftEndMarker) {
 			if ((ch & 0x0F) == 0x0F) {
 				m_Frame->m_LPktCounter = REV_BYTE_ORDER(w);
+				if (prev_fcl + 1 != m_Frame->m_LPktCounter)
+					printf("Left Frame Number Error %i %i\n", prev_fcl, m_Frame->m_LPktCounter);
+				prev_fcl = m_Frame->m_LPktCounter;
 				m_LeftEndMarker = true;
+				//printf("Left %i\n", m_Frame->m_LPktCounter );
 			}
 			else {
 				m_Frame->m_LChLen[ch & 0x0F]++;
@@ -286,7 +311,11 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 			//if (!m_RightEndMarker) {
 			if ((ch & 0x0F) == 0x0F) {
 				m_Frame->m_RPktCounter = REV_BYTE_ORDER(w);
+				if (prev_fcr + 1 != m_Frame->m_RPktCounter)
+					printf("Right Frame Number Error %i %i\n", prev_fcr, m_Frame->m_RPktCounter);
+				prev_fcr = m_Frame->m_RPktCounter;
 				m_RightEndMarker = true;
+				//printf("Right           %i\n", m_Frame->m_RPktCounter);
 			}
 			else {
 				m_Frame->m_RChLen[ch & 0x0F]++;
@@ -301,6 +330,7 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		//	UpdateFrame(true);
 		//}
 		else {
+			//printf("Key changed 0x%08X block marker=0x%02X\n", w, ch);
 			m_ErrorCount++;
 			m_Frame->Clean();
 			m_LeftEndMarker = false;
@@ -309,6 +339,9 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		}
 
 		if (m_LeftEndMarker && m_RightEndMarker) {
+			//printf("pkt cntr %i %i\n", m_Frame->m_LPktCounter, m_Frame->m_RPktCounter);
+			if (m_Frame->m_LDataLen != 1792 || m_Frame->m_RDataLen != 1792)
+				printf("pkt data len %i %i\n", m_Frame->m_LDataLen, m_Frame->m_RDataLen);
 			UpdateFrame(true);
 		}
 	}
@@ -335,6 +368,7 @@ void DScopeStream::DecodeStream(void) {
 				else {
 					if (m_PreambleCount == 4 && ch[0] == 0xD5)
 						m_StreamState = ssGetDataBlock;
+
 					m_PreambleCount = 0;
 				}
 			}
@@ -347,6 +381,7 @@ void DScopeStream::DecodeStream(void) {
 		case ssGetPreamble: {
 			if (RecvBuf(ch, 5) == 5) {
 				m_StreamState = ssGetDataBlock;
+
 				for (int i = 0; i < 5; i++) {
 					if ((i != 4 && ch[i] != 0x55) || (i == 4 && ch[i] != 0xD5)) {
 						m_StreamState = ssWaitPreamble;
@@ -362,6 +397,8 @@ void DScopeStream::DecodeStream(void) {
 
 		case ssGetDataBlock: {
 			if (RecvBuf(ch, 1000) == 1000) {
+				//res += shift;
+				//block_size += res;
 				if (0 == DecodeBuffer(ch, 1000)) {
 					m_StreamState = ssGetPreamble;
 					block_count++;
@@ -395,6 +432,7 @@ void DScopeStream::RecvThread(void) {
 			printf("block count=%i\n", block_count);
 			printf("error count=%i\n", error_count);
 			printf("m_ErrorCount=%i\n", m_ErrorCount);
+			printf("Frame Drop Count=%i\n", frame_drop);
 			break;
 		}
 //		if(n++ > 10000000) {
@@ -409,8 +447,8 @@ void DScopeStream::GetFrame(DataFrame* &aDataFrame) {
 	pthread_mutex_lock(&m_FrameLock);
 	if (m_Q->IsEmpty()) {
 		int err = 0;
-		m_DataAccepted = true;
-		while (m_DataAccepted) {
+		m_DataAccepted = false;
+		while (!m_DataAccepted) {
 			err = pthread_cond_wait(&m_DataReady, &m_FrameLock);
 			if (err)
 				break;
@@ -418,5 +456,14 @@ void DScopeStream::GetFrame(DataFrame* &aDataFrame) {
 	}
 	aDataFrame = m_Q->PullFront();
 	pthread_mutex_unlock(&m_FrameLock);
+}
+//----------------------------------------------------------------------------
+
+int DScopeStream::GetFrameCount(void) {
+	pthread_mutex_lock(&m_FrameLock);
+	int frame_count = m_Q->GetLen();
+	pthread_mutex_unlock(&m_FrameLock);
+
+	return frame_count;
 }
 //----------------------------------------------------------------------------

@@ -119,10 +119,10 @@ public:
 
 class DPart: public DChannelBase {
 protected:
+	unsigned char m_Addr[4];
 	bool m_LedOn;
 	HightVoltage m_HV;
 	bool m_PktCntrEnable;
-
 public:
 	DChannel *Channel[14];
 	DAScan *AScan;

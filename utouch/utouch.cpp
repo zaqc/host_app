@@ -164,7 +164,10 @@ int main(void) {
 		DataFrame *df;
 		dss->GetFrame(df);
 		tscroll->RenderFrame(df->m_RData);
-		renderFrame();
+
+		//tscroll->RenderFrame(dss);
+
+		//renderFrame();
 		eglSwapBuffers(__egl_display, surf);
 
 		fc++;
