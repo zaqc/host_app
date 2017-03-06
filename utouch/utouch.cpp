@@ -23,6 +23,7 @@
 #include "Util.h"
 #include "TextScroller.h"
 #include "DScopeStream.h"
+#include "TextAScan.h"
 
 //bool setupGraphics(int w, int h);
 //void renderFrame();
@@ -139,6 +140,8 @@ int main(void) {
 
 	eglSwapInterval(__egl_display, 1);
 
+	TextAScan *a_scan = new TextAScan();
+
 	XEvent x_event;
 	while (true) {
 		if (XPending(x_disp)) {
@@ -170,6 +173,14 @@ int main(void) {
 
 		tscroll->RenderFrame(dss);
 
+		a_scan->FillRect(100, 100, 700, 380);
+		unsigned char *b = dss->GetRealtime();
+		if (b) {
+			a_scan->DrawBuf(100, 100, 700, 380, b, 128);
+		}
+
+		//tscroll->RenderFrame(dss);
+
 		eglSwapBuffers(__egl_display, surf);
 
 		//renderFrame();
@@ -185,6 +196,8 @@ int main(void) {
 			ts_prev = ts;
 		}
 	}
+
+	delete a_scan;
 
 	printf("try to delete TextScroller...\n");
 	delete tscroll;

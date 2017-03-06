@@ -88,6 +88,8 @@ protected:
 	bool m_ReadyToPush;
 	int m_GetPtr;
 	int m_PutPtr;
+
+	unsigned char m_RealTimeBuf[128];
 public:
 	/**
 	 * create queue for store data frame
@@ -134,6 +136,8 @@ public:
 	int GetLen(void) {
 		return m_QLen;
 	}
+
+	unsigned char *GetRealTimeBuf(void);
 };
 //----------------------------------------------------------------------------
 
@@ -200,6 +204,8 @@ public:
 	 * @param aDataFrame return data frame if data present (caller thread is paused if data are not ready yet)
 	 */
 	void GetFrame(DataFrame* &aDataFrame);
+
+	unsigned char* GetRealtime(void);
 
 	/**
 	 * Get frame count in Queue

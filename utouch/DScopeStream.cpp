@@ -71,13 +71,29 @@ DataFrame *DataFrameQueue::PullFront(void) {
 		DataFrame *res = m_Q[m_GetPtr];
 		m_Q[m_GetPtr] = m_ExtFrame;
 		m_ExtFrame = res;
+
 		m_GetPtr = (m_GetPtr + 1) % m_QSize;
 		m_QLen--;
+
+		if(m_QLen == 1)
+			memcpy(m_RealTimeBuf, res->m_RData, 128);
+
 		return res;
 	}
 	return NULL;
 }
 //----------------------------------------------------------------------------
+
+unsigned char *DataFrameQueue::GetRealTimeBuf(void) {
+	if (m_QLen) {
+		int ptr = m_PutPtr - 1;
+		if (ptr < 0)
+			ptr = 0;
+		memcpy(m_RealTimeBuf, m_Q[ptr]->m_RData, 128);
+	}
+
+	return m_RealTimeBuf;
+}
 
 DataFrame *DataFrameQueue::GetBack(void) {
 	return m_NewFrame;
@@ -269,7 +285,6 @@ void DScopeStream::CMD_InternalSync(bool aOn) {
 	buf[11] = aOn ? 0x01 : 0x00;	// 0x01 - enable internal sync
 
 	ftdi_write_data(m_FTDI, buf, 16);
-
 }
 //----------------------------------------------------------------------------
 
@@ -336,7 +351,7 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		}
 		else if (ch == 0xC0) {
 			printf("Key changed 0x%08X\n", w);
-			if(w == 0xFFBF0000) {
+			if (w == 0xFFBF0000) {
 				m_ExtSync = !m_ExtSync;
 				CMD_InternalSync(m_ExtSync);
 			}
@@ -535,6 +550,14 @@ void DScopeStream::GetFrame(DataFrame* &aDataFrame) {
 	}
 	aDataFrame = m_Q->PullFront();
 	pthread_mutex_unlock(&m_FrameLock);
+}
+//----------------------------------------------------------------------------
+
+unsigned char* DScopeStream::GetRealtime(void) {
+	pthread_mutex_lock(&m_FrameLock);
+	unsigned char *ptr = m_Q->GetRealTimeBuf();
+	pthread_mutex_unlock(&m_FrameLock);
+	return ptr;
 }
 //----------------------------------------------------------------------------
 
