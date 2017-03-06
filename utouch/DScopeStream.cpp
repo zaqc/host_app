@@ -207,10 +207,12 @@ DScopeStream::DScopeStream() {
 		buf[8] = 0x00;
 		buf[9] = 0x00;
 		buf[10] = 0x00;
-		buf[11] = 0x00;	// 0x01 - enable internal sync
+		buf[11] = 0x01;	// 0x01 - enable internal sync
 
 		ftdi_write_data(m_FTDI, buf, 16);
 	}
+	m_ExtSync = true;
+
 	m_Q = new DataFrameQueue(800, true);
 
 	m_ThreadRunning = true;
@@ -247,6 +249,27 @@ DScopeStream::~DScopeStream() {
 	printf("delete m_Q...\n");
 
 	delete m_Q;
+}
+//----------------------------------------------------------------------------
+
+void DScopeStream::CMD_InternalSync(bool aOn) {
+	unsigned char buf[16];
+	buf[0] = 0x55;
+	buf[1] = 0x55;
+	buf[2] = 0x55;
+	buf[3] = 0xd5;
+
+	buf[4] = 0xFA;
+	buf[5] = 0xA5;
+	buf[6] = 0xED;
+	buf[7] = 0xA3;
+	buf[8] = 0x00;
+	buf[9] = 0x00;
+	buf[10] = 0x00;
+	buf[11] = aOn ? 0x01 : 0x00;	// 0x01 - enable internal sync
+
+	ftdi_write_data(m_FTDI, buf, 16);
+
 }
 //----------------------------------------------------------------------------
 
@@ -313,6 +336,10 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		}
 		else if (ch == 0xC0) {
 			printf("Key changed 0x%08X\n", w);
+			if(w == 0xFFBF0000) {
+				m_ExtSync = !m_ExtSync;
+				CMD_InternalSync(m_ExtSync);
+			}
 		}
 		else if ((ch & 0xF0) == 0xA0) {
 			//if (!m_LeftEndMarker) {

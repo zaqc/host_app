@@ -187,6 +187,9 @@ public:
 	DScopeStream();
 	virtual ~DScopeStream();
 
+	bool m_ExtSync;
+	void CMD_InternalSync(bool aOn);
+
 	/**
 	 * method which called from recv_thread function
 	 */
