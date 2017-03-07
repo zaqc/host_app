@@ -24,6 +24,17 @@
 #include "TextScroller.h"
 #include "DScopeStream.h"
 #include "TextAScan.h"
+#include "TextFont.h"
+
+#define	JOY_UP			0xFF7F0000
+#define	JOY_DN			0xFFFD0000
+#define	JOY_LEFT		0xFFF70000
+#define	JOY_RIGHT		0xFFDF0000
+
+#define BTN_HOME		0xFFFB0000
+
+#define BTN_OK			0xFFBF0000
+#define BTN_CANCEL		0xFFEF0000
 
 //bool setupGraphics(int w, int h);
 //void renderFrame();
@@ -142,6 +153,8 @@ int main(void) {
 
 	TextAScan *a_scan = new TextAScan();
 
+	bool show_a_scan = false;
+
 	XEvent x_event;
 	while (true) {
 		if (XPending(x_disp)) {
@@ -171,12 +184,19 @@ int main(void) {
 
 		//renderFrame();
 
-		tscroll->RenderFrame(dss);
+		if (dss->GetKey() == BTN_HOME) {
+			show_a_scan = !show_a_scan;
+		}
 
-		a_scan->FillRect(100, 100, 700, 380);
-		unsigned char *b = dss->GetRealtime();
-		if (b) {
-			a_scan->DrawBuf(100, 100, 700, 380, b, 128);
+		if (show_a_scan) {
+			a_scan->FillRect(0, 0, 800, 480);
+			unsigned char *b = dss->GetRealtime();
+			if (b) {
+				a_scan->DrawBuf(0, 0, 800, 480, b, 128);
+			}
+		}
+		else {
+			tscroll->RenderFrame(dss);
 		}
 
 		//tscroll->RenderFrame(dss);

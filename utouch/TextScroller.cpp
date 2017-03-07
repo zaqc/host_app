@@ -15,6 +15,7 @@
 #include <GLES2/gl2.h>
 
 #include "DScopeStream.h"
+#include "TextFont.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -41,8 +42,8 @@ TextScroller::~TextScroller() {
 	glDeleteFramebuffers(1, &m_FB);
 	glDeleteTextures(1, &m_Text);
 
-	if(m_Data)
-		delete [] m_Data;
+	if (m_Data)
+		delete[] m_Data;
 }
 //----------------------------------------------------------------------------
 
@@ -131,9 +132,13 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 			aBuf = df->m_RData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
 		int n = i * 4;
 		for (int j = 0; j < 480; j++) {
-			unsigned char v = j;
-			if (aBuf)
-				v = *aBuf;
+			unsigned char v = *aBuf;
+//			int v = j;
+//			if (aBuf)
+//				v = *aBuf / 4;
+//			v = v * v;
+//			if (v > 255)
+//				v = 255;
 			m_Data[n] = v;
 			m_Data[n + 1] = v;
 			m_Data[n + 2] = v;
@@ -190,6 +195,8 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 }
 //----------------------------------------------------------------------------
 
+TextFont *font = NULL;
+
 void TextScroller::RenderFrame(DScopeStream *aDSS) {
 	glUseProgram(m_Prog);
 
@@ -227,6 +234,9 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
+	if (!font)
+		font = new TextFont();
+
 	int ss = aDSS->GetFrameCount();
 	if (ss) {
 		glActiveTexture(GL_TEXTURE1);
@@ -243,6 +253,8 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 		DrawData(ss, aDSS);
 	}
+
+	font->RenderString(m_Text, 10, 10, (unsigned char*) "B-Scan Channels (1-4)");
 }
 //----------------------------------------------------------------------------
 

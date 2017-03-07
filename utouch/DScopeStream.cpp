@@ -229,6 +229,8 @@ DScopeStream::DScopeStream() {
 	}
 	m_ExtSync = true;
 
+	pthread_mutex_init(&m_KeyLock, NULL);
+
 	m_Q = new DataFrameQueue(800, true);
 
 	m_ThreadRunning = true;
@@ -261,6 +263,8 @@ DScopeStream::~DScopeStream() {
 
 	pthread_mutex_destroy(&m_FrameLock);
 	pthread_cond_destroy(&m_DataReady);
+
+	pthread_mutex_destroy(&m_KeyLock);
 
 	printf("delete m_Q...\n");
 
@@ -350,6 +354,9 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 			//fflush(stdout);
 		}
 		else if (ch == 0xC0) {
+			pthread_mutex_lock(&m_KeyLock);
+			m_Keys.push(w);
+			pthread_mutex_unlock(&m_KeyLock);
 			printf("Key changed 0x%08X\n", w);
 			if (w == 0xFFBF0000) {
 				m_ExtSync = !m_ExtSync;
@@ -560,6 +567,20 @@ unsigned char* DScopeStream::GetRealtime(void) {
 	return ptr;
 }
 //----------------------------------------------------------------------------
+
+unsigned int DScopeStream::GetKey(void){
+	unsigned int res = 0xFFFFFFFF;
+
+	pthread_mutex_lock(&m_KeyLock);
+	if(!m_Keys.empty()) {
+		res = m_Keys.front();
+		m_Keys.pop();
+	}
+	pthread_mutex_unlock(&m_KeyLock);
+
+	return res;
+}
+
 
 int DScopeStream::GetFrameCount(void) {
 	pthread_mutex_lock(&m_FrameLock);

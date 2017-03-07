@@ -12,6 +12,9 @@
 #include <ftdi.h>
 #include <pthread.h>
 #include <memory.h>
+
+#include <queue>
+#include <deque>
 //----------------------------------------------------------------------------
 
 #define	DSCOPE_PID	0xEDA3
@@ -177,6 +180,10 @@ protected:
 	int m_DecoLen;
 	int m_AlignShift;
 
+
+	pthread_mutex_t m_KeyLock;
+	std::queue<unsigned int> m_Keys;
+
 	void UpdateFrame(bool aPush);
 	/**
 	 * Decode received data (aligned by 5 bytes)
@@ -205,7 +212,17 @@ public:
 	 */
 	void GetFrame(DataFrame* &aDataFrame);
 
+	/**
+	 * Get latest data from DScope
+	 * @return last received frame from DScope or NULL if ain't frame received yet
+	 */
 	unsigned char* GetRealtime(void);
+
+	/**
+	 * Get hardware key from Key Queue if key are was pressed
+	 * @return Key code or 0xFFFFFFFF if queue empty
+	 */
+	unsigned int GetKey(void);
 
 	/**
 	 * Get frame count in Queue

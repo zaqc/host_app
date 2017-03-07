@@ -10,6 +10,7 @@
 
 #include "TextAScan.h"
 #include "GlUtil.h"
+#include "TextFont.h"
 //----------------------------------------------------------------------------
 
 TextAScan::TextAScan() {
@@ -74,6 +75,8 @@ void TextAScan::DrawLine(int aX1, int aY1, int aX2, int aY2) {
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_SHORT, ndx);
 }
 //----------------------------------------------------------------------------
+
+extern TextFont *font;
 
 void TextAScan::FillRect(int aX1, int aY1, int aX2, int aY2) {
 	float x1 = (float) aX1 / 400.0 - 1.0;
@@ -161,6 +164,9 @@ void TextAScan::DrawBuf(int aX1, int aY1, int aX2, int aY2, unsigned char *aBuf,
 	glEnableVertexAttribArray(m_paramVertexColor);
 
 	glDrawElements(GL_LINE_LOOP, aSize, GL_UNSIGNED_SHORT, ndx);
+
+	if (font)
+		font->RenderString(0, 10, 10, (unsigned char*) "A-Scan Render String...");
 
 	delete[] ndx;
 	delete[] c;
