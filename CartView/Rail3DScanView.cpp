@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "Rail3DScanView.h"
-#include "Matrix.h"
+#include "../utouch/Matrix.h"
 
 using namespace ScreenView;
 

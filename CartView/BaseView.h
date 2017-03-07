@@ -1,5 +1,5 @@
 #pragma once
-#include "GUSDataCacher.h"
+//#include "GUSDataCacher.h"
 
 namespace ScreenView
 {
@@ -8,7 +8,7 @@ namespace ScreenView
 	public:
 		BaseView();
 		~BaseView();
-		virtual void AddPacket(DataFile::GusFrame& aFrame);
+		virtual void AddPacket();
 		virtual void Render();
 	};
 }
