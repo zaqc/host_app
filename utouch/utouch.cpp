@@ -24,9 +24,13 @@
 #include "TextScroller.h"
 #include "DScopeStream.h"
 #include "TextAScan.h"
-
+#include "ViewContainer.h"
+#include "Rail3DScanView.h"
 //bool setupGraphics(int w, int h);
 //void renderFrame();
+
+ScreenView::ViewContainer* pContainer = nullptr;
+ScreenView::Rail3DScanView* pRailView = nullptr;
 
 int main(void) {
 	puts("!!!Hello World!!!");
@@ -34,7 +38,8 @@ int main(void) {
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
 
-	DScopeStream *dss = new DScopeStream();
+	DScopeStream *dss = nullptr;
+	//dss = new DScopeStream();
 
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
@@ -112,7 +117,8 @@ int main(void) {
 	EGL_NONE };
 
 	EGLContext __egl_context = eglCreateContext(__egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
-	if (__egl_context == EGL_NO_CONTEXT) {
+	if (__egl_context == EGL_NO_CONTEXT)
+	{
 		//cerr << "Unable to create EGL context (eglError: " << eglGetError() << ")" << endl;
 		printf("unable to create EGL context eglerror:%i\n", eglGetError());
 		return 1;
@@ -143,6 +149,12 @@ int main(void) {
 	TextAScan *a_scan = new TextAScan();
 
 	XEvent x_event;
+
+	pContainer = new ScreenView::ViewContainer();
+	pRailView = new ScreenView::Rail3DScanView();
+	pContainer->AddView(pRailView);
+
+	float c = 0;
 	while (true) {
 		if (XPending(x_disp)) {
 			XNextEvent(x_disp, &x_event);
@@ -171,15 +183,20 @@ int main(void) {
 
 		//renderFrame();
 
+		///default rendering
 		tscroll->RenderFrame(dss);
-
 		a_scan->FillRect(100, 100, 700, 380);
-		unsigned char *b = dss->GetRealtime();
-		if (b) {
+		unsigned char *b = nullptr;
+		//b = dss->GetRealtime();
+		if (b)
+		{
 			a_scan->DrawBuf(100, 100, 700, 380, b, 128);
 		}
 
 		//tscroll->RenderFrame(dss);
+
+		//new rendering
+		pContainer->Render();
 
 		eglSwapBuffers(__egl_display, surf);
 

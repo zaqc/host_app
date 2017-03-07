@@ -1,14 +1,26 @@
 TARGET:=utouch
 
-CXXFLAGS:=-g3 -Wall -I/usr/include -fmessage-length=0
+CXXFLAGS:=-g3 -Wall -I/usr/include -fmessage-length=0 -std=c++11
 
-PKG:=egl glesv2 x11 libpng libftdi1
+PKG:=egl glesv2 x11 libpng libftdi
 
 CC=g++
 
+INC_DIR := -I../DataFile -I../CartView -I../DataCacher -I../Misc -I../Graphics -I../MediaManager
 HDR:=$(wildcard *.h)
+HDR += $(wildcard ../DataCacher/*.h)
+HDR += $(wildcard ../CartView/*.h)
+HDR += $(wildcard ../DataFile/*.h)
+HDR += $(wildcard ../Misc/*.h)
 
 SRC:=$(wildcard *.cpp)
+SRC += $(wildcard ../CartView/*.cpp)
+SRC += $(wildcard ../Misc/*.cpp)
+SRC += $(wildcard ../MediaManager/*.cpp)
+
+SRC := $(filter-out ../CartView/ChanelDeffects.cpp, $(SRC))
+SRC := $(filter-out ../CartView/DeffectsSample.cpp, $(SRC))
+SRC := $(filter-out ../MediaManager/JavaAssetManager.cpp, $(SRC))
 
 OBJS:=$(patsubst %.cpp, %.o, $(SRC))
 
@@ -28,7 +40,7 @@ all: $(TARGET)
 endif
 
 %.o: %.cpp $(HDR)
-	$(CC) $(CXXFLAGS) -c $< -o $@;	
+	$(CC) $(CXXFLAGS) $(INC_DIR) -c $< -o $@;	
 
 $(TARGET): $(OBJS)
 	@echo "Linking project ["$(TARGET)"] with FLAGS="$(LDFLAGS)
