@@ -195,8 +195,6 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 }
 //----------------------------------------------------------------------------
 
-TextFont *font = NULL;
-
 void TextScroller::RenderFrame(DScopeStream *aDSS) {
 	glUseProgram(m_Prog);
 
@@ -234,18 +232,13 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
-	if (!font)
-		font = new TextFont();
-
 	int ss = aDSS->GetFrameCount();
 	if (ss) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_Text);
 
-		if (ss < 800) {
+		if (ss < 800)
 			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
-			//glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
-		}
 		else
 			ss = 800;
 
@@ -254,7 +247,7 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 		DrawData(ss, aDSS);
 	}
 
-	font->RenderString(m_Text, 10, 10, (unsigned char*) "B-Scan Channels (1-4)");
+	font->RenderString(10, 10, (char*) "B-Scan Channels (1-4)");
 }
 //----------------------------------------------------------------------------
 

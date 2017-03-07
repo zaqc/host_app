@@ -21,23 +21,16 @@
 #include  <X11/Xutil.h>
 
 #include "Util.h"
+#include "GlUtil.h"
 #include "TextScroller.h"
 #include "DScopeStream.h"
 #include "TextAScan.h"
 #include "TextFont.h"
 
-#define	JOY_UP			0xFF7F0000
-#define	JOY_DN			0xFFFD0000
-#define	JOY_LEFT		0xFFF70000
-#define	JOY_RIGHT		0xFFDF0000
-
-#define BTN_HOME		0xFFFB0000
-
-#define BTN_OK			0xFFBF0000
-#define BTN_CANCEL		0xFFEF0000
-
 //bool setupGraphics(int w, int h);
 //void renderFrame();
+
+TextFont *font = NULL;
 
 int main(void) {
 	puts("!!!Hello World!!!");
@@ -140,6 +133,8 @@ int main(void) {
 
 	//glEnable(GL_DEPTH_TEST);
 
+	font = new TextFont();
+
 	TextScroller *tscroll = new TextScroller();
 	tscroll->InitProgram();
 	tscroll->Init();
@@ -184,11 +179,15 @@ int main(void) {
 
 		//renderFrame();
 
-		if (dss->GetKey() == BTN_HOME) {
+		unsigned int key = dss->GetKey();
+		if (key == BTN_HOME) {
 			show_a_scan = !show_a_scan;
+			key = 0;
 		}
 
 		if (show_a_scan) {
+			a_scan->ProcessButton(key);
+
 			a_scan->FillRect(0, 0, 800, 480);
 			unsigned char *b = dss->GetRealtime();
 			if (b) {
@@ -221,6 +220,8 @@ int main(void) {
 
 	printf("try to delete TextScroller...\n");
 	delete tscroll;
+
+	delete font;
 
 	usleep(100000);
 

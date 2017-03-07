@@ -25,7 +25,11 @@ public:
 	TextFont();
 	virtual ~TextFont();
 
-	void RenderString(GLuint aTxt, int aX, int aY, unsigned char *aStr);
+	int GetStringWidth(char *aStr);
+	int GetStringHeight(void);
+	void RenderString(int aX, int aY, char *aStr);
 };
+
+extern TextFont *font;
 
 #endif /* TEXTFONT_H_ */

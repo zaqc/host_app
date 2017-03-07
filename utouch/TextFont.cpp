@@ -34,6 +34,8 @@ TextFont::TextFont() {
 			"{ \n"
 //			"    txtColor = vec4(TextCoord.x, TextCoord.y, 1.0, 1.0); \n"
 			"    txtColor = texture2D(Texture, TextCoord); \n"
+//			"    txtColor.y = 0.0; \n"
+//			"    txtColor.z = 0.0; \n"
 			"    gl_FragColor = txtColor; \n"
 			"} \n";
 
@@ -96,7 +98,15 @@ TextFont::~TextFont() {
 	delete[] m_Data;
 }
 
-void TextFont::RenderString(GLuint aTxt, int aX, int aY, unsigned char *aStr) {
+int TextFont::GetStringWidth(char *aStr) {
+	return strlen(aStr) * 9;
+}
+
+int TextFont::GetStringHeight(void) {
+	return 16;
+}
+
+void TextFont::RenderString(int aX, int aY, char *aStr) {
 //unsigned char glyph[] = { 0x00, 0x20, 0x78, 0xA8, 0xA0, 0x60, 0x30, 0x28, 0xA8, 0xF0, 0x20, 0x00 };
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FB);
@@ -117,7 +127,7 @@ void TextFont::RenderString(GLuint aTxt, int aX, int aY, unsigned char *aStr) {
 
 	int x = 0;
 	for (int i = 0; i < len; i++) {
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, 9 * (*aStr - 32), 0, 9, 16);
+		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, 9 * ((unsigned char) *aStr - 32), 0, 9, 16);
 		x += 9;
 		aStr++;
 	}
