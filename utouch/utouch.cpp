@@ -142,7 +142,7 @@ int main(void) {
 	int fc = 0;
 	ts_prev = ts;
 
-	eglSwapInterval(__egl_display, 1);
+	eglSwapInterval(__egl_display, 0);
 
 	TextAScan *a_scan = new TextAScan();
 
