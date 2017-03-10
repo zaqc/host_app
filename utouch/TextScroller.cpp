@@ -247,7 +247,7 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 		DrawData(ss, aDSS);
 	}
 
-	font->RenderString(10, 10, (char*) "B-Scan Channels (1-4)");
+	// font->RenderString(10, 10, (char*) "B-Scan Channels (1-4)");
 }
 //----------------------------------------------------------------------------
 
