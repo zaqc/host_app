@@ -9,7 +9,7 @@ BaseView::BaseView()
 BaseView::~BaseView()
 {
 }
-void BaseView::AddPacket(DataFile::GusFrame& aFrame)
+void BaseView::AddPacket()
 {
 }
 void BaseView::Render()

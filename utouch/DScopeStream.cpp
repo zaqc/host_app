@@ -75,7 +75,7 @@ DataFrame *DataFrameQueue::PullFront(void) {
 		m_GetPtr = (m_GetPtr + 1) % m_QSize;
 		m_QLen--;
 
-		if(m_QLen == 1)
+		if(0 == m_QLen)
 			memcpy(m_RealTimeBuf, res->m_RData, 128);
 
 		return res;
