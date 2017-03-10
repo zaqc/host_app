@@ -207,7 +207,7 @@ public:
         li.QuadPart = pos;
 		return SetFilePointerEx(m_hFile, li, &li_new, FILE_BEGIN) && (li.QuadPart == li_new.QuadPart);
 #else
-		off64_t tmp = lseek64(m_hFile, static_cast<off64_t>(pos), SEEK_SET);
+		lseek64(m_hFile, static_cast<off64_t>(pos), SEEK_SET);
 		return true;
 #endif
     }
@@ -222,9 +222,9 @@ public:
         li.QuadPart = pos;
         return SetFilePointerEx(m_hFile, li, &li_new, FILE_CURRENT) && (li.QuadPart == li_new.QuadPart);
 #else
-		off64_t tmp = lseek64(m_hFile, static_cast<off64_t>(pos), SEEK_CUR);
+		lseek64(m_hFile, static_cast<off64_t>(pos), SEEK_CUR);
 		//assert(0);
-		return false;
+		return true;
 #endif
     }
 

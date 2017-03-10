@@ -2,6 +2,8 @@
 #ifndef COMMON_DEF_H
 #define COMMON_DEF_H
 
+#include <cstdio>
+
 #if (((defined WIN32) || (defined _WIN32) || (defined _WIN64)) && !defined __ANDROID_API__ && !defined __linux__)
 	#define WINDOWS_OS
 #else
@@ -13,8 +15,12 @@
 
 
 #define ABS(a) ((a) < 0 ? -(a) : (a))
+#ifndef MIN
 #define MIN(a,b) ((a) <= (b) ? (a) : (b))
+#endif
+#ifndef MAX
 #define MAX(a,b) ((a) >= (b) ? (a) : (b))
+#endif
 
 #include <cstring>
 #include <cstdint>

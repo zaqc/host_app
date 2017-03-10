@@ -26,8 +26,6 @@
 #include "TextAScan.h"
 #include "ViewContainer.h"
 #include "Rail3DScanView.h"
-//bool setupGraphics(int w, int h);
-//void renderFrame();
 
 ScreenView::ViewContainer* pContainer = nullptr;
 ScreenView::Rail3DScanView* pRailView = nullptr;
@@ -154,15 +152,17 @@ int main(void) {
 	pRailView = new ScreenView::Rail3DScanView();
 	pContainer->AddView(pRailView);
 
-	float c = 0;
-	while (true) {
-		if (XPending(x_disp)) {
+	while (true)
+	{
+		if (XPending(x_disp))
+		{
 			XNextEvent(x_disp, &x_event);
 
 			if (x_event.type == ClientMessage) {
 				printf("Client Message\n");
 				break;
 			}
+
 			if (x_event.type == ButtonPress) {
 				printf("Trying to close full screen mode\n");
 				//				Atom atom = XInternAtom(x_disp, "_NET_WM_DESKTOP", true);

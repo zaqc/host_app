@@ -1,5 +1,5 @@
 #include "EGLContext.h"
-#include <GLES2\gl2.h>
+
 using namespace Graphics;
 
 Context::Context(EGLNativeWindowType ahWindow, EGLNativeDisplayType ahDisplay, int aWidth, int aHeight)

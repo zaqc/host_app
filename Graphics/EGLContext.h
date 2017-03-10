@@ -1,7 +1,7 @@
 #pragma once
-#include <EGL\eglplatform.h>
-#include <EGL\egl.h>
-#include <GLES2\gl2.h>
+#include <EGL/eglplatform.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
 #include "common_def.h"
 
 
