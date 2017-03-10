@@ -411,6 +411,7 @@ void MenuAScan::HandleEvent(void) {
 		dpart->Channel[ch_num]->SetADCAccum(m_ADCAccum->GetValue());
 	}
 
+
 	if (m_Level->IsChanged()) {
 		int val = m_Level->GetValue() + 127;
 		dpart->Channel[ch_num]->SetADCOffset(val);
@@ -456,14 +457,14 @@ TextAScan::TextAScan() {
 			"void main() \n"
 			"{ \n"
 			"    gl_Position = VertexPos; \n"
-			"    vertex_color = VertexColor; \n"
+//			"    vertex_color = VertexColor; \n"
 			"} \n";
 
 	const char fs[] = "precision mediump float;\n"
 			"varying vec4 vertex_color;\n"
 			"void main() \n"
 			"{ \n"
-			"    gl_FragColor = vertex_color; \n"
+			"    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); \n" //vertex_color; \n"
 			"} \n";
 
 	m_Prog = createProgram(vs, fs);
