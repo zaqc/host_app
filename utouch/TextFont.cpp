@@ -94,10 +94,20 @@ TextFont::TextFont() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// unBind texture
 	glBindTexture(GL_TEXTURE_2D, 0);	// unBind texture
+
+	glActiveTexture(GL_TEXTURE2);
+	glGenTextures(1, &m_BkText);
+	glBindTexture(GL_TEXTURE_2D, m_BkText);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);	// GL_ALPHA
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 //----------------------------------------------------------------------------
 
 TextFont::~TextFont() {
+	glDeleteTextures(1, &m_BkText);
+
 	glDeleteFramebuffers(1, &m_FB);
 	glDeleteTextures(1, &m_Text);
 	delete[] m_Data;
@@ -118,20 +128,11 @@ void TextFont::RenderString(int aX, int aY, char *aStr) {
 //unsigned char glyph[] = { 0x00, 0x20, 0x78, 0xA8, 0xA0, 0x60, 0x30, 0x28, 0xA8, 0xF0, 0x20, 0x00 };
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FB);
-//	glViewport(0, 0, 1024, 16);
-//	glDisable(GL_DEPTH_TEST);
-//	glClearColor(1.0, 1.0, 0.0, 1.0);
-//	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	int len = strlen((char *) aStr);
 
 	glActiveTexture(GL_TEXTURE2);
-	glGenTextures(1, &m_BkText);
 	glBindTexture(GL_TEXTURE_2D, m_BkText);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);	// GL_ALPHA
-	glGenerateMipmap(GL_TEXTURE_2D);
 
 	int x = 0;
 	for (int i = 0; i < len; i++) {
@@ -140,11 +141,11 @@ void TextFont::RenderString(int aX, int aY, char *aStr) {
 		aStr++;
 	}
 
-	float x2 = 2.0 / 1024.0 * (float) (len * 9) - 1.0;
-
-	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	float x2 = 2.0 / 1024.0 * (float) (len * 9) - 1.0;
+
 
 	GLfloat v[] = { /* vertexes */
 	-1.0f, -1.0f, 0.0f, /**/
@@ -175,7 +176,5 @@ void TextFont::RenderString(int aX, int aY, char *aStr) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glDeleteTextures(1, &m_BkText);
 }
 //----------------------------------------------------------------------------
