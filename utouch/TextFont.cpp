@@ -14,6 +14,10 @@
 #include "GlUtil.h"
 
 #include "font.h"
+//----------------------------------------------------------------------------
+
+TextFont *font = NULL;
+//----------------------------------------------------------------------------
 
 TextFont::TextFont() {
 
@@ -91,20 +95,24 @@ TextFont::TextFont() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// unBind texture
 	glBindTexture(GL_TEXTURE_2D, 0);	// unBind texture
 }
+//----------------------------------------------------------------------------
 
 TextFont::~TextFont() {
 	glDeleteFramebuffers(1, &m_FB);
 	glDeleteTextures(1, &m_Text);
 	delete[] m_Data;
 }
+//----------------------------------------------------------------------------
 
 int TextFont::GetStringWidth(char *aStr) {
 	return strlen(aStr) * 9;
 }
+//----------------------------------------------------------------------------
 
 int TextFont::GetStringHeight(void) {
 	return 16;
 }
+//----------------------------------------------------------------------------
 
 void TextFont::RenderString(int aX, int aY, char *aStr) {
 //unsigned char glyph[] = { 0x00, 0x20, 0x78, 0xA8, 0xA0, 0x60, 0x30, 0x28, 0xA8, 0xF0, 0x20, 0x00 };
@@ -170,4 +178,4 @@ void TextFont::RenderString(int aX, int aY, char *aStr) {
 
 	glDeleteTextures(1, &m_BkText);
 }
-
+//----------------------------------------------------------------------------

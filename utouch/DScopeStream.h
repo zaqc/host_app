@@ -15,10 +15,14 @@
 
 #include <queue>
 #include <deque>
+
+#include "DScope.h"
 //----------------------------------------------------------------------------
 
-#define	DSCOPE_PID	0xEDA3
-#define	DSCOPE_VID	0x2179
+#define	DSCOPE_PID			0xEDA3
+#define	DSCOPE_VID			0x2179
+
+#define	DATA_MAX_SIZE		2048
 //----------------------------------------------------------------------------
 
 /**
@@ -47,8 +51,8 @@ struct DataFrame {
 	int m_RDataLen;
 
 	void Create(void) {
-		m_LData = new unsigned char[4096];
-		m_RData = new unsigned char[4096];
+		m_LData = new unsigned char[DATA_MAX_SIZE];
+		m_RData = new unsigned char[DATA_MAX_SIZE];
 	}
 
 	void Destroy(void) {
@@ -61,14 +65,25 @@ struct DataFrame {
 		m_RPktCounter = 0;
 //		m_LChMask = 0;
 //		m_RChMask = 0;
-		memset(m_LData, 0, 4096);
-		memset(m_RData, 0, 4096);
+		memset(m_LData, 0, DATA_MAX_SIZE);
+		memset(m_RData, 0, DATA_MAX_SIZE);
 		for (int i = 0; i < 16; i++) {
 			m_LChLen[i] = 0;
 			m_RChLen[i] = 0;
 		}
 		m_LDataLen = 0;
 		m_RDataLen = 0;
+	}
+
+	void Copy(DataFrame *aDF) {
+		m_LPktCounter = aDF->m_LPktCounter;
+		m_RPktCounter = aDF->m_RPktCounter;
+		m_LDataLen = aDF->m_LDataLen;
+		m_RDataLen = aDF->m_RDataLen;
+		memcpy(m_LData, aDF->m_LData, aDF->m_LDataLen);
+		memcpy(m_RData, aDF->m_RData, aDF->m_RDataLen);
+		memcpy(m_LChLen, aDF->m_LChLen, sizeof(m_LChLen));
+		memcpy(m_RChLen, aDF->m_RChLen, sizeof(m_RChLen));
 	}
 };
 //----------------------------------------------------------------------------
@@ -92,7 +107,8 @@ protected:
 	int m_GetPtr;
 	int m_PutPtr;
 
-	unsigned char m_RealTimeBuf[128];
+	DataFrame *m_RealTimeBuf;
+	DataFrame *m_RealTimeExt;
 public:
 	/**
 	 * create queue for store data frame
@@ -140,7 +156,7 @@ public:
 		return m_QLen;
 	}
 
-	unsigned char *GetRealTimeBuf(void);
+	DataFrame *GetRealTimeBuf(void);
 };
 //----------------------------------------------------------------------------
 
@@ -156,6 +172,7 @@ enum StreamState {
 class DScopeStream {
 protected:
 	ftdi_context *m_FTDI;
+
 	pthread_t m_Thread;
 	pthread_cond_t m_DataReady;
 	bool m_DataAccepted; // data accepted in GetFrame method
@@ -180,9 +197,10 @@ protected:
 	int m_DecoLen;
 	int m_AlignShift;
 
-
 	pthread_mutex_t m_KeyLock;
 	std::queue<unsigned int> m_Keys;
+
+	int ch_error;
 
 	void UpdateFrame(bool aPush);
 	/**
@@ -197,6 +215,8 @@ protected:
 public:
 	DScopeStream();
 	virtual ~DScopeStream();
+
+	void PrintInfo(void);
 
 	bool m_ExtSync;
 	void CMD_InternalSync(bool aOn);
@@ -216,7 +236,7 @@ public:
 	 * Get latest data from DScope
 	 * @return last received frame from DScope or NULL if ain't frame received yet
 	 */
-	unsigned char* GetRealtime(void);
+	DataFrame* GetRealtime(void);
 
 	/**
 	 * Get hardware key from Key Queue if key are was pressed
@@ -233,3 +253,4 @@ public:
 //----------------------------------------------------------------------------
 
 #endif /* SRC_DSCOPESTREAM_H_ */
+

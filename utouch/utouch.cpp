@@ -30,8 +30,6 @@
 //bool setupGraphics(int w, int h);
 //void renderFrame();
 
-TextFont *font = NULL;
-
 int main(void) {
 	puts("!!!Hello World!!!");
 
@@ -183,16 +181,15 @@ int main(void) {
 		if (key == BTN_HOME) {
 			show_a_scan = !show_a_scan;
 			key = 0;
+		} else if(key == BTN_CANCEL){
+			dss->PrintInfo();
 		}
 
 		if (show_a_scan) {
 			a_scan->ProcessButton(key);
 
 			a_scan->FillRect(0, 0, 800, 480);
-			unsigned char *b = dss->GetRealtime();
-			if (b) {
-				a_scan->DrawBuf(0, 0, 800, 480, b, 128);
-			}
+			a_scan->DrawBuf(dss, 0, 0, 800, 480);
 		}
 		else {
 			tscroll->RenderFrame(dss);
@@ -200,9 +197,10 @@ int main(void) {
 
 		//tscroll->RenderFrame(dss);
 
+		//renderFrame();
+
 		eglSwapBuffers(__egl_display, surf);
 
-		//renderFrame();
 
 		fc++;
 		gettimeofday(&ts, 0);
@@ -235,6 +233,8 @@ int main(void) {
 	delete dss;
 
 	usleep(100000);
+
+	printf("see you soon :-)\n");
 
 	return EXIT_SUCCESS;
 }

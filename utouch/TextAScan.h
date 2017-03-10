@@ -61,10 +61,12 @@ protected:
 	int m_Max;
 	unsigned int m_PrevKey;
 	int m_HoldTickCount;
-
 public:
 	IntMenuItem(TextAScan *aTextAScan, char *aCaption, int aVal, int aMin, int aMax);
 	virtual ~IntMenuItem();
+
+	virtual int GetValue(void);
+	virtual void SetValue(int aVal, bool aIsChanged = false);
 
 	virtual int GetWidth(void);
 
@@ -76,7 +78,11 @@ public:
 class MenuAScan {
 protected:
 	TextAScan *m_TextAScan;
+	SwitchMenuItem *m_Side;
+	IntMenuItem *m_ChNumber;
 	SwitchMenuItem *m_AScanType;
+	IntMenuItem *m_Delay;
+	IntMenuItem *m_ADCAccum;
 	IntMenuItem *m_Amp1;
 	IntMenuItem *m_Amp2;
 	IntMenuItem *m_VRC;
@@ -84,17 +90,31 @@ protected:
 
 	MenuItem *m_Selected;
 	std::vector<MenuItem *> m_Items;
-//	bool m_Log;	// or VGA
-//	int m_LogLevel;
-//	int m_Amp2;
-//	int m_Vrc;
+
+	int m_AmpDelta;
+
+	float m_VRCTab[128];
+	float m_LogTab[256];
+
+	bool m_ShowAllChannel;
 public:
 	MenuAScan(TextAScan *aTextAScan);
 	virtual ~MenuAScan();
 
+	int GetSide(void);
+	int GetChNumber(void);
+	bool GetShowAllChannel(void);
+
+	bool IsLogView(void);
+
 	void UpdateControl(bool aLogType);
 
 	void ProcessButton(unsigned int &aKey);
+	virtual void HandleEvent(void);
+
+	void FillVRC(void);
+	void CalcVGA(float *aVal, unsigned char *aBuf, int aSize);
+
 	void Render(int aX, int aY);
 };
 //----------------------------------------------------------------------------
@@ -105,6 +125,11 @@ protected:
 	GLuint m_paramVertexPos;
 	GLuint m_paramVertexColor;
 
+	GLfloat *m_V;	// vertex
+	GLfloat *m_C;	// color
+	GLushort *m_Ndx;	// line index
+	int m_PtCount;	// Point count
+
 	MenuAScan *m_Menu;
 public:
 	TextAScan();
@@ -114,7 +139,10 @@ public:
 	void FillRect(int aX1, int aY1, int aX2, int aY2, GLfloat *aColor = NULL);
 
 	void ProcessButton(unsigned int &aKey);
-	void DrawBuf(int aX1, int aY1, int aX2, int aY2, unsigned char *aBuf, int aSize);
+
+	void CalcAScan(int aX1, int aY1, int aX2, int aY2, unsigned char *aBuf, int aSize);
+
+	void DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2);
 };
 //----------------------------------------------------------------------------
 

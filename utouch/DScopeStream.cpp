@@ -22,9 +22,6 @@
 //	DataFrameQueue
 //============================================================================
 
-#define	DATA_MAX_SIZE		4096
-//----------------------------------------------------------------------------
-
 DataFrameQueue::DataFrameQueue(int aQSize, bool aOverPush) {
 	m_QSize = aQSize;
 	m_OverPush = aOverPush;
@@ -48,10 +45,24 @@ DataFrameQueue::DataFrameQueue(int aQSize, bool aOverPush) {
 	}
 	m_QLen = 0;
 	m_ReadyToPush = false;
+
+	m_RealTimeBuf = new DataFrame();
+	m_RealTimeBuf->Create();
+	m_RealTimeBuf->Clean();
+
+	m_RealTimeExt = new DataFrame();
+	m_RealTimeExt->Create();
+	m_RealTimeExt->Clean();
 }
 //----------------------------------------------------------------------------
 
 DataFrameQueue::~DataFrameQueue() {
+	m_RealTimeExt->Destroy();
+	delete m_RealTimeExt;
+
+	m_RealTimeBuf->Destroy();
+	delete m_RealTimeBuf;
+
 	for (int i = 0; i < m_QSize; i++) {
 		m_Q[i]->Destroy();
 		delete m_Q[i];
@@ -75,8 +86,8 @@ DataFrame *DataFrameQueue::PullFront(void) {
 		m_GetPtr = (m_GetPtr + 1) % m_QSize;
 		m_QLen--;
 
-		if(0 == m_QLen)
-			memcpy(m_RealTimeBuf, res->m_RData, 128);
+		if (0 == m_QLen)
+			m_RealTimeBuf->Copy(res);
 
 		return res;
 	}
@@ -84,16 +95,21 @@ DataFrame *DataFrameQueue::PullFront(void) {
 }
 //----------------------------------------------------------------------------
 
-unsigned char *DataFrameQueue::GetRealTimeBuf(void) {
+DataFrame *DataFrameQueue::GetRealTimeBuf(void) {
 	if (m_QLen) {
 		int ptr = m_PutPtr - 1;
 		if (ptr < 0)
 			ptr = 0;
-		memcpy(m_RealTimeBuf, m_Q[ptr]->m_RData, 128);
+		m_RealTimeBuf->Copy(m_Q[ptr]);
 	}
 
-	return m_RealTimeBuf;
+	DataFrame *tmp = m_RealTimeBuf;
+	m_RealTimeBuf = m_RealTimeExt;
+	m_RealTimeExt = tmp;
+
+	return tmp;
 }
+//----------------------------------------------------------------------------
 
 DataFrame *DataFrameQueue::GetBack(void) {
 	return m_NewFrame;
@@ -103,18 +119,20 @@ DataFrame *DataFrameQueue::GetBack(void) {
 int frame_drop = 0;
 
 void DataFrameQueue::Push(void) {
-	if (m_QLen < m_QSize || m_OverPush) {
-		if (m_QLen == m_QSize) {
+	if (m_OverPush) {
+		while (m_QLen >= m_QSize) {
 			m_GetPtr = (m_GetPtr + 1) % m_QSize;
 			m_QLen--;
 			frame_drop++;
 		}
 	}
-	DataFrame *tmp = m_Q[m_PutPtr];
-	m_Q[m_PutPtr] = m_NewFrame;
-	m_NewFrame = tmp;
-	m_PutPtr = (m_PutPtr + 1) % m_QSize;
-	m_QLen++;
+	if (m_QLen < m_QSize) {
+		DataFrame *tmp = m_Q[m_PutPtr];
+		m_Q[m_PutPtr] = m_NewFrame;
+		m_NewFrame = tmp;
+		m_PutPtr = (m_PutPtr + 1) % m_QSize;
+		m_QLen++;
+	}
 }
 //----------------------------------------------------------------------------
 
@@ -192,10 +210,13 @@ DScopeStream::DScopeStream() {
 
 	printf("size of (int*) = %i\n", (int) sizeof(int *));
 
-	DScope *ds = new DScope();
+	dscope = new DScope(m_FTDI);
+
+	dscope->RFish->SetHightVoltage(hv60);
+
 	bool l_on = true;
 	for (int i = 0; i < 2; i++) {
-		unsigned int v = ds->LFish->LightOn(l_on);
+		unsigned int v = dscope->LFish->LightOn(l_on);
 		l_on = !l_on;
 
 		buf[8] = (v >> 24) & 0xFF;
@@ -207,7 +228,7 @@ DScopeStream::DScopeStream() {
 		usleep(100000);
 	}
 	{
-		unsigned int v = ds->LFish->SetHightVoltage(hv60);
+		unsigned int v = dscope->LFish->SetHightVoltage(hv60);
 		buf[11] = v & 0xFF;
 		buf[10] = (v >> 8) & 0xFF;
 		buf[9] = (v >> 16) & 0xFF;
@@ -228,6 +249,8 @@ DScopeStream::DScopeStream() {
 		ftdi_write_data(m_FTDI, buf, 16);
 	}
 	m_ExtSync = true;
+
+	ch_error = 0;
 
 	pthread_mutex_init(&m_KeyLock, NULL);
 
@@ -253,10 +276,6 @@ DScopeStream::~DScopeStream() {
 
 	pthread_mutex_destroy(&m_ReadLock);
 
-	printf("close ftdi...\n");
-	ftdi_usb_close(m_FTDI);
-	ftdi_free(m_FTDI);
-
 	pthread_mutex_lock(&m_FrameLock);
 	pthread_cond_signal(&m_DataReady);
 	pthread_mutex_unlock(&m_FrameLock);
@@ -269,6 +288,18 @@ DScopeStream::~DScopeStream() {
 	printf("delete m_Q...\n");
 
 	delete m_Q;
+
+	delete dscope;
+
+	printf("close ftdi...\n");
+	ftdi_usb_close(m_FTDI);
+	ftdi_free(m_FTDI);
+}
+//----------------------------------------------------------------------------
+
+void DScopeStream::PrintInfo(void) {
+	printf("ch_error=%i", ch_error);
+	ch_error = 0;
 }
 //----------------------------------------------------------------------------
 
@@ -363,7 +394,7 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 				CMD_InternalSync(m_ExtSync);
 			}
 		}
-		else if ((ch & 0xF0) == 0xA0) {
+		else if ((ch & 0xF0) == 0x50) {
 			//if (!m_LeftEndMarker) {
 			if ((ch & 0x0F) == 0x0F) {
 				m_Frame->m_LPktCounter = REV_BYTE_ORDER(w);
@@ -375,8 +406,8 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 			}
 			else {
 				m_Frame->m_LChLen[ch & 0x0F]++;
-				if (m_Frame->m_LDataLen < 4096) {
-					*(unsigned int *) &m_Frame->m_LData[m_Frame->m_LDataLen] = REV_BYTE_ORDER(w);
+				if (m_Frame->m_LDataLen < DATA_MAX_SIZE) {
+					*(unsigned int *) &m_Frame->m_LData[m_Frame->m_LDataLen] = w; //REV_BYTE_ORDER(w);
 					m_Frame->m_LDataLen += 4;
 				}
 				//buf += 5;
@@ -386,7 +417,7 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		//	UpdateFrame(true);
 
 		//}
-		else if ((ch & 0xF0) == 0x50) {
+		else if ((ch & 0xF0) == 0xA0) {
 			//if (!m_RightEndMarker) {
 			if ((ch & 0x0F) == 0x0F) {
 				m_Frame->m_RPktCounter = REV_BYTE_ORDER(w);
@@ -398,8 +429,8 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 			}
 			else {
 				m_Frame->m_RChLen[ch & 0x0F]++;
-				if (m_Frame->m_RDataLen < 4096) {
-					*(unsigned int *) &m_Frame->m_RData[m_Frame->m_RDataLen] = REV_BYTE_ORDER(w);
+				if (m_Frame->m_RDataLen < DATA_MAX_SIZE) {
+					*(unsigned int *) &m_Frame->m_RData[m_Frame->m_RDataLen] = w; //REV_BYTE_ORDER(w);
 					m_Frame->m_RDataLen += 4;
 				}
 				//buf += 5;
@@ -418,6 +449,16 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		}
 
 		if (m_LeftEndMarker && m_RightEndMarker) {
+			for (int i = 0; i < 14; i++) {
+				if (m_Frame->m_LChLen[i] != 32) {
+					ch_error++;
+					printf("left ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
+				}
+				if (m_Frame->m_RChLen[i] != 32) {
+					ch_error++;
+					printf("right ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
+				}
+			}
 			//printf("pkt cntr %i %i\n", m_Frame->m_LPktCounter, m_Frame->m_RPktCounter);
 			if (m_Frame->m_LDataLen != 1792 || m_Frame->m_RDataLen != 1792)
 				printf("pkt data len %i %i\n", m_Frame->m_LDataLen, m_Frame->m_RDataLen);
@@ -560,19 +601,19 @@ void DScopeStream::GetFrame(DataFrame* &aDataFrame) {
 }
 //----------------------------------------------------------------------------
 
-unsigned char* DScopeStream::GetRealtime(void) {
+DataFrame* DScopeStream::GetRealtime(void) {
 	pthread_mutex_lock(&m_FrameLock);
-	unsigned char *ptr = m_Q->GetRealTimeBuf();
+	DataFrame *ptr = m_Q->GetRealTimeBuf();
 	pthread_mutex_unlock(&m_FrameLock);
 	return ptr;
 }
 //----------------------------------------------------------------------------
 
-unsigned int DScopeStream::GetKey(void){
+unsigned int DScopeStream::GetKey(void) {
 	unsigned int res = 0xFFFFFFFF;
 
 	pthread_mutex_lock(&m_KeyLock);
-	if(!m_Keys.empty()) {
+	if (!m_Keys.empty()) {
 		res = m_Keys.front();
 		m_Keys.pop();
 	}
@@ -580,7 +621,6 @@ unsigned int DScopeStream::GetKey(void){
 
 	return res;
 }
-
 
 int DScopeStream::GetFrameCount(void) {
 	pthread_mutex_lock(&m_FrameLock);

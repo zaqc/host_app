@@ -129,7 +129,7 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 		aDSS->GetFrame(df);
 		unsigned char *aBuf = NULL;
 		if (df)
-			aBuf = df->m_RData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
+			aBuf = df->m_LData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
 		int n = i * 4;
 		for (int j = 0; j < 480; j++) {
 			unsigned char v = *aBuf;
