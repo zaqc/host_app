@@ -20,14 +20,14 @@ TextFont *font = NULL;
 //----------------------------------------------------------------------------
 
 TextFont::TextFont() {
-
 	const char vs[] = "attribute vec4 VertexPos; \n"
+			"attribute vec2 TexturePos; \n"
 			"varying vec2 TextCoord; \n"
 			"uniform vec4 FontColor; \n"
 			"void main() \n"
 			"{ \n"
 			"    gl_Position = VertexPos; \n"
-			"    TextCoord = vec2((VertexPos.x + 1.0) / 2.0, (VertexPos.y + 1.0) / 2.0); \n"
+			"    TextCoord = TexturePos; \n"
 			"} \n";
 
 	const char fs[] = "precision mediump float;\n"
@@ -36,20 +36,17 @@ TextFont::TextFont() {
 			"vec4 txtColor; \n"
 			"void main() \n"
 			"{ \n"
-//			"    txtColor = vec4(TextCoord.x, TextCoord.y, 1.0, 1.0); \n"
 			"    txtColor = texture2D(Texture, TextCoord); \n"
-//			"    txtColor.y = 0.0; \n"
-//			"    txtColor.z = 0.0; \n"
 			"    gl_FragColor = txtColor; \n"
 			"} \n";
 
 	m_Prog = createProgram(vs, fs);
 	if (!m_Prog) {
-		printf("Can't load programm for TextScroller...\n");
+		printf("Can't load program for TextScroller...\n");
 		exit(-1);
 	}
 	m_paramVertexPos = glGetAttribLocation(m_Prog, "VertexPos");
-	m_paramVertexTextCoord = 0; //glGetAttribLocation(m_Prog, "VertexTextCoord");
+	m_paramTexturePos = glGetAttribLocation(m_Prog, "TexturePos");
 	m_paramTexture = glGetUniformLocation(m_Prog, "Texture");
 	m_paramFontColor = glGetUniformLocation(m_Prog, "FontColor");
 
@@ -80,17 +77,14 @@ TextFont::TextFont() {
 	glBindTexture(GL_TEXTURE_2D, m_Text);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_Data);	// GL_ALPHA
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA,
+	GL_UNSIGNED_BYTE, m_Data);	// GL_ALPHA
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glGenFramebuffers(1, &m_FB);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FB);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Text, 0);
-
-//	glViewport(0, 0, 1024, 16);
-//	glDisable(GL_DEPTH_TEST);
-//	glClearColor(1.0, 1.0, 0.0, 1.0);
-//	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+			m_Text, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// unBind texture
 	glBindTexture(GL_TEXTURE_2D, 0);	// unBind texture
@@ -100,12 +94,22 @@ TextFont::TextFont() {
 	glBindTexture(GL_TEXTURE_2D, m_BkText);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);	// GL_ALPHA
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 16, 0, GL_RGBA,
+	GL_UNSIGNED_BYTE, NULL);	// GL_ALPHA
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	m_V = new GLfloat[12 * 10000];
+	m_T = new GLfloat[8 * 10000];
+	m_Ndx = new GLushort[6 * 10000];
+	m_Index = 0;
 }
 //----------------------------------------------------------------------------
 
 TextFont::~TextFont() {
+	delete[] m_Ndx;
+	delete[] m_T;
+	delete[] m_V;
+
 	glDeleteTextures(1, &m_BkText);
 
 	glDeleteFramebuffers(1, &m_FB);
@@ -124,57 +128,85 @@ int TextFont::GetStringHeight(void) {
 }
 //----------------------------------------------------------------------------
 
-void TextFont::RenderString(int aX, int aY, char *aStr) {
-//unsigned char glyph[] = { 0x00, 0x20, 0x78, 0xA8, 0xA0, 0x60, 0x30, 0x28, 0xA8, 0xF0, 0x20, 0x00 };
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_FB);
-
+void TextFont::RenderString(int aX, int aY, char *aStr, bool aFlush) {
 	int len = strlen((char *) aStr);
 
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, m_BkText);
+	if (m_Index + len >= 1000) {
+		glViewport(0, 0, 800, 480);
+		glDisable(GL_DEPTH_TEST);
 
-	int x = 0;
+		glUseProgram(m_Prog);
+
+		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
+		glEnableVertexAttribArray(m_paramVertexPos);
+
+		glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
+		glEnableVertexAttribArray(m_paramTexturePos);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_Text);
+		glUniform1i(m_paramTexture, 1);
+
+		//glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_Index = 0;
+	}
+
 	for (int i = 0; i < len; i++) {
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, 9 * ((unsigned char) *aStr - 32), 0, 9, 16);
-		x += 9;
+		int ch = (unsigned char) *aStr - 32;
+		float x1 = 2.0 / 800.0 * (float) (aX + i * 9) - 1.0;
+		float x2 = 2.0 / 800.0 * (float) (aX + (i + 1) * 9) - 1.0;
+
+		float y1 = 2.0 / 480.0 * (float)aY - 1.0;
+		float y2 = 2.0 / 480.0 * (float)(aY + 16) - 1.0;
+
+		GLfloat _v[] = { /* vertexes */
+		x1, y1, 0.0f, /**/
+		x1, y2, 0.0f, /**/
+		x2, y1, 0.0f, /**/
+		x2, y2, 0.0f };
+		memcpy(&m_V[m_Index * 12], _v, 12 * sizeof(GLfloat));
+
+		float tx1 = 1.0 / 1024.0 * (float) ch * 9.0;
+		float tx2 = 1.0 / 1024.0 * (float) (ch + 1) * 9.0;
+		GLfloat _txc[] = { /* texture coordinate */
+		tx1, 0.0f, /**/
+		tx1, 1.0f, /**/
+		tx2, 0.0f, /**/
+		tx2, 1.0f };
+		memcpy(&m_T[m_Index * 8], _txc, 8 * sizeof(GLfloat));
+
+		GLushort n = i * 4;
+		GLushort _ndx[] = { (GLushort) (n + 1), (GLushort) (n + 0),
+				(GLushort) (n + 2), (GLushort) (n + 1), (GLushort) (n + 2),
+				(GLushort) (n + 3) };
+		memcpy(&m_Ndx[m_Index * 6], _ndx, 6 * sizeof(GLushort));
+
+		m_Index++;
 		aStr++;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	if (aFlush) {
+		glViewport(0, 0, 800, 480);
+		glDisable(GL_DEPTH_TEST);
 
-	float x2 = 2.0 / 1024.0 * (float) (len * 9) - 1.0;
+		glUseProgram(m_Prog);
 
+		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
+		glEnableVertexAttribArray(m_paramVertexPos);
 
-	GLfloat v[] = { /* vertexes */
-	-1.0f, -1.0f, 0.0f, /**/
-	-1.0f, 1.0f, 0.0f, /**/
-	x2, -1.0f, 0.0f, /**/
-	x2, 1.0f, 0.0f };
+		glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
+		glEnableVertexAttribArray(m_paramTexturePos);
 
-//	GLfloat txc[] = { /* texture coordinate */
-//	0.0f, 0.0f, /**/
-//	0.0f, 1.0f, /**/
-//	1.0f, 0.0f, /**/
-//	1.0f, 1.0f };
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_Text);
+		glUniform1i(m_paramTexture, 1);
 
-	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
+		glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
 
-	glViewport(aX, aY, 1024, 16);
-	glDisable(GL_DEPTH_TEST);
-
-	glUseProgram(m_Prog);
-
-	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
-	glEnableVertexAttribArray(m_paramVertexPos);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_BkText);
-	glUniform1i(m_paramTexture, 1);
-
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_Index = 0;
+	}
 }
 //----------------------------------------------------------------------------
