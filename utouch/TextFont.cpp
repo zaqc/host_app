@@ -155,11 +155,11 @@ void TextFont::RenderString(int aX, int aY, char *aStr, bool aFlush) {
 
 	for (int i = 0; i < len; i++) {
 		int ch = (unsigned char) *aStr - 32;
-		float x1 = 2.0 / 800.0 * (float) (aX + i * 9) - 1.0;
-		float x2 = 2.0 / 800.0 * (float) (aX + (i + 1) * 9) - 1.0;
+		float x1 = ((float) (aX + i * 9)) / 400.0 - 1.0;
+		float x2 = ((float) (aX + (i + 1) * 9)) / 400.0 - 1.0;
 
-		float y1 = 2.0 / 480.0 * (float) aY - 1.0;
-		float y2 = 2.0 / 480.0 * (float) (aY + 16) - 1.0;
+		float y1 = ((float) aY) / 240.0 - 1.0;
+		float y2 = ((float) (aY + 16)) / 240.0 - 1.0;
 
 		GLfloat _v[] = { /* vertexes */
 		x1, y1, 0.0f, /**/
@@ -189,26 +189,26 @@ void TextFont::RenderString(int aX, int aY, char *aStr, bool aFlush) {
 	int maxv;
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxv);
 
-	if (aFlush || m_Index >= 16) {
-		glViewport(0, 0, 800, 480);
-		glDisable(GL_DEPTH_TEST);
+	//if (aFlush || m_Index >= 16) {
+	glViewport(0, 0, 800, 480);
+	glDisable(GL_DEPTH_TEST);
 
-		glUseProgram(m_Prog);
+	glUseProgram(m_Prog);
 
-		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
-		glEnableVertexAttribArray(m_paramVertexPos);
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
+	glEnableVertexAttribArray(m_paramVertexPos);
 
-		glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
-		glEnableVertexAttribArray(m_paramTexturePos);
+	glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
+	glEnableVertexAttribArray(m_paramTexturePos);
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_Text);
-		glUniform1i(m_paramTexture, 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_Text);
+	glUniform1i(m_paramTexture, 1);
 
-		glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
+	glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		m_Index = 0;
-	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+	m_Index = 0;
+	//}
 }
 //----------------------------------------------------------------------------

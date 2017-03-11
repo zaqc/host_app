@@ -657,9 +657,9 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 		glDrawElements(GL_LINE_LOOP, size + 1, GL_UNSIGNED_SHORT, m_Ndx);
 	}
 
-	// font->RenderString(2, 2, (char*) "A-Scan Render String...");
+	m_Menu->Render(10, 20);
 
-	// m_Menu->Render(10, 20);
+	font->RenderString(2, 2, (char*) "A-Scan Render String...", true);
 }
 //----------------------------------------------------------------------------
 
