@@ -21,14 +21,11 @@
 #include  <X11/Xutil.h>
 
 #include "Util.h"
+#include "GlUtil.h"
 #include "TextScroller.h"
 #include "DScopeStream.h"
 #include "TextAScan.h"
-#include "ViewContainer.h"
-#include "Rail3DScanView.h"
-
-ScreenView::ViewContainer* pContainer = nullptr;
-ScreenView::Rail3DScanView* pRailView = nullptr;
+#include "TextFont.h"
 
 int main(void) {
 	puts("!!!Hello World!!!");
@@ -36,8 +33,7 @@ int main(void) {
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
 
-	DScopeStream *dss = nullptr;
-	//dss = new DScopeStream();
+	DScopeStream *dss = NULL; //new DScopeStream();
 
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
@@ -48,7 +44,8 @@ int main(void) {
 	XWindowAttributes attr;
 	XGetWindowAttributes(x_disp, x_desktop, &attr);
 
-	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0, 255);
+	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0,
+			255);
 	//eglInitialize()
 
 	XSetWindowAttributes xattr;
@@ -64,7 +61,8 @@ int main(void) {
 
 	Atom window_type = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE", False);
 	long value = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
+	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace,
+			(unsigned char *) &value, 1);
 
 	XMapWindow(x_disp, x_wnd);
 	XMoveWindow(x_disp, x_wnd, (attr.width - 800) / 2, (attr.height - 480) / 2);
@@ -114,9 +112,9 @@ int main(void) {
 	EGL_CONTEXT_CLIENT_VERSION, 2,
 	EGL_NONE };
 
-	EGLContext __egl_context = eglCreateContext(__egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
-	if (__egl_context == EGL_NO_CONTEXT)
-	{
+	EGLContext __egl_context = eglCreateContext(__egl_display, ecfg,
+	EGL_NO_CONTEXT, ctxattr);
+	if (__egl_context == EGL_NO_CONTEXT) {
 		//cerr << "Unable to create EGL context (eglError: " << eglGetError() << ")" << endl;
 		printf("unable to create EGL context eglerror:%i\n", eglGetError());
 		return 1;
@@ -133,6 +131,8 @@ int main(void) {
 
 	//glEnable(GL_DEPTH_TEST);
 
+	font = new TextFont();
+
 	TextScroller *tscroll = new TextScroller();
 	tscroll->InitProgram();
 	tscroll->Init();
@@ -142,9 +142,11 @@ int main(void) {
 	int fc = 0;
 	ts_prev = ts;
 
-	eglSwapInterval(__egl_display, 1);
+	eglSwapInterval(__egl_display, 0);
 
 	TextAScan *a_scan = new TextAScan();
+
+	bool show_a_scan = false;
 
 	XEvent x_event;
 
@@ -183,28 +185,46 @@ int main(void) {
 
 		//renderFrame();
 
-		///default rendering
-		tscroll->RenderFrame(dss);
-		a_scan->FillRect(100, 100, 700, 380);
-		unsigned char *b = nullptr;
-		//b = dss->GetRealtime();
-		if (b)
-		{
-			a_scan->DrawBuf(100, 100, 700, 380, b, 128);
+		if (dss) {
+			unsigned int key = dss->GetKey();
+			if (key == BTN_HOME) {
+				show_a_scan = !show_a_scan;
+				key = 0;
+			} else if (key == BTN_CANCEL) {
+				dss->PrintInfo();
+			}
+
+			if (show_a_scan) {
+				a_scan->ProcessButton(key);
+
+				a_scan->FillRect(0, 0, 800, 480);
+				a_scan->DrawBuf(dss, 0, 0, 800, 480);
+			} else {
+				tscroll->RenderFrame(dss);
+			}
 		}
 
 		//tscroll->RenderFrame(dss);
 
-		//new rendering
-		pContainer->Render();
+		//renderFrame();
+		a_scan->FillRect(0, 0, 800, 480);
+
+//		for (int row = 0; row < 4; row++)
+//			for (int i = 0; i < 34; i++)
+//				font->RenderString(row * 200, i * 14,
+//						(char*) "String render slow slow...");
+
+		for (int i = 0; i < 100; i++)
+			font->RenderString(10, 10, (char*) "String render slow slow...");
+
+		font->RenderString(10, 50, (char*) "String render slow slow...", true);
 
 		eglSwapBuffers(__egl_display, surf);
 
-		//renderFrame();
-
 		fc++;
 		gettimeofday(&ts, 0);
-		float delta = (ts.tv_sec * 1000000 + ts.tv_usec) - (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
+		float delta = (ts.tv_sec * 1000000 + ts.tv_usec)
+				- (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
 
 		if (delta >= 1000000.0f) {
 			printf("FPS=%.4f \n", (float) fc * 1000000.0 / delta);
@@ -219,6 +239,8 @@ int main(void) {
 	printf("try to delete TextScroller...\n");
 	delete tscroll;
 
+	delete font;
+
 	usleep(100000);
 
 	eglDestroyContext(__egl_display, __egl_context);
@@ -228,9 +250,12 @@ int main(void) {
 	XDestroyWindow(x_disp, x_wnd);
 
 	printf("try to delete DScopeStream...\n");
-	delete dss;
+	if (dss)
+		delete dss;
 
 	usleep(100000);
+
+	printf("see you soon :-)\n");
 
 	return EXIT_SUCCESS;
 }

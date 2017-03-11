@@ -15,6 +15,7 @@
 #include <GLES2/gl2.h>
 
 #include "DScopeStream.h"
+#include "TextFont.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -41,8 +42,8 @@ TextScroller::~TextScroller() {
 	glDeleteFramebuffers(1, &m_FB);
 	glDeleteTextures(1, &m_Text);
 
-	if(m_Data)
-		delete [] m_Data;
+	if (m_Data)
+		delete[] m_Data;
 }
 //----------------------------------------------------------------------------
 
@@ -128,12 +129,16 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 		aDSS->GetFrame(df);
 		unsigned char *aBuf = NULL;
 		if (df)
-			aBuf = df->m_RData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
+			aBuf = df->m_LData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
 		int n = i * 4;
 		for (int j = 0; j < 480; j++) {
-			unsigned char v = j;
-			if (aBuf)
-				v = *aBuf;
+			unsigned char v = *aBuf;
+//			int v = j;
+//			if (aBuf)
+//				v = *aBuf / 4;
+//			v = v * v;
+//			if (v > 255)
+//				v = 255;
 			m_Data[n] = v;
 			m_Data[n + 1] = v;
 			m_Data[n + 2] = v;
@@ -232,10 +237,8 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_Text);
 
-		if (ss < 800) {
+		if (ss < 800)
 			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ss, 0, 800 - ss, 480);
-			//glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 800 - ss, 0, ss, 0, ss, 480);
-		}
 		else
 			ss = 800;
 
@@ -243,6 +246,8 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 		DrawData(ss, aDSS);
 	}
+
+	// font->RenderString(10, 10, (char*) "B-Scan Channels (1-4)");
 }
 //----------------------------------------------------------------------------
 
