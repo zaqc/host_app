@@ -232,8 +232,8 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 
-	int ss = 0;
-	if (aDSS && (ss = aDSS->GetFrameCount()) > 0) {
+	int ss = aDSS->GetFrameCount();
+	if (ss) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_Text);
 

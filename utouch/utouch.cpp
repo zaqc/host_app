@@ -27,6 +27,9 @@
 #include "TextAScan.h"
 #include "TextFont.h"
 
+//bool setupGraphics(int w, int h);
+//void renderFrame();
+
 int main(void) {
 	puts("!!!Hello World!!!");
 
@@ -149,22 +152,14 @@ int main(void) {
 	bool show_a_scan = false;
 
 	XEvent x_event;
-
-	pContainer = new ScreenView::ViewContainer();
-	pRailView = new ScreenView::Rail3DScanView();
-	pContainer->AddView(pRailView);
-
-	while (true)
-	{
-		if (XPending(x_disp))
-		{
+	while (true) {
+		if (XPending(x_disp)) {
 			XNextEvent(x_disp, &x_event);
 
 			if (x_event.type == ClientMessage) {
 				printf("Client Message\n");
 				break;
 			}
-
 			if (x_event.type == ButtonPress) {
 				printf("Trying to close full screen mode\n");
 				//				Atom atom = XInternAtom(x_disp, "_NET_WM_DESKTOP", true);
