@@ -206,13 +206,12 @@ int main(void) {
 
 //		for (int row = 0; row < 4; row++)
 //			for (int i = 0; i < 34; i++)
-//				font->RenderString(row * 200, i * 14,
-//						(char*) "String render slow slow...");
+//				font->RenderString(row * 200, i * 14, (char*) "String render slow slow...");
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10; i++)
 			font->RenderString(10, 10, (char*) "String render slow slow...");
 
-		font->RenderString(10, 50, (char*) "String render slow slow...", true);
+		font->RenderString(10, 50, (char*) "this is string for flush out text...", true);
 
 		eglSwapBuffers(__egl_display, surf);
 

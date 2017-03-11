@@ -83,8 +83,7 @@ TextFont::TextFont() {
 
 	glGenFramebuffers(1, &m_FB);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FB);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-			m_Text, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Text, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);	// unBind texture
 	glBindTexture(GL_TEXTURE_2D, 0);	// unBind texture
@@ -98,9 +97,9 @@ TextFont::TextFont() {
 	GL_UNSIGNED_BYTE, NULL);	// GL_ALPHA
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	m_V = new GLfloat[12 * 10000];
-	m_T = new GLfloat[8 * 10000];
-	m_Ndx = new GLushort[6 * 10000];
+	m_V = new GLfloat[12 * 1000];
+	m_T = new GLfloat[8 * 1000];
+	m_Ndx = new GLushort[6 * 1000];
 	m_Index = 0;
 }
 //----------------------------------------------------------------------------
@@ -131,35 +130,36 @@ int TextFont::GetStringHeight(void) {
 void TextFont::RenderString(int aX, int aY, char *aStr, bool aFlush) {
 	int len = strlen((char *) aStr);
 
-	if (m_Index + len >= 1000) {
-		glViewport(0, 0, 800, 480);
-		glDisable(GL_DEPTH_TEST);
+	/*	if (m_Index + len >= 1000) {
+	 glViewport(0, 0, 800, 480);
+	 glDisable(GL_DEPTH_TEST);
 
-		glUseProgram(m_Prog);
+	 glUseProgram(m_Prog);
 
-		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
-		glEnableVertexAttribArray(m_paramVertexPos);
+	 glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
+	 glEnableVertexAttribArray(m_paramVertexPos);
 
-		glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
-		glEnableVertexAttribArray(m_paramTexturePos);
+	 glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, m_T);
+	 glEnableVertexAttribArray(m_paramTexturePos);
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_Text);
-		glUniform1i(m_paramTexture, 1);
+	 glActiveTexture(GL_TEXTURE1);
+	 glBindTexture(GL_TEXTURE_2D, m_Text);
+	 glUniform1i(m_paramTexture, 1);
 
-		//glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
+	 glDrawElements(GL_TRIANGLES, 6 * m_Index, GL_UNSIGNED_SHORT, m_Ndx);
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		m_Index = 0;
-	}
+	 glBindTexture(GL_TEXTURE_2D, 0);
+	 m_Index = 0;
+	 }
+	 */
 
 	for (int i = 0; i < len; i++) {
 		int ch = (unsigned char) *aStr - 32;
 		float x1 = 2.0 / 800.0 * (float) (aX + i * 9) - 1.0;
 		float x2 = 2.0 / 800.0 * (float) (aX + (i + 1) * 9) - 1.0;
 
-		float y1 = 2.0 / 480.0 * (float)aY - 1.0;
-		float y2 = 2.0 / 480.0 * (float)(aY + 16) - 1.0;
+		float y1 = 2.0 / 480.0 * (float) aY - 1.0;
+		float y2 = 2.0 / 480.0 * (float) (aY + 16) - 1.0;
 
 		GLfloat _v[] = { /* vertexes */
 		x1, y1, 0.0f, /**/
@@ -178,16 +178,18 @@ void TextFont::RenderString(int aX, int aY, char *aStr, bool aFlush) {
 		memcpy(&m_T[m_Index * 8], _txc, 8 * sizeof(GLfloat));
 
 		GLushort n = i * 4;
-		GLushort _ndx[] = { (GLushort) (n + 1), (GLushort) (n + 0),
-				(GLushort) (n + 2), (GLushort) (n + 1), (GLushort) (n + 2),
-				(GLushort) (n + 3) };
+		GLushort _ndx[] = { (GLushort) (n + 1), (GLushort) (n + 0), (GLushort) (n + 2), (GLushort) (n + 1),
+				(GLushort) (n + 2), (GLushort) (n + 3) };
 		memcpy(&m_Ndx[m_Index * 6], _ndx, 6 * sizeof(GLushort));
 
 		m_Index++;
 		aStr++;
 	}
 
-	if (aFlush) {
+	int maxv;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxv);
+
+	if (aFlush || m_Index >= 16) {
 		glViewport(0, 0, 800, 480);
 		glDisable(GL_DEPTH_TEST);
 
