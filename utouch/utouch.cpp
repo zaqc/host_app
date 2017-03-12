@@ -36,7 +36,7 @@ int main(void) {
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
 
-	DScopeStream *dss = new DScopeStream();
+	DScopeStream *dss = NULL; //new DScopeStream();
 
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
@@ -47,7 +47,8 @@ int main(void) {
 	XWindowAttributes attr;
 	XGetWindowAttributes(x_disp, x_desktop, &attr);
 
-	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0, 255);
+	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0,
+			255);
 	//eglInitialize()
 
 	XSetWindowAttributes xattr;
@@ -63,7 +64,8 @@ int main(void) {
 
 	Atom window_type = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE", False);
 	long value = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
+	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace,
+			(unsigned char *) &value, 1);
 
 	XMapWindow(x_disp, x_wnd);
 	XMoveWindow(x_disp, x_wnd, (attr.width - 800) / 2, (attr.height - 480) / 2);
@@ -143,7 +145,7 @@ int main(void) {
 	int fc = 0;
 	ts_prev = ts;
 
-	eglSwapInterval(__egl_display, 1);
+	eglSwapInterval(__egl_display, 0);
 
 	TextAScan *a_scan = new TextAScan();
 
@@ -183,8 +185,7 @@ int main(void) {
 			if (key == BTN_HOME) {
 				show_a_scan = !show_a_scan;
 				key = 0;
-			}
-			else if (key == BTN_CANCEL) {
+			} else if (key == BTN_CANCEL) {
 				dss->PrintInfo();
 			}
 
@@ -193,16 +194,19 @@ int main(void) {
 
 				a_scan->FillRect(0, 0, 800, 480);
 				a_scan->DrawBuf(dss, 0, 0, 800, 480);
-			}
-			else {
+			} else {
 				tscroll->RenderFrame(dss);
 			}
-		}
-		else {
+		} else {
 			a_scan->FillRect(0, 0, 800, 480);
-			for (int i = 0; i < 10; i++)
-				font->RenderString(10, 10, (char*) "String render slow slow...");
-			font->RenderString(10, 50, (char*) "this is string for flush out text...", true);
+			for (int j = 0; j < 30; j++)
+				for (int i = 0; i < 4; i++)
+					font->RenderString(i * 200, j * 16,
+							(char*) "String render slow slow...");
+			font->RenderString(10, 50,
+					(char*) "this is string for flush out text...");
+
+			font->FlushText();
 		}
 
 		//tscroll->RenderFrame(dss);
@@ -213,7 +217,8 @@ int main(void) {
 
 		fc++;
 		gettimeofday(&ts, 0);
-		float delta = (ts.tv_sec * 1000000 + ts.tv_usec) - (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
+		float delta = (ts.tv_sec * 1000000 + ts.tv_usec)
+				- (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
 
 		if (delta >= 1000000.0f) {
 			printf("FPS=%.4f \n", (float) fc * 1000000.0 / delta);

@@ -32,7 +32,8 @@ public:
 
 	int GetStringWidth(char *aStr);
 	int GetStringHeight(void);
-	void RenderString(int aX, int aY, char *aStr, bool aFlush = false);
+	void RenderString(int aX, int aY, char *aStr);
+	void FlushText(void);
 };
 
 extern TextFont *font;
