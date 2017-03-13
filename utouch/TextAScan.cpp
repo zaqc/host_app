@@ -12,6 +12,7 @@
 #include "TextAScan.h"
 #include "GlUtil.h"
 #include "TextFont.h"
+#include "TextDraw.h"
 //----------------------------------------------------------------------------
 
 //============================================================================
@@ -616,10 +617,10 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 
 	DataFrame *fr = aDSS->GetRealtime();
 
-	glUseProgram(m_Prog);
-
-	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 800, 480);
+//	glUseProgram(m_Prog);
+//
+//	glDisable(GL_DEPTH_TEST);
+//	glViewport(0, 0, 800, 480);
 
 	if (m_Menu->GetShowAllChannel()) {
 		for (int j = 0; j < 4; j++) {
@@ -633,6 +634,11 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 				unsigned char *b = (side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
 				CalcAScan(x1, y1, x2, y2, b, size);
 
+				glUseProgram(m_Prog);
+
+				glDisable(GL_DEPTH_TEST);
+				glViewport(0, 0, 800, 480);
+
 				glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
 				glEnableVertexAttribArray(m_paramVertexPos);
 
@@ -644,8 +650,15 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 		}
 	}
 	else {
+		draw->DrawGrid(aX1 - 20, aY1, aX2 + 20, aY2, m_Menu->IsLogView());
+
 		unsigned char *b = (side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
-		CalcAScan(aX1, aY1, aX2, aY2, b, size);
+		CalcAScan(aX1 + 16, aY1 + 46, aX2 + 16, aY2 + 26, b, size);
+
+		glUseProgram(m_Prog);
+
+		glDisable(GL_DEPTH_TEST);
+		glViewport(0, 0, 800, 480);
 
 		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
 		glEnableVertexAttribArray(m_paramVertexPos);
@@ -655,8 +668,6 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 
 		glDrawElements(GL_LINE_LOOP, size + 1, GL_UNSIGNED_SHORT, m_Ndx);
 	}
-
-	DrawGrid(aX1, aY1, aX2, aY2, true);
 
 	m_Menu->Render(10, 20);
 
