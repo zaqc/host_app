@@ -638,10 +638,6 @@ void DScopeStream::RecvThread(void) {
 			printf("Frame Drop Count=%i\n", frame_drop);
 			break;
 		}
-//		if(n++ > 10000000) {
-//			printf("error count=%i\n", m_ErrorCount);
-//			n = 0;
-//		}
 	}
 
 	printf("Exit from thread...\n");
