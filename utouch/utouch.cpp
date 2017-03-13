@@ -214,7 +214,7 @@ int main(void) {
 			font->FlushText();
 		}
 
-		draw->DrawGrid(10, 10, 790, 450, true);
+		// draw->DrawGrid(10, 10, 790, 450, true);
 
 		//tscroll->RenderFrame(dss);
 

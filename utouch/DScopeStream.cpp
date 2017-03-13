@@ -468,16 +468,17 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 			for (int i = 0; i < 14; i++) {
 				if (m_Frame->m_LChLen[i] != 32) {
 					ch_error++;
-					printf("left ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
+					//printf("left ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
 				}
 				if (m_Frame->m_RChLen[i] != 32) {
 					ch_error++;
-					printf("right ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
+					//printf("right ch=%i len=%i \n", i, m_Frame->m_LChLen[i]);
 				}
 			}
 			//printf("pkt cntr %i %i\n", m_Frame->m_LPktCounter, m_Frame->m_RPktCounter);
-			if (m_Frame->m_LDataLen != 1792 || m_Frame->m_RDataLen != 1792)
-				printf("pkt data len %i %i\n", m_Frame->m_LDataLen, m_Frame->m_RDataLen);
+			if (m_Frame->m_LDataLen != 1792 || m_Frame->m_RDataLen != 1792) {
+				//printf("pkt data len %i %i\n", m_Frame->m_LDataLen, m_Frame->m_RDataLen);
+			}
 			UpdateFrame(true);
 		}
 	}
