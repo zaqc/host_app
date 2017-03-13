@@ -26,6 +26,9 @@
 #include "DScopeStream.h"
 #include "TextAScan.h"
 #include "TextFont.h"
+#include "SmallFont.h"
+#include "TextDraw.h"
+//----------------------------------------------------------------------------
 
 //bool setupGraphics(int w, int h);
 //void renderFrame();
@@ -36,7 +39,7 @@ int main(void) {
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
 
-	DScopeStream *dss = NULL; //new DScopeStream();
+	DScopeStream *dss = new DScopeStream();
 
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
@@ -135,6 +138,8 @@ int main(void) {
 	//glEnable(GL_DEPTH_TEST);
 
 	font = new TextFont();
+	small_font = new SmallFont();
+	draw = new TextDraw();
 
 	TextScroller *tscroll = new TextScroller();
 	tscroll->InitProgram();
@@ -193,7 +198,7 @@ int main(void) {
 				a_scan->ProcessButton(key);
 
 				a_scan->FillRect(0, 0, 800, 480);
-				a_scan->DrawBuf(dss, 0, 0, 800, 480);
+				a_scan->DrawBuf(dss, 30, 10, 770, 440);
 			} else {
 				tscroll->RenderFrame(dss);
 			}
@@ -209,9 +214,12 @@ int main(void) {
 			font->FlushText();
 		}
 
+		draw->DrawGrid(10, 10, 790, 450, false);
+
 		//tscroll->RenderFrame(dss);
 
 		//renderFrame();
+
 
 		eglSwapBuffers(__egl_display, surf);
 
@@ -233,6 +241,8 @@ int main(void) {
 	printf("try to delete TextScroller...\n");
 	delete tscroll;
 
+	delete draw;
+	delete small_font;
 	delete font;
 
 	usleep(100000);

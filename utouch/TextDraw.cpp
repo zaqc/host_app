@@ -1,0 +1,222 @@
+/*
+ * TextDraw.cpp
+ *
+ *  Created on: Mar 13, 2017
+ *      Author: zaqc
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <GLES2/gl2.h>
+
+#include "TextDraw.h"
+#include "GlUtil.h"
+#include "TextFont.h"
+#include "SmallFont.h"
+//----------------------------------------------------------------------------
+
+TextDraw *draw = NULL;
+//----------------------------------------------------------------------------
+
+TextDraw::TextDraw() {
+	const char vs[] = "attribute vec4 VertexPos; \n"
+			"uniform vec4 DrawColor; \n"
+			"varying vec4 vertex_color;\n"
+			"float xx; \n"
+			"float yy; \n"
+			"void main() \n"
+			"{ \n"
+			"    xx = VertexPos.x / 400.0 - 1.0; \n"
+			"    yy = 1.0 - VertexPos.y / 240.0; \n"
+			"    gl_Position = vec4(xx, yy, 0.0, VertexPos.w); \n"
+			"    vertex_color = DrawColor; \n" //vec4(1.0, 1.0, 1.0, 1.0); \n" //DrawColor; \n"
+			"} \n";
+
+	const char fs[] = "precision mediump float;\n"
+			"varying vec4 vertex_color;\n"
+			"void main() \n"
+			"{ \n"
+			"    gl_FragColor = vertex_color; \n"
+			"} \n";
+
+	m_Prog = createProgram(vs, fs);
+	if (!m_Prog) {
+		printf("Can't load programm for TextScroller...\n");
+		exit(-1);
+	}
+
+	m_R = m_G = m_B = m_A = 1.0f;
+
+	m_paramVertexPos = glGetAttribLocation(m_Prog, "VertexPos");
+	m_paramDrawColor = glGetUniformLocation(m_Prog, "DrawColor");
+
+	m_LineCacheSize = 1024;
+	m_LineVertex = new GLfloat[m_LineCacheSize * 6];
+	m_LineColor = new GLfloat[m_LineCacheSize * 8];
+	m_LineNdx = new GLushort[m_LineCacheSize * 2];
+}
+//----------------------------------------------------------------------------
+
+TextDraw::~TextDraw() {
+	delete[] m_LineNdx;
+	delete[] m_LineColor;
+	delete[] m_LineVertex;
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::SetColor(GLfloat *aColor) {
+	m_R = aColor[0];
+	m_G = aColor[1];
+	m_B = aColor[2];
+	m_A = aColor[3];
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::SetColor(GLfloat aR, GLfloat aG, GLfloat aB, GLfloat aA) {
+	m_R = aR;
+	m_G = aG;
+	m_B = aB;
+	m_A = aA;
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::FillRect(int aX1, int aY1, int aX2, int aY2) {
+	float x1 = aX1; //(float) aX1 / 400.0 - 1.0;
+	float x2 = aX2; //(float) aX2 / 400.0 - 1.0;
+	float y1 = aY1; //(float) aY1 / 240.0 - 1.0;
+	float y2 = aY2; //(float) aY2 / 240.0 - 1.0;
+
+	GLfloat v[] = { /* vertexes */
+	x1, y1, 0.0f, /**/
+	x1, y2, 0.0f, /**/
+	x2, y1, 0.0f, /**/
+	x2, y2, 0.0f };
+
+	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, 800, 480);
+
+	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::DrawLine(int aX1, int aY1, int aX2, int aY2) {
+	float x1 = aX1; //(float) aX1 / 400.0 - 1.0;
+	float x2 = aX2; //(float) aX2 / 400.0 - 1.0;
+	float y1 = aY1; //(float) aY1 / 240.0 - 1.0;
+	float y2 = aY2; //(float) aY2 / 240.0 - 1.0;
+
+	GLfloat v[] = { /* vertexes */
+	x1, y1, 0.0f, /**/
+	x2, y2, 0.0f };
+
+	GLushort ndx[] = { 0, 1 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, 800, 480);
+
+	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_SHORT, ndx);
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::DrawRect(int aX1, int aY1, int aX2, int aY2) {
+	float x1 = aX1; //(float) aX1 / 400.0 - 1.0;
+	float x2 = aX2; //(float) aX2 / 400.0 - 1.0;
+	float y1 = aY1; //(float) aY1 / 240.0 - 1.0;
+	float y2 = aY2; //(float) aY2 / 240.0 - 1.0;
+
+	GLfloat v[] = { /* vertexes */
+	x1, y1, 0.0f, /**/
+	x1, y2, 0.0f, /**/
+	x2, y1, 0.0f, /**/
+	x2, y2, 0.0f };
+
+	GLushort ndx[] = { 0, 2, 2, 3, 3, 1, 1, 0 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, 800, 480);
+
+	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, ndx);
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
+	int lm = 30;
+	int bm = 16;
+	int tm = 4;
+	int rm = 4;
+	draw->SetColor(0.0f, 0.0f, 0.25f, 1.0f);
+	draw->FillRect(aX1, aY1, aX2, aY2);
+	draw->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+	draw->DrawRect(aX1, aY1, aX2, aY2);
+	draw->DrawRect(aX1 + lm, aY1 + tm, aX2 - rm, aY2 - bm);
+
+	float delay = 12.5;	// uSec
+	float accum = 40.0 * 32.0 / 1000.0; // uSec
+	int tick_count = 128;
+
+	float full_time = (float) tick_count * accum;
+
+	draw->SetColor(1.0f, 1.0f, 1.0f, .25f);
+	float rw = aX2 - aX1 - lm - rm;
+	float x = aX1 + lm;
+	for (int i = 0; i < 10; i++) {
+		float t = delay + full_time / 10.0 * (float) i;
+		char str[16];
+		sprintf(str, "%.2f", t);
+		int str_w = small_font->GetStringWidth(str);
+		small_font->RenderString(x - str_w / 2, aY2 - 12, str);
+
+		x = x + rw / 10.0;
+		draw->DrawLine(x, aY1 + tm, x, aY2 - bm);
+	}
+
+	{
+		char str[16];
+		sprintf(str, "uSec");
+		int str_w = small_font->GetStringWidth(str);
+		small_font->RenderString(aX2 - str_w - rm, aY2 - 12, str);
+	}
+	small_font->FlushText();
+
+	if (aLogView) {
+		float rh = aY2 - aY1 - tm - bm;
+		float y = aY1 + tm;
+		for (int i = 1; i < 10; i++) {
+			y = y + rh / 10.0;
+			draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
+		}
+	}
+	else {
+		float rh = aY2 - aY1 - tm - bm;
+		float y = aY1 + tm;
+		for (int i = 1; i < 10; i++) {
+			rh = rh / 2;
+			y = y + rh;
+			draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
+		}
+	}
+}
+//----------------------------------------------------------------------------

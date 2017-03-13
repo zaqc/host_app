@@ -135,7 +135,7 @@ public:
 	TextAScan();
 	virtual ~TextAScan();
 
-	void DrawLine(int aX1, int aY1, int aX2, int aY2);
+	void DrawLine(int aX1, int aY1, int aX2, int aY2, GLfloat *aColor = NULL);
 	void FillRect(int aX1, int aY1, int aX2, int aY2, GLfloat *aColor = NULL);
 
 	void ProcessButton(unsigned int &aKey);
@@ -143,6 +143,7 @@ public:
 	void CalcAScan(int aX1, int aY1, int aX2, int aY2, unsigned char *aBuf, int aSize);
 
 	void DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2);
+	void DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLog);
 };
 //----------------------------------------------------------------------------
 

@@ -60,6 +60,7 @@ TextFont::TextFont() {
 		m_Data[i * 4 + 2] = 0;
 		m_Data[i * 4 + 3] = 0;
 	}
+
 	unsigned char *font_ptr = &font_8x13[0][0];
 	for (unsigned int n = 0; n < sizeof(font_8x13) / 13; n++) {
 		for (int j = 0; j < 13; j++) {

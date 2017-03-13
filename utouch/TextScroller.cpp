@@ -128,23 +128,21 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 		DataFrame *df = NULL;
 		aDSS->GetFrame(df);
 		unsigned char *aBuf = NULL;
-		if (df)
-			aBuf = df->m_LData; //t_log[*aBuf] < 255 ? (unsigned char) t_log[*aBuf] : 255;
-		int n = i * 4;
-		for (int j = 0; j < 480; j++) {
-			unsigned char v = *aBuf;
-//			int v = j;
-//			if (aBuf)
-//				v = *aBuf / 4;
-//			v = v * v;
-//			if (v > 255)
-//				v = 255;
-			m_Data[n] = v;
-			m_Data[n + 1] = v;
-			m_Data[n + 2] = v;
-			m_Data[n + 3] = 255;
-			n += aW * 4;
-			aBuf++;
+		if (df) {
+			int n = i * 4;
+			for (int tr = 0; tr < 4; tr++) {
+				aBuf = &df->m_LData[tr * 256];
+				for (int j = 0; j < 128; j++) {
+					unsigned char v1 = *aBuf;
+					unsigned char v2 = *(aBuf + 128);
+					m_Data[n] = v1;
+					m_Data[n + 1] = (v1 > v2) ? v1 : v2;
+					m_Data[n + 2] = v2;
+					m_Data[n + 3] = 255;
+					n += aW * 4;
+					aBuf++;
+				}
+			}
 		}
 	}
 
@@ -248,6 +246,7 @@ void TextScroller::RenderFrame(DScopeStream *aDSS) {
 	}
 
 	font->RenderString(10, 10, (char*) "B-Scan Channels (1-4)");
+	font->FlushText();
 }
 //----------------------------------------------------------------------------
 

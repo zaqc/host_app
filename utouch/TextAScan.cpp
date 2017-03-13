@@ -58,9 +58,8 @@ bool MenuItem::IsChanged(void) {
 //	IntMenuItem
 //============================================================================
 
-SwitchMenuItem::SwitchMenuItem(TextAScan *aTextAScan, char *aCaption, char* aI1,
-		char* aI2) :
-		MenuItem(aTextAScan) {
+SwitchMenuItem::SwitchMenuItem(TextAScan *aTextAScan, char *aCaption, char* aI1, char* aI2)
+		: MenuItem(aTextAScan) {
 	m_Caption = strdup(aCaption);
 	m_I1 = strdup(aI1);
 	m_I2 = strdup(aI2);
@@ -125,9 +124,8 @@ void SwitchMenuItem::Render(int aX, int aY) {
 //	IntMenuItem
 //============================================================================
 
-IntMenuItem::IntMenuItem(TextAScan *aTextAScan, char *aCaption, int aVal,
-		int aMin, int aMax) :
-		MenuItem(aTextAScan) {
+IntMenuItem::IntMenuItem(TextAScan *aTextAScan, char *aCaption, int aVal, int aMin, int aMax)
+		: MenuItem(aTextAScan) {
 	m_Caption = new char[strlen(aCaption) + 1];
 	memset(m_Caption, 0, strlen(aCaption) + 1);
 	memcpy(m_Caption, aCaption, strlen(aCaption));
@@ -182,11 +180,13 @@ void IntMenuItem::ProcessButton(unsigned int &aKey) {
 				else
 					aKey = 0;
 			}
-		} else {
+		}
+		else {
 			m_PrevKey = aKey;
 			m_HoldTickCount = 0;
 		}
-	} else {
+	}
+	else {
 		m_HoldTickCount = 0;
 		m_PrevKey = 0;
 	}
@@ -239,12 +239,10 @@ void IntMenuItem::Render(int aX, int aY) {
 
 MenuAScan::MenuAScan(TextAScan * aTextAScan) {
 	m_TextAScan = aTextAScan;
-	m_Side = new SwitchMenuItem(aTextAScan, (char*) "DS Side:", (char*) "Left",
-			(char*) "Right");
+	m_Side = new SwitchMenuItem(aTextAScan, (char*) "DS Side:", (char*) "Left", (char*) "Right");
 	m_ChNumber = new IntMenuItem(aTextAScan, (char*) "Ch Num:", 1, 1, 14);
 
-	m_AScanType = new SwitchMenuItem(aTextAScan, (char*) "View Type:",
-			(char*) "Log", (char*) "VGA");
+	m_AScanType = new SwitchMenuItem(aTextAScan, (char*) "View Type:", (char*) "Log", (char*) "VGA");
 	m_Delay = new IntMenuItem(aTextAScan, (char*) "Delay:", 0, 0, 100);
 	m_ADCAccum = new IntMenuItem(aTextAScan, (char*) "Accum:", 31, 0, 128);
 
@@ -312,11 +310,10 @@ void MenuAScan::FillVRC(void) {
 		if (i < vrc_tick) {
 			float val = 1.0 - (amp1 / vrc) * (x + (float) i * tick_step);
 			m_VRCTab[i] = 1.0 / pow(10.0, val * 83.0 / 20.0);
-		} else {
+		}
+		else {
 			float val = 1.0
-					- (amp1
-							+ ((amp2 - amp1) / (vrc + 100.0 * 1000.0))
-									* (x + (float) (i - vrc_tick) * tick_step));
+					- (amp1 + ((amp2 - amp1) / (vrc + 100.0 * 1000.0)) * (x + (float) (i - vrc_tick) * tick_step));
 			if (val < 0.0)
 				val = 0.0;
 			m_VRCTab[i] = 1.0 / pow(10.0, val * 83.0 / 20.0);
@@ -346,7 +343,8 @@ void MenuAScan::UpdateControl(bool aLogType) {
 		m_Items.push_back(m_Level);
 		m_Items.push_back(m_Delay);
 		m_Items.push_back(m_ADCAccum);
-	} else {
+	}
+	else {
 		m_Items.push_back(m_Amp1);
 		m_Items.push_back(m_Amp2);
 		m_Items.push_back(m_VRC);
@@ -369,7 +367,8 @@ void MenuAScan::ProcessButton(unsigned int &aKey) {
 		m_Selected->SetSelected(false);
 		m_Selected = *i;
 		m_Selected->SetSelected(true);
-	} else if (aKey == JOY_RIGHT) {
+	}
+	else if (aKey == JOY_RIGHT) {
 		std::vector<MenuItem*>::iterator i = m_Items.begin();
 		while (i != m_Items.end()) {
 			if (*i == m_Selected) {
@@ -383,9 +382,11 @@ void MenuAScan::ProcessButton(unsigned int &aKey) {
 		m_Selected->SetSelected(false);
 		m_Selected = *i;
 		m_Selected->SetSelected(true);
-	} else if (aKey == BTN_CANCEL) {
+	}
+	else if (aKey == BTN_CANCEL) {
 		m_ShowAllChannel = !m_ShowAllChannel;
-	} else {
+	}
+	else {
 		m_Selected->ProcessButton(aKey);
 		HandleEvent();
 	}
@@ -395,8 +396,7 @@ void MenuAScan::ProcessButton(unsigned int &aKey) {
 void MenuAScan::HandleEvent(void) {
 	int ch_num = m_ChNumber->GetValue() - 1;
 
-	DPart *dpart =
-			(m_Side->SelectedItem() == 0) ? dscope->LFish : dscope->RFish;
+	DPart *dpart = (m_Side->SelectedItem() == 0) ? dscope->LFish : dscope->RFish;
 
 	if (m_AScanType->IsChanged())
 		UpdateControl(m_AScanType->SelectedItem() == 0);
@@ -438,8 +438,7 @@ void MenuAScan::HandleEvent(void) {
 
 void MenuAScan::Render(int aX, int aY) {
 	int x = aX;
-	for (std::vector<MenuItem*>::iterator i = m_Items.begin();
-			i != m_Items.end(); i++) {
+	for (std::vector<MenuItem*>::iterator i = m_Items.begin(); i != m_Items.end(); i++) {
 		(*i)->Render(x, aY);
 		x += (*i)->GetWidth() + 16;
 	}
@@ -492,7 +491,7 @@ TextAScan::~TextAScan() {
 }
 //----------------------------------------------------------------------------
 
-void TextAScan::DrawLine(int aX1, int aY1, int aX2, int aY2) {
+void TextAScan::DrawLine(int aX1, int aY1, int aX2, int aY2, GLfloat *aColor) {
 	float x1 = (float) aX1 / 400.0 - 1.0;
 	float x2 = (float) aX2 / 400.0 - 1.0;
 	float y1 = (float) aY1 / 240.0 - 1.0;
@@ -516,7 +515,7 @@ void TextAScan::DrawLine(int aX1, int aY1, int aX2, int aY2) {
 	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
 	glEnableVertexAttribArray(m_paramVertexPos);
 
-	glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0, txc);
+	glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0, aColor != NULL ? aColor : txc);
 	glEnableVertexAttribArray(m_paramVertexColor);
 
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_SHORT, ndx);
@@ -557,16 +556,14 @@ void TextAScan::FillRect(int aX1, int aY1, int aX2, int aY2, GLfloat *aColor) {
 	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
 	glEnableVertexAttribArray(m_paramVertexPos);
 
-	glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0,
-			aColor ? aColor : txc);
+	glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0, aColor ? aColor : txc);
 	glEnableVertexAttribArray(m_paramVertexColor);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 }
 //----------------------------------------------------------------------------
 
-void TextAScan::CalcAScan(int aX1, int aY1, int aX2, int aY2,
-		unsigned char *aBuf, int aSize) {
+void TextAScan::CalcAScan(int aX1, int aY1, int aX2, int aY2, unsigned char *aBuf, int aSize) {
 	float x1 = (float) aX1 / 400.0 - 1.0;
 	float x2 = (float) aX2 / 400.0 - 1.0;
 	float y1 = (float) aY1 / 240.0 - 1.0;
@@ -577,7 +574,8 @@ void TextAScan::CalcAScan(int aX1, int aY1, int aX2, int aY2,
 		for (int i = 0; i < aSize; i++) {
 			val[i] = aBuf[i];
 		}
-	} else {
+	}
+	else {
 		m_Menu->CalcVGA(val, aBuf, aSize);
 	}
 
@@ -585,12 +583,13 @@ void TextAScan::CalcAScan(int aX1, int aY1, int aX2, int aY2,
 		if (i == 0) {
 			m_V[i * 3] = x1;
 			m_V[i * 3 + 1] = y1; // + (float) aBuf[i] / 255.0 * (y2 - y1);
-		} else if (i == aSize) {
+		}
+		else if (i == aSize) {
 			m_V[i * 3] = x2;
 			m_V[i * 3 + 1] = y1;
-		} else {
-			m_V[i * 3] = x1
-					+ (float) (i - 1) / (float) (aSize - 2) * (float) (x2 - x1);
+		}
+		else {
+			m_V[i * 3] = x1 + (float) (i - 1) / (float) (aSize - 2) * (float) (x2 - x1);
 			float v = y1 + (float) val[i - 1] / 255.0 * (y2 - y1);
 			if (v < y1)
 				v = y1;
@@ -610,8 +609,7 @@ void TextAScan::CalcAScan(int aX1, int aY1, int aX2, int aY2,
 }
 //----------------------------------------------------------------------------
 
-void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2,
-		int aY2) {
+void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) {
 	int size = 128;
 	int side = m_Menu->GetSide();
 	int ch = m_Menu->GetChNumber() - 1;
@@ -632,42 +630,46 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2,
 				float x2 = 800.0 / 7.0 * (float) (i + 1);
 				float y1 = 40 + 440.0 / 4.0 * (float) j;
 				float y2 = 40 + 440.0 / 4.0 * (float) (j + 1);
-				unsigned char *b =
-						(side == 0) ?
-								&fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
+				unsigned char *b = (side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
 				CalcAScan(x1, y1, x2, y2, b, size);
 
-				glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE,
-						0, m_V);
+				glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
 				glEnableVertexAttribArray(m_paramVertexPos);
 
-				glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE,
-						0, m_C);
+				glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0, m_C);
 				glEnableVertexAttribArray(m_paramVertexColor);
 
-				glDrawElements(GL_LINE_LOOP, size + 1, GL_UNSIGNED_SHORT,
-						m_Ndx);
+				glDrawElements(GL_LINE_LOOP, size + 1, GL_UNSIGNED_SHORT, m_Ndx);
 			}
 		}
-	} else {
-		unsigned char *b =
-				(side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
+	}
+	else {
+		unsigned char *b = (side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
 		CalcAScan(aX1, aY1, aX2, aY2, b, size);
 
 		glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, m_V);
 		glEnableVertexAttribArray(m_paramVertexPos);
 
-		glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0,
-				m_C);
+		glVertexAttribPointer(m_paramVertexColor, 4, GL_FLOAT, GL_FALSE, 0, m_C);
 		glEnableVertexAttribArray(m_paramVertexColor);
 
 		glDrawElements(GL_LINE_LOOP, size + 1, GL_UNSIGNED_SHORT, m_Ndx);
 	}
 
+	DrawGrid(aX1, aY1, aX2, aY2, true);
+
 	m_Menu->Render(10, 20);
 
 	font->RenderString(2, 2, (char*) "A-Scan Render String...");
 	font->FlushText();
+}
+//----------------------------------------------------------------------------
+
+void TextAScan::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLog) {
+	GLfloat c[] = { /* texture coordinate */
+	0.0f, 0.0f, 0.0f, .5f,/**/
+	0.0f, 0.0f, 0.0f, .5f };
+	DrawLine(aX1, aY1, aX2, aY2, c);
 }
 //----------------------------------------------------------------------------
 
