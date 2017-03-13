@@ -290,6 +290,8 @@ DScopeStream::~DScopeStream() {
 	pthread_mutex_unlock(&m_ReadLock);
 	pthread_join(m_Thread, NULL);
 
+	pthread_join(m_DecodeThread, NULL);
+
 	pthread_mutex_destroy(&m_ReadLock);
 
 	pthread_mutex_lock(&m_FrameLock);
@@ -300,6 +302,33 @@ DScopeStream::~DScopeStream() {
 	pthread_cond_destroy(&m_DataReady);
 
 	pthread_mutex_destroy(&m_KeyLock);
+
+	pthread_mutex_destroy(&m_WRQLock);
+
+	int n = 0;
+	while (!m_RestQueue.empty()) {
+		ISItem *item = m_RestQueue.front();
+		m_RestQueue.pop();
+		item->Destroy();
+		delete item;
+		n++;
+	}
+	printf("Rest Queue size %i \n", n);
+
+	n = 0;
+	while (!m_WorkQueue.empty()) {
+		ISItem *item = m_WorkQueue.front();
+		m_WorkQueue.pop();
+		item->Destroy();
+		delete item;
+		n++;
+	}
+	printf("Work Queue size %i \n", n);
+
+	if(m_CurrentWork) {
+		m_CurrentWork->Destroy();
+		delete m_CurrentWork;
+	}
 
 	printf("delete m_Q...\n");
 
@@ -566,6 +595,7 @@ void DScopeStream::DecodeStream(void) {
 				else {
 					m_CurrentWork = m_WorkQueue.front();
 					m_WorkQueue.pop();
+					printf(".");
 				}
 
 				if (m_AlignShift)
@@ -635,8 +665,6 @@ void DScopeStream::DecodeThread(void) {
 			m_RestQueue.push(item);
 			pthread_mutex_unlock(&m_WRQLock);
 		}
-		else
-			usleep(1);
 
 		pthread_mutex_lock(&m_ReadLock);
 		bool run = m_ThreadRunning;
