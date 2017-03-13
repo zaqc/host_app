@@ -151,6 +151,12 @@ void * recv_thread(void *context) {
 }
 //----------------------------------------------------------------------------
 
+void * decode_thread(void *context) {
+	((DScopeStream*) context)->DecodeThread();
+	return NULL;
+}
+//----------------------------------------------------------------------------
+
 DScopeStream::DScopeStream() {
 	m_StreamState = ssStateNone;
 	m_PreambleCount = 0;
@@ -252,6 +258,13 @@ DScopeStream::DScopeStream() {
 
 	ch_error = 0;
 
+	pthread_mutex_init(&m_WRQLock, NULL);
+	for (int i = 0; i < 1024; i++) {
+		ISItem *item = new ISItem();
+		item->Create();
+		m_RestQueue.push(item);
+	}
+
 	pthread_mutex_init(&m_KeyLock, NULL);
 
 	m_Q = new DataFrameQueue(800, true);
@@ -262,6 +275,9 @@ DScopeStream::DScopeStream() {
 	m_DataAccepted = false;
 	pthread_mutex_init(&m_FrameLock, NULL);
 	pthread_cond_init(&m_DataReady, NULL);
+
+	pthread_create(&m_DecodeThread, NULL, &decode_thread, this);
+
 	pthread_create(&m_Thread, NULL, &recv_thread, this);
 }
 //----------------------------------------------------------------------------
@@ -529,21 +545,32 @@ void DScopeStream::DecodeStream(void) {
 		}
 
 		case ssGetDataBlock: {
-			int res = RecvBuf(&ch[m_AlignShift], 1000 - m_AlignShift - m_DecoLen, false);
+			unsigned char *buf = m_CurrentWork->m_Data;
+			int res = RecvBuf(&buf[m_AlignShift], 1000 - m_AlignShift - m_DecoLen, false);
 			if (res > 0) {
 				res += m_AlignShift;
 				m_AlignShift = 0;
 
-				if (0 == DecodeBuffer(ch, res))
-					block_count++;
-				else
-					error_count++;
-
+				pthread_mutex_lock(&m_WRQLock);
 				int ald = (res / 5) * 5;
 				m_DecoLen += ald;
 				m_AlignShift = res - ald;
+				m_CurrentWork->m_DataLen = ald;
+
+				m_WorkQueue.push(m_CurrentWork);
+				if (!m_RestQueue.empty()) {
+					m_CurrentWork = m_RestQueue.front();
+					m_RestQueue.pop();
+				}
+				else {
+					m_CurrentWork = m_WorkQueue.front();
+					m_WorkQueue.pop();
+				}
+
 				if (m_AlignShift)
-					memcpy(ch, &ch[ald], m_AlignShift);
+					memcpy(m_CurrentWork->m_Data, &buf[ald], m_AlignShift);
+
+				pthread_mutex_unlock(&m_WRQLock);
 
 				if (m_DecoLen == 1000)
 					m_StreamState = ssGetPreamble;
@@ -564,7 +591,12 @@ void DScopeStream::DecodeStream(void) {
 
 void DScopeStream::RecvThread(void) {
 	printf("Start receive thread...\n");
-	//int n = 0;
+
+	pthread_mutex_lock(&m_WRQLock);
+	m_CurrentWork = m_RestQueue.front();
+	m_RestQueue.pop();
+	pthread_mutex_unlock(&m_WRQLock);
+
 	while (true) {
 		DecodeStream();
 		if (m_StreamState == ssError) {
@@ -579,6 +611,37 @@ void DScopeStream::RecvThread(void) {
 //			printf("error count=%i\n", m_ErrorCount);
 //			n = 0;
 //		}
+	}
+
+	printf("Exit from thread...\n");
+}
+//----------------------------------------------------------------------------
+
+void DScopeStream::DecodeThread(void) {
+	printf("Start decode thread...\n");
+	while (true) {
+		pthread_mutex_lock(&m_WRQLock);
+		ISItem *item = NULL;
+		if (!m_WorkQueue.empty()) {
+			item = m_WorkQueue.front();
+			m_WorkQueue.pop();
+		}
+		pthread_mutex_unlock(&m_WRQLock);
+
+		if (item) {
+			DecodeBuffer(item->m_Data, item->m_DataLen);
+			pthread_mutex_lock(&m_WRQLock);
+			m_RestQueue.push(item);
+			pthread_mutex_unlock(&m_WRQLock);
+		}
+		else
+			usleep(1);
+
+		pthread_mutex_lock(&m_ReadLock);
+		bool run = m_ThreadRunning;
+		pthread_mutex_unlock(&m_ReadLock);
+		if (!run)
+			break;
 	}
 
 	printf("Exit from thread...\n");

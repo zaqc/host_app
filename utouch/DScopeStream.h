@@ -166,6 +166,28 @@ enum StreamState {
 //----------------------------------------------------------------------------
 
 /**
+ * Input Stream Item
+ */
+struct ISItem {
+	unsigned char *m_Data;
+	int m_DataLen;
+
+	void Create(void){
+		m_Data = new unsigned char[4096];
+		m_DataLen = 0;
+	}
+
+	void Destroy(void){
+		delete [] m_Data;
+	}
+
+	void Clean(void) {
+		m_DataLen = 0;
+	}
+};
+//----------------------------------------------------------------------------
+
+/**
  * class for accept data from DScope and send control command to it
  * DScope contains two part left and right
  */
@@ -212,6 +234,12 @@ protected:
 	int DecodeBuffer(unsigned char *aBuf, int aSize);
 	void DecodeStream(void);
 	int RecvBuf(unsigned char *aBuf, int aSize, bool aWait);
+
+	pthread_t m_DecodeThread;
+	pthread_mutex_t m_WRQLock;
+	ISItem *m_CurrentWork;
+	std::queue<ISItem*> m_WorkQueue;
+	std::queue<ISItem*> m_RestQueue;
 public:
 	DScopeStream();
 	virtual ~DScopeStream();
@@ -223,8 +251,17 @@ public:
 
 	/**
 	 * method which called from recv_thread function
+	 * pull free block from m_RestQueue
+	 * receive data in to it from ftdi and push it to m_WorkQueue
 	 */
 	void RecvThread(void);
+
+	/**
+	 * metod wich called from decode_thread function
+	 * pull data from m_WorkQueue and parse it
+	 * push parsed data to Frame queue
+	 */
+	void DecodeThread(void);
 
 	/**
 	 * Get latest data frame received from both part of DScope

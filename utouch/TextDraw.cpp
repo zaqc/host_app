@@ -163,7 +163,7 @@ void TextDraw::DrawRect(int aX1, int aY1, int aX2, int aY2) {
 //----------------------------------------------------------------------------
 
 void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
-	int lm = 30;
+	int lm = 36;
 	int bm = 16;
 	int tm = 4;
 	int rm = 4;
@@ -182,31 +182,43 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
 	draw->SetColor(1.0f, 1.0f, 1.0f, .25f);
 	float rw = aX2 - aX1 - lm - rm;
 	float x = aX1 + lm;
-	for (int i = 0; i < 10; i++) {
-		float t = delay + full_time / 10.0 * (float) i;
+	for (int i = 0; i <= 10; i++) {
 		char str[16];
-		sprintf(str, "%.2f", t);
-		int str_w = small_font->GetStringWidth(str);
-		small_font->RenderString(x - str_w / 2, aY2 - 12, str);
-
+		if (i == 10) {
+			sprintf(str, "uSec");
+			int str_w = small_font->GetStringWidth(str);
+			small_font->RenderString(aX2 - str_w - rm - 2, aY2 - 12, str);
+		}
+		else {
+			float t = delay + full_time / 10.0 * (float) i;
+			sprintf(str, "%.2f", t);
+			int str_w = small_font->GetStringWidth(str);
+			small_font->RenderString(x - str_w / 2, aY2 - 12, str);
+		}
 		x = x + rw / 10.0;
 		draw->DrawLine(x, aY1 + tm, x, aY2 - bm);
 	}
 
-	{
-		char str[16];
-		sprintf(str, "uSec");
-		int str_w = small_font->GetStringWidth(str);
-		small_font->RenderString(aX2 - str_w - rm, aY2 - 12, str);
-	}
-	small_font->FlushText();
-
 	if (aLogView) {
 		float rh = aY2 - aY1 - tm - bm;
 		float y = aY1 + tm;
-		for (int i = 1; i < 10; i++) {
-			y = y + rh / 10.0;
-			draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
+		for (int i = 0; i <= 10; i++) {
+			if (i == 0) {
+				char str[16];
+				sprintf(str, "dB");
+				int str_w = small_font->GetStringWidth(str);
+				small_font->RenderString(aX1 + lm - str_w - 2, aY1 + tm, str);
+			}
+			else {
+				y = y + rh / 10.0;
+				draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
+				float t = 84.0 / 10.0 * (float) (10 - i);
+				char str[16];
+				sprintf(str, "%.2f", t);
+				int str_w = small_font->GetStringWidth(str);
+				float yy = y - ((i == 10) ? small_font->GetStringHeight() : small_font->GetStringHeight() / 2);
+				small_font->RenderString(aX1 + lm - str_w - 2, yy, str);
+			}
 		}
 	}
 	else {
@@ -218,5 +230,7 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
 			draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
 		}
 	}
+
+	small_font->FlushText();
 }
 //----------------------------------------------------------------------------
