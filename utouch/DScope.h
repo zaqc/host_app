@@ -101,6 +101,7 @@ protected:
 
 	int m_Amp1; // virtual param (for VGA scan view)
 	int m_Amp2;
+	int m_AmpDelta;
 	int m_VRC;
 public:
 	DLogChannel(DScope *aDScope, DPart *aPart, int aChNum);
@@ -124,6 +125,10 @@ public:
 		m_Amp2 = aAmp2;
 	}
 
+	void SetAmpDelta(int aAmpDelta) {
+		m_AmpDelta = aAmpDelta;
+	}
+
 	void SetVRC(int aVRC) {
 		m_VRC = aVRC;
 	}
@@ -134,6 +139,10 @@ public:
 
 	int GetAmp2(void) {
 		return m_Amp2;
+	}
+
+	int GetAmpDelta(void) {
+		return m_AmpDelta;
 	}
 
 	int GetVRC(void) {

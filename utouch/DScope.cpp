@@ -102,6 +102,7 @@ DLogChannel::DLogChannel(DScope *aDScope, DPart *aPart, int aChNum)
 
 	m_Amp1 = 48;
 	m_Amp2 = 53;
+	m_AmpDelta = 0;
 	m_VRC = 5;
 }
 //----------------------------------------------------------------------------
@@ -121,6 +122,7 @@ void DLogChannel::Load(int aFile){
 
 	read(aFile, &m_Amp1, sizeof(int));
 	read(aFile, &m_Amp2, sizeof(int));
+	read(aFile, &m_AmpDelta, sizeof(int));
 	read(aFile, &m_VRC, sizeof(int));
 }
 //----------------------------------------------------------------------------
@@ -132,6 +134,7 @@ void DLogChannel::Save(int aFile){
 
 	write(aFile, &m_Amp1, sizeof(int));
 	write(aFile, &m_Amp2, sizeof(int));
+	write(aFile, &m_AmpDelta, sizeof(int));
 	write(aFile, &m_VRC, sizeof(int));
 }
 //----------------------------------------------------------------------------

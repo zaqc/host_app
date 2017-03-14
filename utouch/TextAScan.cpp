@@ -360,6 +360,29 @@ void MenuAScan::UpdateControl(bool aLogType) {
 		m_Items.push_back(m_Amp2);
 		m_Items.push_back(m_VRC);
 	}
+
+	int side = GetSide();
+	int ch = GetChNumber() - 1;
+	int adc_offset = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetADCOffset();
+	m_Level->SetValue(adc_offset - 127, 0);
+
+	int accum = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetADCAccum();
+	m_ADCAccum->SetValue(accum, 0);
+
+	int delay = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetDelay();
+	m_Delay->SetValue(delay / (accum + 1), 0);
+
+	int amp1 = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetAmp1();
+	m_Amp1->SetValue(amp1, false);
+
+	int amp2 = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetAmp2();
+	m_Amp2->SetValue(amp2, false);
+
+	int vrc = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetVRC();
+	m_VRC->SetValue(vrc, false);
+
+	m_AmpDelta = ((side == 0) ? dscope->LFish->Channel[ch] : dscope->RFish->Channel[ch])->GetAmpDelta();
+	FillVRC();
 }
 //----------------------------------------------------------------------------
 
@@ -409,7 +432,7 @@ void MenuAScan::HandleEvent(void) {
 
 	DPart *dpart = (m_Side->SelectedItem() == 0) ? dscope->LFish : dscope->RFish;
 
-	if (m_AScanType->IsChanged())
+	if (m_AScanType->IsChanged() || m_ChNumber->IsChanged())
 		UpdateControl(m_AScanType->SelectedItem() == 0);
 
 	if (m_Delay->IsChanged()) {
@@ -430,10 +453,14 @@ void MenuAScan::HandleEvent(void) {
 	}
 
 	if (m_VRC->IsChanged()) {
+		int val = m_VRC->GetValue();
+		dpart->Channel[ch_num]->SetVRC(val);
 		FillVRC();
 	}
 
 	if (m_Amp1->IsChanged()) {
+		int val = m_Amp1->GetValue();
+		dpart->Channel[ch_num]->SetAmp1(val);
 		m_Amp2->SetValue(m_Amp1->GetValue() + m_AmpDelta);
 		FillVRC();
 	}
@@ -444,6 +471,9 @@ void MenuAScan::HandleEvent(void) {
 			m_AmpDelta = 0;
 			m_Amp2->SetValue(m_Amp1->GetValue());
 		}
+		int val = m_Amp2->GetValue();
+		dpart->Channel[ch_num]->SetAmp2(val);
+		dpart->Channel[ch_num]->SetAmpDelta(m_AmpDelta);
 		FillVRC();
 	}
 }
