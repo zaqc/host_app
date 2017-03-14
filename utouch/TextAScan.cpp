@@ -298,6 +298,16 @@ bool MenuAScan::IsLogView(void) {
 }
 //----------------------------------------------------------------------------
 
+int MenuAScan::GetADCAccum(void) {
+	return m_ADCAccum->GetValue();
+}
+//----------------------------------------------------------------------------
+
+int MenuAScan::GetDelay(void) {
+	return m_Delay->GetValue();
+}
+//----------------------------------------------------------------------------
+
 void MenuAScan::FillVRC(void) {
 	float amp1 = m_Amp1->GetValue() / 83.0; // VRC hight from "0" to this value
 	float amp2 = m_Amp2->GetValue() / 83.0; // time of this point = VRC + 100 uSec
@@ -410,6 +420,8 @@ void MenuAScan::HandleEvent(void) {
 
 	if (m_ADCAccum->IsChanged()) {
 		dpart->Channel[ch_num]->SetADCAccum(m_ADCAccum->GetValue());
+		int acum = m_ADCAccum->GetValue() + 1;
+		dpart->Channel[ch_num]->SetDelay(m_Delay->GetValue() * acum);
 	}
 
 	if (m_Level->IsChanged()) {
@@ -650,7 +662,7 @@ void TextAScan::DrawBuf(DScopeStream *aDSS, int aX1, int aY1, int aX2, int aY2) 
 		}
 	}
 	else {
-		draw->DrawGrid(aX1 - 20, aY1, aX2 + 20, aY2, m_Menu->IsLogView());
+		draw->DrawGrid(aX1 - 20, aY1, aX2 + 20, aY2, m_Menu->IsLogView(), m_Menu->GetDelay(), m_Menu->GetADCAccum());
 
 		unsigned char *b = (side == 0) ? &fr->m_LData[128 * ch] : &fr->m_RData[128 * ch];
 		CalcAScan(aX1 + 16, aY1 + 46, aX2 + 16, aY2 + 26, b, size);

@@ -105,6 +105,9 @@ public:
 	int GetChNumber(void);
 	bool GetShowAllChannel(void);
 
+	int GetADCAccum(void);
+	int GetDelay(void);
+
 	bool IsLogView(void);
 
 	void UpdateControl(bool aLogType);

@@ -38,7 +38,7 @@ public:
 	void DrawLine(int aX1, int aY1, int aX2, int aY2);
 	void DrawRect(int aX1, int aY1, int aX2, int aY2);
 
-	void DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView);
+	void DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView, int aDelay = 0, int aAccum = 31);
 
 	void BeginLines(void);
 	void ShowLines(void);

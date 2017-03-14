@@ -162,7 +162,7 @@ void TextDraw::DrawRect(int aX1, int aY1, int aX2, int aY2) {
 }
 //----------------------------------------------------------------------------
 
-void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
+void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView, int aDelay, int aAccum) {
 	int lm = 36;
 	int bm = 16;
 	int tm = 4;
@@ -173,8 +173,8 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
 	draw->DrawRect(aX1, aY1, aX2, aY2);
 	draw->DrawRect(aX1 + lm, aY1 + tm, aX2 - rm, aY2 - bm);
 
-	float delay = 12.5;	// uSec
-	float accum = 40.0 * 32.0 / 1000.0; // uSec
+	float delay = (float)(aDelay * 40.0 * (aAccum + 1)) / 1000.0;	// uSec
+	float accum = 40.0 * (float)(aAccum + 1) / 1000.0; // uSec
 	int tick_count = 128;
 
 	float full_time = (float) tick_count * accum;
@@ -193,7 +193,7 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
 			float t = delay + full_time / 10.0 * (float) i;
 			sprintf(str, "%.2f", t);
 			int str_w = small_font->GetStringWidth(str);
-			small_font->RenderString(x - str_w / 2, aY2 - 12, str);
+			small_font->RenderString(x - ((i == 0) ? 0 : str_w / 2), aY2 - 12, str);
 		}
 		x = x + rw / 10.0;
 		draw->DrawLine(x, aY1 + tm, x, aY2 - bm);
@@ -224,7 +224,24 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView) {
 	else {
 		float rh = aY2 - aY1 - tm - bm;
 		float y = aY1 + tm;
-		for (int i = 1; i < 10; i++) {
+		float prev_y = y;
+		int dB = 6;
+		for (int i = 0; i <= 10; i++) {
+			if (prev_y + 8 < y || i == 10 || i == 0) {
+				char str[16];
+				if (i == 10)
+					sprintf(str, "-72.0");
+				else if (i == 0)
+					sprintf(str, "dB");
+				else
+					sprintf(str, "-%.1f", (float)dB);
+				int str_w = small_font->GetStringWidth(str);
+				float yy = y - ((i == 0) ? 0 : ((i == 10) ? small_font->GetStringHeight() : small_font->GetStringHeight() / 2));
+				small_font->RenderString(aX1 + lm - str_w - 2, yy, str);
+			}
+			prev_y = y;
+			dB += 6;
+
 			rh = rh / 2;
 			y = y + rh;
 			draw->DrawLine(aX1 + lm, y, aX2 - rm, y);
