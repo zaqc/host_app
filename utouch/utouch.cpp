@@ -220,6 +220,19 @@ int main(void) {
 
 		//renderFrame();
 
+		draw->SetColor(0.0, 1.0, 0.0, 1.0);
+		draw->FillRect(0, 0, 129 + 32, 480);
+		draw->FillRect(799 - 129 - 32, 0, 799, 480);
+		draw->SetColor(0.0, 0.0, 0.25, 1.0);
+		for(int i = 0; i < 6; i++) {
+			int y1 = (int)((float)i * (480.0 / 6.0));
+			int y2 = (int)((float)(i + 1) * (480.0 / 6.0) - 1.0);
+			draw->FillRect(32, y1, 32 + 128, y2);
+			draw->FillRect(799 - 128 - 32, y1, 799 - 32, y2);
+			//draw->FillRect(129, y1, 129 + 128, y2);
+			//draw->FillRect(799 - 128 - 129, y1, 799 - 129, y2);
+		}
+
 
 		eglSwapBuffers(__egl_display, surf);
 

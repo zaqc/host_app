@@ -187,11 +187,31 @@ DScopeStream::DScopeStream() {
 	int res = ftdi_set_bitmode(m_FTDI, 0xFF, BITMODE_SYNCFF);
 	std::cout << "ftdi_set_bitmode res=" << res << std::endl;
 
-	res = ftdi_read_data_set_chunksize(m_FTDI, 64 * 1024);
+	res = ftdi_read_data_set_chunksize(m_FTDI, 16384);
 	std::cout << "ftdi_read_data_set_chunksize res=" << res << std::endl;
 
 	res = ftdi_usb_purge_buffers(m_FTDI);
 	std::cout << "ftdi_usb_purge_buffers res=" << res << std::endl;
+
+//	unsigned char dd[1024];
+//	int pr_cnt = 0;
+//	for (int n = 0; n < 20; n++) {
+//		int bc = ftdi_read_data(m_FTDI, dd, 1024);
+//		printf("\n\n%i\n\n", bc);
+//		for (int i = 0; i < bc; i++) {
+//			printf("0x%02X ", dd[i]);
+//			if (dd[i] == 0x55) {
+//				pr_cnt++;
+//				if (pr_cnt >= 2)
+//					printf("\n\n\n");
+//			}
+//			else
+//				pr_cnt = 0;
+//		}
+//	}
+
+//	printf("\n");
+//	exit(-1);
 
 	unsigned char buf[64];
 	buf[0] = 0x55;
@@ -218,10 +238,11 @@ DScopeStream::DScopeStream() {
 
 	dscope = new DScope(m_FTDI);
 
-	dscope->RFish->SetHightVoltage(hv60);
+	dscope->RFish->SetHightVoltage(hvOff);
+	dscope->LFish->SetHightVoltage(hvOff);
 
 	bool l_on = true;
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 4; i++) {
 		unsigned int v = dscope->LFish->LightOn(l_on);
 		l_on = !l_on;
 
@@ -233,14 +254,14 @@ DScopeStream::DScopeStream() {
 		ftdi_write_data(m_FTDI, buf, 16);
 		usleep(100000);
 	}
-	{
-		unsigned int v = dscope->LFish->SetHightVoltage(hv60);
-		buf[11] = v & 0xFF;
-		buf[10] = (v >> 8) & 0xFF;
-		buf[9] = (v >> 16) & 0xFF;
-		buf[8] = (v >> 24) & 0xFF;
-		ftdi_write_data(m_FTDI, buf, 16);
-	}
+//	{
+//		unsigned int v = dscope->LFish->SetHightVoltage(hv60);
+//		buf[11] = v & 0xFF;
+//		buf[10] = (v >> 8) & 0xFF;
+//		buf[9] = (v >> 16) & 0xFF;
+//		buf[8] = (v >> 24) & 0xFF;
+//		ftdi_write_data(m_FTDI, buf, 16);
+//	}
 	//hFAA5EDA3
 	{
 		buf[4] = 0xFA;
@@ -325,7 +346,7 @@ DScopeStream::~DScopeStream() {
 	}
 	printf("Work Queue size %i \n", n);
 
-	if(m_CurrentWork) {
+	if (m_CurrentWork) {
 		m_CurrentWork->Destroy();
 		delete m_CurrentWork;
 	}
@@ -426,7 +447,14 @@ int DScopeStream::DecodeBuffer(unsigned char *aBuf, int aSize) {
 		unsigned int w = *(unsigned int *) buf;
 		buf += 4;
 		if (ch == 0x90) {
-			printf(".");
+			if (!(REV_BYTE_ORDER(w) & 1)) {
+				if (REV_BYTE_ORDER(w) & 2)
+					printf("->");
+				else
+					printf("<-");
+			}
+			else
+				printf(".");
 			//fflush(stdout);
 		}
 		else if (ch == 0xC0) {
