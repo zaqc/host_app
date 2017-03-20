@@ -2,7 +2,7 @@ TARGET:=utouch
 
 CXXFLAGS:=-g3 -Wall -I/usr/include -fmessage-length=0
 
-PKG:=egl glesv2 x11 libpng libftdi1
+PKG:=egl glesv2 x11 libpng libftdi1 freetype2
 
 CC=g++
 

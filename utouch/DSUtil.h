@@ -23,8 +23,9 @@ struct ChInfo {
 	float m_Beta;
 	float m_Delay;
 	float m_PhyDelay;
-	float m_LevelAmp;		// for -6dB
-	float m_ConditionAmp;	// add to LevelAmp
+	float m_LevelAmp;		// amp for -6dB level
+	float m_ConditionAmp;	// value for add to LevelAmp (from table, depence the type of the channel)
+	float m_RealAmp;		// real amp
 };
 //----------------------------------------------------------------------------
 

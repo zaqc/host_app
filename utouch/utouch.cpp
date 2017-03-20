@@ -28,6 +28,7 @@
 #include "TextFont.h"
 #include "SmallFont.h"
 #include "TextDraw.h"
+#include "TTFont.h"
 //----------------------------------------------------------------------------
 
 //bool setupGraphics(int w, int h);
@@ -156,6 +157,8 @@ int main(void) {
 
 	bool show_a_scan = false;
 
+	TTFont *ttfont = new TTFont();
+
 	XEvent x_event;
 	while (true) {
 		if (XPending(x_disp)) {
@@ -220,18 +223,22 @@ int main(void) {
 
 		//renderFrame();
 
+		/*
 		draw->SetColor(0.0, 1.0, 0.0, 1.0);
 		draw->FillRect(0, 0, 129 + 32, 480);
 		draw->FillRect(799 - 129 - 32, 0, 799, 480);
 		draw->SetColor(0.0, 0.0, 0.25, 1.0);
-		for(int i = 0; i < 6; i++) {
-			int y1 = (int)((float)i * (480.0 / 6.0));
-			int y2 = (int)((float)(i + 1) * (480.0 / 6.0) - 1.0);
+		for(int i = 0; i < 9; i++) {
+			int y1 = (int)((float)i * (480.0 / 9.0));
+			int y2 = (int)((float)(i + 1) * (480.0 / 9.0) - 1.0);
 			draw->FillRect(32, y1, 32 + 128, y2);
 			draw->FillRect(799 - 128 - 32, y1, 799 - 32, y2);
 			//draw->FillRect(129, y1, 129 + 128, y2);
 			//draw->FillRect(799 - 128 - 129, y1, 799 - 129, y2);
 		}
+		*/
+
+		ttfont->Render();
 
 
 		eglSwapBuffers(__egl_display, surf);
@@ -248,6 +255,8 @@ int main(void) {
 			ts_prev = ts;
 		}
 	}
+
+	delete ttfont;
 
 	delete a_scan;
 
