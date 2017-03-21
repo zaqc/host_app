@@ -158,6 +158,7 @@ int main(void) {
 	bool show_a_scan = false;
 
 	TTFont *ttfont = new TTFont();
+	ttfont->RenderString(L"Channels ↖70° ↑70° ↗70°");
 
 	XEvent x_event;
 	while (true) {

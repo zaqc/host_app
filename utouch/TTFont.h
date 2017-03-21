@@ -9,10 +9,19 @@
 #define TTFONT_H_
 //----------------------------------------------------------------------------
 
+#include <string>
+
 #include <GLES2/gl2.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+struct TTString {
+	std::string m_Str;
+	GLuint m_Text;
+	int m_W;
+	int m_H;
+};
+//----------------------------------------------------------------------------
 
 class TTFont {
 protected:
@@ -26,11 +35,16 @@ protected:
 
 	FT_Library m_Library;
 	FT_Face m_Face;
-	FT_GlyphSlot  m_Slot;
+
+	TTString m_TTS;
 
 public:
 	TTFont();
 	virtual ~TTFont();
+
+	int GetStringWidth(std::wstring aStr);
+	int GetStringHeight(std::wstring aStr);
+	void RenderString(std::wstring aStr);
 
 	void Render(void);
 };
