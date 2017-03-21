@@ -21,23 +21,29 @@ TTFont::TTFont() {
 	const char vs[] = "attribute vec4 VertexPos; \n"
 			"attribute vec2 TexturePos; \n"
 			"varying vec2 TextCoord; \n"
+			"uniform vec2 OffsetXY; \n"
 			"uniform vec4 FontColor; \n"
+			"float x; \n"
+			"float y; \n"
 			"void main() \n"
 			"{ \n"
-			"    gl_Position = VertexPos; \n"
+			"    x = (OffsetXY.x + VertexPos.x) / 400.0 - 1.0; \n"
+			"    y = 1.0 - (OffsetXY.y + VertexPos.y) / 240.0; \n"
+			"    gl_Position = vec4(x, y, VertexPos.z, VertexPos.w); \n"
 			"    TextCoord = TexturePos; \n"
 			"} \n";
 
 	const char fs[] = "precision mediump float;\n"
 			"varying vec2 TextCoord;\n"
+			"uniform vec4 FontColor; \n"
 			"uniform sampler2D Texture; \n"
 			"vec4 txtColor; \n"
 			"void main() \n"
 			"{ \n"
 			"    txtColor = texture2D(Texture, TextCoord); \n"
-			"    txtColor.r = 1.0; \n"
-			"    txtColor.g = 1.0; \n"
-			"    txtColor.b = 0.0; \n"
+			"    txtColor.r = FontColor.r; \n"
+			"    txtColor.g = FontColor.g; \n"
+			"    txtColor.b = FontColor.b; \n"
 			"    gl_FragColor = txtColor; \n"
 			"} \n";
 
@@ -50,6 +56,7 @@ TTFont::TTFont() {
 	m_paramTexturePos = glGetAttribLocation(m_Prog, "TexturePos");
 	m_paramTexture = glGetUniformLocation(m_Prog, "Texture");
 	m_paramFontColor = glGetUniformLocation(m_Prog, "FontColor");
+	m_paramOffsetXY = glGetUniformLocation(m_Prog, "OffsetXY");
 
 	FT_Error error;
 	error = FT_Init_FreeType(&m_Library); /* initialize library */
@@ -68,7 +75,7 @@ TTFont::TTFont() {
 		exit(-1);
 	}
 
-	error = FT_Set_Char_Size(m_Face, 20 << 6, 20 << 6, 72, 72); /* set character size */
+	error = FT_Set_Char_Size(m_Face, 28 << 6, 28 << 6, 72, 72); /* set character size */
 	if (error) {
 		printf("Error on FT_Set_Char_Size...");
 		exit(-1);
@@ -136,6 +143,8 @@ TTFont::TTFont() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	delete[] buf;
+
+	m_R = m_G = m_B = 1.0f;
 }
 //----------------------------------------------------------------------------
 
@@ -201,9 +210,12 @@ int TTFont::GetStringHeight(std::wstring aStr) {
 }
 //----------------------------------------------------------------------------
 
-void TTFont::RenderString(std::wstring aStr) {
+TTString TTFont::PrepTTString(std::wstring aStr) {
+	TTString res;
+
 	int w = GetStringWidth(aStr);
 	int h = GetStringHeight(aStr);
+	res.Init(w, h);
 
 	w = ((w + 3) / 4) * 4;
 
@@ -236,7 +248,7 @@ void TTFont::RenderString(std::wstring aStr) {
 		for (int j = 0; j < ch_h; j++) {
 			for (int i = 0; i < ch_w; i++) {
 				unsigned char v = slot->bitmap.buffer[i + j * slot->bitmap.pitch];
-				int addr = slot->bitmap_left + i + x + (h / 4 - (j - slot->bitmap_top) - 1) * w;
+				int addr = slot->bitmap_left + i + x + ((float) h / 4.0 * 3.0 - (slot->bitmap_top - j)) * w;
 				addr = addr > 0 ? addr : 0;
 				addr = addr < w * h ? addr : w * h - 1;
 				buf[addr] = v;
@@ -246,63 +258,49 @@ void TTFont::RenderString(std::wstring aStr) {
 		x += slot->metrics.horiAdvance / 64;
 	}
 
-	GLuint txt;
-	glGenTextures(1, &txt);
+	glGenTextures(1, &res.m_Text);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, txt);
+	glBindTexture(GL_TEXTURE_2D, res.m_Text);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buf);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	m_Text = txt;
-
 	delete[] buf;
 
-	m_TTS.m_W = w;
-	m_TTS.m_H = h;
-	m_TTS.m_Text = txt;
+	return res;
 }
 //----------------------------------------------------------------------------
 
-void TTFont::Render(void) {
-	float x1 = -.25f;
-	float y1 = -.25f;
-	float x2 = (float)m_TTS.m_W / 400.0 - .25f;
-	float y2 = (float)m_TTS.m_H / 240.0 - .25f;
-	GLfloat v[] = { /* vertexes */
-	x1, y1, 0.0f, /**/
-	x1, y2, 0.0f, /**/
-	x2, y1, 0.0f, /**/
-	x2, y2, 0.0f };
+void TTFont::SetColor(GLfloat aR, GLfloat aG, GLfloat aB) {
+	m_R = aR;
+	m_G = aG;
+	m_B = aB;
+}
+//----------------------------------------------------------------------------
 
-	GLfloat t[] = { /* texture coordinate */
-	0.0f, 0.0f, /**/
-	0.0f, 1.0f, /**/
-	1.0f, 0.0f, /**/
-	1.0f, 1.0f };
-
-	GLushort ndx[] = { 1, 0, 2, 1, 2, 3 };
-
+void TTFont::Render(int aX, int aY, TTString *aTTS) {
 	glUseProgram(m_Prog);
 
 	glDisable(GL_DEPTH_TEST);
 	glViewport(0, 0, 800, 480);
 
-	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, aTTS->m_V);
 	glEnableVertexAttribArray(m_paramVertexPos);
 
-	glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, t);
+	glVertexAttribPointer(m_paramTexturePos, 2, GL_FLOAT, GL_FALSE, 0, aTTS->m_T);
 	glEnableVertexAttribArray(m_paramTexturePos);
 
+	glUniform2f(m_paramOffsetXY, aX, aY);
+	glUniform4f(m_paramFontColor, m_R, m_G, m_B, 1.0);
+
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_Text);
+	glBindTexture(GL_TEXTURE_2D, aTTS->m_Text);
 
 	glUniform1i(m_paramTexture, 1);
 
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
-
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, aTTS->m_Ndx);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 //----------------------------------------------------------------------------

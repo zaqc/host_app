@@ -51,8 +51,7 @@ int main(void) {
 	XWindowAttributes attr;
 	XGetWindowAttributes(x_disp, x_desktop, &attr);
 
-	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0,
-			255);
+	Window x_wnd = XCreateSimpleWindow(x_disp, x_desktop, 0, 0, 800, 480, 8, 0, 255);
 	//eglInitialize()
 
 	XSetWindowAttributes xattr;
@@ -68,8 +67,7 @@ int main(void) {
 
 	Atom window_type = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE", False);
 	long value = XInternAtom(x_disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace,
-			(unsigned char *) &value, 1);
+	XChangeProperty(x_disp, x_wnd, window_type, XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
 
 	XMapWindow(x_disp, x_wnd);
 	XMoveWindow(x_disp, x_wnd, (attr.width - 800) / 2, (attr.height - 480) / 2);
@@ -158,7 +156,10 @@ int main(void) {
 	bool show_a_scan = false;
 
 	TTFont *ttfont = new TTFont();
-	ttfont->RenderString(L"Channels ↖70° ↑70° ↗70°");
+
+	TTString l70 = ttfont->PrepTTString(L"↖70°");
+	TTString up70 = ttfont->PrepTTString(L"↑70°");
+	TTString r70 = ttfont->PrepTTString(L"↗70°");
 
 	XEvent x_event;
 	while (true) {
@@ -194,7 +195,8 @@ int main(void) {
 			if (key == BTN_HOME) {
 				show_a_scan = !show_a_scan;
 				key = 0;
-			} else if (key == BTN_CANCEL) {
+			}
+			else if (key == BTN_CANCEL) {
 				dss->PrintInfo();
 			}
 
@@ -203,17 +205,17 @@ int main(void) {
 
 				a_scan->FillRect(0, 0, 800, 480);
 				a_scan->DrawBuf(dss, 30, 10, 770, 440);
-			} else {
+			}
+			else {
 				tscroll->RenderFrame(dss);
 			}
-		} else {
+		}
+		else {
 			a_scan->FillRect(0, 0, 800, 480);
 			for (int j = 0; j < 30; j++)
 				for (int i = 0; i < 4; i++)
-					font->RenderString(i * 200, j * 16,
-							(char*) "String render slow slow...");
-			font->RenderString(10, 50,
-					(char*) "this is string for flush out text...");
+					font->RenderString(i * 200, j * 16, (char*) "String render slow slow...");
+			font->RenderString(10, 50, (char*) "this is string for flush out text...");
 
 			font->FlushText();
 		}
@@ -225,29 +227,79 @@ int main(void) {
 		//renderFrame();
 
 		/*
-		draw->SetColor(0.0, 1.0, 0.0, 1.0);
-		draw->FillRect(0, 0, 129 + 32, 480);
-		draw->FillRect(799 - 129 - 32, 0, 799, 480);
-		draw->SetColor(0.0, 0.0, 0.25, 1.0);
-		for(int i = 0; i < 9; i++) {
-			int y1 = (int)((float)i * (480.0 / 9.0));
-			int y2 = (int)((float)(i + 1) * (480.0 / 9.0) - 1.0);
-			draw->FillRect(32, y1, 32 + 128, y2);
-			draw->FillRect(799 - 128 - 32, y1, 799 - 32, y2);
-			//draw->FillRect(129, y1, 129 + 128, y2);
-			//draw->FillRect(799 - 128 - 129, y1, 799 - 129, y2);
+		 draw->SetColor(0.0, 1.0, 0.0, 1.0);
+		 draw->FillRect(0, 0, 129 + 32, 480);
+		 draw->FillRect(799 - 129 - 32, 0, 799, 480);
+		 draw->SetColor(0.0, 0.0, 0.25, 1.0);
+		 for(int i = 0; i < 9; i++) {
+		 int y1 = (int)((float)i * (480.0 / 9.0));
+		 int y2 = (int)((float)(i + 1) * (480.0 / 9.0) - 1.0);
+		 draw->FillRect(32, y1, 32 + 128, y2);
+		 draw->FillRect(799 - 128 - 32, y1, 799 - 32, y2);
+		 //draw->FillRect(129, y1, 129 + 128, y2);
+		 //draw->FillRect(799 - 128 - 129, y1, 799 - 129, y2);
+		 }
+		 */
+
+//		draw->SetColor(0.0, 0.0, .25, .75);
+//		draw->FillRect(30, 10, 34 + up70.m_W, 14 + up70.m_H);
+		for (int i = 0; i < 8; i++) {
+			if (i == 2 || i == 0)
+				draw->SetColor(1.0, 0.0, 0.0, 1.0);
+			else
+				draw->SetColor(.25, .25, .25, .75);
+			draw->FillRect(4, i * 480 / 8, 144, (i + 1) * 480 / 8 - 4);
+			draw->SetColor(1.0, 1.0, 1.0, .75);
+			draw->DrawRect(4, i * 480 / 8, 144, (i + 1) * 480 / 8 - 4);
+			if (i == 0) {
+				ttfont->SetColor(0.0, 1.0, 0.0);
+				ttfont->Render(4 + 70 - up70.m_W / 2, 4 + i * 480 / 8, &up70);
+			}
+			else if (i == 1 || i == 2) {
+				ttfont->SetColor(1.0, 1.0, 0.0);
+				ttfont->Render(6, 4 + i * 480 / 8, &l70);
+				ttfont->SetColor(0.0, 1.0, 1.0);
+				ttfont->Render(142 - r70.m_W, 4 + i * 480 / 8, &r70);
+			}
+			else if (i == 3) {
+				ttfont->SetColor(0.0, 1.0, 0.0);
+				ttfont->Render(6, 4 + i * 480 / 8, &l70);
+				ttfont->SetColor(1.0, 0.0, 1.0);
+				ttfont->Render(142 - r70.m_W, 4 + i * 480 / 8, &r70);
+			}
 		}
-		*/
 
-		ttfont->Render();
+		for (int i = 0; i < 13; i++) {
+			draw->SetColor(.25, .25, .25, .75);
+			draw->FillRect(700, i * 480 / 13, 798, (i + 1) * 480 / 13 - 4);
+			draw->SetColor(1.0, 1.0, 1.0, .75);
+			draw->DrawRect(700, i * 480 / 13, 798, (i + 1) * 480 / 13 - 4);
+			if (i == 0) {
+				ttfont->SetColor(0.0, 1.0, 0.0);
+				ttfont->Render(706, 4 + i * 480 / 13, &up70);
+			}
+			else if (i == 1) {
+				ttfont->SetColor(0.0, 1.0, 1.0);
+				ttfont->Render(706, 4 + i * 480 / 13, &l70);
+			}
+			else if (i == 2) {
+				ttfont->SetColor(1.0, 1.0, 0.0);
+				ttfont->Render(706, 4 + i * 480 / 13, &r70);
 
+			}
+
+			char str[8];
+			sprintf(str, "%i", i + 1);
+			int sw = small_font->GetStringWidth(str);
+			small_font->RenderString(796 - sw, i * 480 / 13 + 2, str);
+		}
+		small_font->FlushText();
 
 		eglSwapBuffers(__egl_display, surf);
 
 		fc++;
 		gettimeofday(&ts, 0);
-		float delta = (ts.tv_sec * 1000000 + ts.tv_usec)
-				- (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
+		float delta = (ts.tv_sec * 1000000 + ts.tv_usec) - (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
 
 		if (delta >= 1000000.0f) {
 			printf("FPS=%.4f \n", (float) fc * 1000000.0 / delta);
