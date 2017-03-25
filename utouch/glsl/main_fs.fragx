@@ -1,0 +1,84 @@
+precision mediump float;
+//-------------------------------------------------------------------------------
+
+uniform sampler2D Texture;
+varying float bb_timer;
+//-------------------------------------------------------------------------------
+
+float DrawLine(in vec2 cor, in vec2 pa, in vec2 pb)
+{
+    float x = cor.x;
+    float y = cor.y;
+    vec2 pt = vec2(x, y);
+	
+    float a = abs(distance(pa, pt));
+	float b = abs(distance(pb, pt));
+	float c = abs(distance(pa, pb));
+		if ( a >= c || b >=  c ) 
+            return 0.0;
+
+	float p = (a + b + c) * 0.5;
+	float h = 2.0 / c * sqrt( p * ( p - a) * ( p - b) * ( p - c));
+	return mix(1.0, 0.0, smoothstep(0.5, 2.0, h));    
+}
+//-------------------------------------------------------------------------------
+
+float FillRect(in vec2 cor, in vec2 pa, in vec2 pb)
+{
+	float lr = clamp((cor.x - pa.x) * (pb.x - cor.x), 0.0, 1.0);
+	float tb = clamp((cor.y - pa.y) * (pb.y - cor.y), 0.0, 1.0);
+	return clamp(lr * tb, 0.0, 1.0);
+	//return cor.x > pa.x && cor.x < pb.x && cor.y > pa.y && cor.y < pb.y ? 1.0 : 0.0;
+}
+//-------------------------------------------------------------------------------
+
+float DrawBevel_LT(in vec2 cor, in vec2 pa, in vec2 pb)
+{
+	float l = clamp((1.0 - abs(cor.x - pa.x) / 4.0), 0.0, 1.0);
+	float t = clamp((1.0 - abs(cor.y - pa.y) / 4.0), 0.0, 1.0);
+	return clamp(max(l, t) * FillRect(cor, pa, pb), 0.0, 1.0);
+}
+//-------------------------------------------------------------------------------
+
+float DrawBevel_RB(in vec2 cor, in vec2 pa, in vec2 pb)
+{
+	float r = clamp((1.0 - abs(pb.x - cor.x) / 4.0), 0.0, 1.0);
+	float b = clamp((1.0 - abs(pb.y - cor.y) / 4.0), 0.0, 1.0);
+	return clamp(max(r, b) * FillRect(cor, pa, pb), 0.0, 1.0);
+}
+//-------------------------------------------------------------------------------
+
+vec4 CopyTexture(in vec2 cor, in vec2 in_a, in vec2 in_b, in vec2 out_a, in vec2 out_b)
+{
+	float x = clamp((in_a.x + (in_b.x - in_a.x) / (out_b.x - out_a.x) * (cor.x - out_a.x)) / 1024.0, 0.0, 1.0);
+	float y = clamp((in_a.y + (in_b.y - in_a.y) / (out_b.y - out_a.y) * (cor.y - out_a.y)) / 32.0, 0.0, 1.0);
+	return texture2D(Texture, vec2(x, y));
+}
+//-------------------------------------------------------------------------------
+
+void main() {
+	vec4 col = vec4(0.0, 0.0, 0.0, 1.0);
+	vec2 cor = gl_FragCoord.xy;
+	cor.y = 480.0 - cor.y;
+
+	//float a = 0.5;	
+	//mat2 rm = mat2(sin(a), cos(a), cos(a), -sin(a));
+	//cor = cor * rm;
+	
+	col = mix(col, vec4(0.0, 0.0, 0.75, 1.0), FillRect(cor, vec2(0.0, 0.0), vec2(800.0, 480.0)));
+	
+	col = mix(col, vec4(1.0, 0.0, 1.0, 0.5), DrawLine(cor, vec2(0.0, 0.0), vec2(800.0, 480.0)));
+	
+	col = mix(col, vec4(0.0, 1.0, 1.0, 0.5), FillRect(cor, vec2(10.0, 10.0), vec2(250.0, 110.0)));
+	col = mix(col, vec4(0.0, 0.0, 0.0, 1.0), DrawBevel_RB(cor, vec2(10.0, 10.0), vec2(250.0, 110.0)));
+	col = mix(col, vec4(1.0, 1.0, 1.0, 1.0), DrawBevel_LT(cor, vec2(10.0, 10.0), vec2(250.0, 110.0)));
+	
+	col = mix(col, 
+		CopyTexture(cor, vec2(0.0, 0.0), vec2(58.0, 32.0),
+			vec2(10.0, 300.0), vec2(138.0, 332.0)),
+			FillRect(cor, vec2(10.0, 300.0), vec2(138.0, 332.0)));
+	
+	gl_FragColor = col;
+}
+//-------------------------------------------------------------------------------
+

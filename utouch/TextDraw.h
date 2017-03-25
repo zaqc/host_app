@@ -19,6 +19,9 @@ protected:
 	GLuint m_Prog;
 	GLuint m_paramVertexPos;
 	GLuint m_paramDrawColor;
+	GLuint m_paramViewSize;
+	GLfloat m_ViewWidth;
+	GLfloat m_ViewHeight;
 
 	GLfloat m_R;
 	GLfloat m_G;
@@ -33,12 +36,16 @@ public:
 	TextDraw();
 	virtual ~TextDraw();
 
+	void SetViewSize(int aW, int aH);
+
 	void SetColor(GLfloat *aColor);
 	void SetColor(GLfloat aR, GLfloat aG, GLfloat aB, GLfloat aA);
 
 	void FillRect(int aX1, int aY1, int aX2, int aY2);
 	void DrawLine(int aX1, int aY1, int aX2, int aY2);
 	void DrawRect(int aX1, int aY1, int aX2, int aY2);
+
+	void DrawArrow(int aX1, int aY1, int aX2, int aY2);
 
 	void DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView, int aDelay = 0, int aAccum = 31);
 

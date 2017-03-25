@@ -170,7 +170,7 @@ void TextScroller::DrawData(int aW, DScopeStream *aDSS) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, aW, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_Data);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BkFB);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BkText, 0);
+	// ??? glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_BkText, 0);
 
 	glUniform1f(m_paramShiftX, 0.0f);
 

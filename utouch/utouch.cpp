@@ -29,6 +29,8 @@
 #include "SmallFont.h"
 #include "TextDraw.h"
 #include "TTFont.h"
+#include "ChannelTag.h"
+#include "ChannelInfo.h"
 //----------------------------------------------------------------------------
 
 //bool setupGraphics(int w, int h);
@@ -161,6 +163,13 @@ int main(void) {
 	TTString up70 = ttfont->PrepTTString(L"↑70°");
 	TTString r70 = ttfont->PrepTTString(L"↗70°");
 
+	TTString d70_45 = ttfont->PrepTTString(L"70° 45°");
+
+	ChannelTag *ch_tag = new ChannelTag();
+	ch_tag->InitTexture();
+
+	ChannelInfo *ci = new ChannelInfo();
+
 	XEvent x_event;
 	while (true) {
 		if (XPending(x_disp)) {
@@ -285,7 +294,10 @@ int main(void) {
 			else if (i == 2) {
 				ttfont->SetColor(1.0, 1.0, 0.0);
 				ttfont->Render(706, 4 + i * 480 / 13, &r70);
-
+			}
+			else if (i == 3) {
+				ttfont->SetColor(1.0, 1.0, 1.0);
+				ttfont->Render(706, 4 + i * 480 / 13, &d70_45);
 			}
 
 			char str[8];
@@ -294,6 +306,10 @@ int main(void) {
 			small_font->RenderString(796 - sw, i * 480 / 13 + 2, str);
 		}
 		small_font->FlushText();
+
+		ch_tag->Render();
+
+		ci->Render();
 
 		eglSwapBuffers(__egl_display, surf);
 
@@ -308,6 +324,10 @@ int main(void) {
 			ts_prev = ts;
 		}
 	}
+
+	delete ci;
+
+	delete ch_tag;
 
 	delete ttfont;
 

@@ -10,6 +10,8 @@
 //----------------------------------------------------------------------------
 
 #include <string>
+
+#include <GLES2/gl2.h>
 //----------------------------------------------------------------------------
 
 class ChannelItem {
@@ -50,9 +52,16 @@ class ChannelGroup {
 //----------------------------------------------------------------------------
 
 class ChannelInfo {
+protected:
+	GLuint m_Prog;
+	GLuint m_paramVertexPos;
+	GLuint m_paramTexture;
+	GLuint m_Text;
 public:
 	ChannelInfo();
 	virtual ~ChannelInfo();
+
+	void Render(void);
 };
 //----------------------------------------------------------------------------
 

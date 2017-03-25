@@ -21,13 +21,14 @@ TextDraw *draw = NULL;
 TextDraw::TextDraw() {
 	const char vs[] = "attribute vec4 VertexPos; \n"
 			"uniform vec4 DrawColor; \n"
+			"uniform vec2 ViewSize; \n"
 			"varying vec4 vertex_color;\n"
 			"float xx; \n"
 			"float yy; \n"
 			"void main() \n"
 			"{ \n"
-			"    xx = VertexPos.x / 400.0 - 1.0; \n"
-			"    yy = 1.0 - VertexPos.y / 240.0; \n"
+			"    xx = VertexPos.x / ViewSize.x * 2.0 - 1.0; \n"
+			"    yy = 1.0 - VertexPos.y / ViewSize.y * 2.0; \n"
 			"    gl_Position = vec4(xx, yy, 0.0, VertexPos.w); \n"
 			"    vertex_color = DrawColor; \n" //vec4(1.0, 1.0, 1.0, 1.0); \n" //DrawColor; \n"
 			"} \n";
@@ -49,6 +50,10 @@ TextDraw::TextDraw() {
 
 	m_paramVertexPos = glGetAttribLocation(m_Prog, "VertexPos");
 	m_paramDrawColor = glGetUniformLocation(m_Prog, "DrawColor");
+	m_paramViewSize = glGetUniformLocation(m_Prog, "ViewSize");
+
+	m_ViewWidth = 800;
+	m_ViewHeight = 480;
 
 	m_LineCacheSize = 1024;
 	m_LineVertex = new GLfloat[m_LineCacheSize * 6];
@@ -61,6 +66,12 @@ TextDraw::~TextDraw() {
 	delete[] m_LineNdx;
 	delete[] m_LineColor;
 	delete[] m_LineVertex;
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::SetViewSize(int aW, int aH) {
+	m_ViewWidth = aW;
+	m_ViewHeight = aH;
 }
 //----------------------------------------------------------------------------
 
@@ -97,12 +108,14 @@ void TextDraw::FillRect(int aX1, int aY1, int aX2, int aY2) {
 	glUseProgram(m_Prog);
 
 	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 800, 480);
+	glViewport(0, 0, m_ViewWidth, m_ViewHeight);
 
 	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
 
 	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
 	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glUniform2f(m_paramViewSize, m_ViewWidth, m_ViewHeight);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, ndx);
 }
@@ -123,7 +136,7 @@ void TextDraw::DrawLine(int aX1, int aY1, int aX2, int aY2) {
 	glUseProgram(m_Prog);
 
 	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 800, 480);
+	glViewport(0, 0, m_ViewWidth, m_ViewHeight);
 
 	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
 
@@ -151,7 +164,39 @@ void TextDraw::DrawRect(int aX1, int aY1, int aX2, int aY2) {
 	glUseProgram(m_Prog);
 
 	glDisable(GL_DEPTH_TEST);
-	glViewport(0, 0, 800, 480);
+	glViewport(0, 0, m_ViewWidth, m_ViewHeight);
+
+	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
+
+	glVertexAttribPointer(m_paramVertexPos, 3, GL_FLOAT, GL_FALSE, 0, v);
+	glEnableVertexAttribArray(m_paramVertexPos);
+
+	glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, ndx);
+}
+//----------------------------------------------------------------------------
+
+void TextDraw::DrawArrow(int aX1, int aY1, int aX2, int aY2) {
+//	float x1 = aX1; //(float) aX1 / 400.0 - 1.0;
+//	float x2 = aX2; //(float) aX2 / 400.0 - 1.0;
+//	float y1 = aY1; //(float) aY1 / 240.0 - 1.0;
+//	float y2 = aY2; //(float) aY2 / 240.0 - 1.0;
+
+	GLfloat v[] = { /**/
+	-2.0 / 3.0, 1.0 / 3.0, 0.0, /**/
+	0.0, 1.0, 0.0, /**/
+	2.0 / 3.0, 1.0 / 3.0, 0.0, /**/
+	1.0 / 3.0, 1.0 / 3.0, 0.0, /**/
+	1.0 / 3.0, -1.0, 0.0, /**/
+	-1.0 / 3.0, -1.0, 0.0, /**/
+	-1.0 / 3.0, 1.0 / 3.0, 0.0 /**/
+	};
+
+	GLushort ndx[] = { 0, 1, 2, 3, 4, 5, 5, 6, 3 };
+
+	glUseProgram(m_Prog);
+
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0, 0, m_ViewWidth, m_ViewHeight);
 
 	glUniform4f(m_paramDrawColor, m_R, m_G, m_B, m_A);
 
@@ -173,8 +218,8 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView, int a
 	draw->DrawRect(aX1, aY1, aX2, aY2);
 	draw->DrawRect(aX1 + lm, aY1 + tm, aX2 - rm, aY2 - bm);
 
-	float delay = (float)(aDelay * 40.0 * (aAccum + 1)) / 1000.0;	// uSec
-	float accum = 40.0 * (float)(aAccum + 1) / 1000.0; // uSec
+	float delay = (float) (aDelay * 40.0 * (aAccum + 1)) / 1000.0;	// uSec
+	float accum = 40.0 * (float) (aAccum + 1) / 1000.0; // uSec
 	int tick_count = 128;
 
 	float full_time = (float) tick_count * accum;
@@ -234,9 +279,11 @@ void TextDraw::DrawGrid(int aX1, int aY1, int aX2, int aY2, bool aLogView, int a
 				else if (i == 0)
 					sprintf(str, "dB");
 				else
-					sprintf(str, "-%.1f", (float)dB);
+					sprintf(str, "-%.1f", (float) dB);
 				int str_w = small_font->GetStringWidth(str);
-				float yy = y - ((i == 0) ? 0 : ((i == 10) ? small_font->GetStringHeight() : small_font->GetStringHeight() / 2));
+				float yy = y
+						- ((i == 0) ?
+								0 : ((i == 10) ? small_font->GetStringHeight() : small_font->GetStringHeight() / 2));
 				small_font->RenderString(aX1 + lm - str_w - 2, yy, str);
 			}
 			prev_y = y;

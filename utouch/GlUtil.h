@@ -23,4 +23,6 @@
 GLuint loadShader(GLenum shaderType, const char* shaderSource);
 GLuint createProgram(const char* vertexSource, const char * fragmentSource);
 
+GLuint loadProgram(const char* vs_name, const char * fs_name);
+
 #endif /* GLUTIL_H_ */
