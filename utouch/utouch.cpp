@@ -42,8 +42,6 @@ int main(void) {
 	//read_png_file("/home/zaqc/work/png/cat_eat.png");
 	read_png_file((char *) "cat_eat.png");
 
-	DScopeStream *dss = new DScopeStream();
-
 	Display *x_disp;
 	x_disp = XOpenDisplay(NULL);
 
@@ -138,6 +136,69 @@ int main(void) {
 
 	//glEnable(GL_DEPTH_TEST);
 
+
+	eglSwapInterval(__egl_display, 1);
+
+	timeval ts, ts_prev;
+	gettimeofday(&ts, 0);
+	int fc = 0;
+	ts_prev = ts;
+
+	//========================================================================
+#define testing_mode
+#ifdef testing_mode
+
+	ChannelInfo *tst_ci = new ChannelInfo();
+
+	XEvent x_ev;
+	while (true) {
+		if (XPending(x_disp)) {
+			XNextEvent(x_disp, &x_ev);
+
+			if (x_ev.type == ClientMessage) {
+				printf("Client Message\n");
+				break;
+			}
+			if (x_ev.type == ButtonPress) {
+				printf("Trying to close full screen mode\n");
+				break;
+			}
+		}
+
+		tst_ci->Render();
+
+		eglSwapBuffers(__egl_display, surf);
+
+		fc++;
+		gettimeofday(&ts, 0);
+		float delta = (ts.tv_sec * 1000000 + ts.tv_usec) - (ts_prev.tv_sec * 1000000 + ts_prev.tv_usec);
+
+		if (delta >= 1000000.0f) {
+			printf("FPS=%.4f \n", (float) fc * 1000000.0 / delta);
+
+			fc = 0;
+			ts_prev = ts;
+		}
+	}
+
+	delete tst_ci;
+
+	usleep(100000);
+
+	eglDestroyContext(__egl_display, __egl_context);
+	eglDestroySurface(__egl_display, surf);
+	eglTerminate(__egl_display);
+
+	XDestroyWindow(x_disp, x_wnd);
+
+	printf("see you soon :-)\n");
+
+	return EXIT_SUCCESS;
+#endif
+	//========================================================================
+
+	DScopeStream *dss = new DScopeStream();
+
 	font = new TextFont();
 	small_font = new SmallFont();
 	draw = new TextDraw();
@@ -146,16 +207,9 @@ int main(void) {
 	tscroll->InitProgram();
 	tscroll->Init();
 
-	timeval ts, ts_prev;
-	gettimeofday(&ts, 0);
-	int fc = 0;
-	ts_prev = ts;
-
-	eglSwapInterval(__egl_display, 1);
-
 	TextAScan *a_scan = new TextAScan();
 
-	bool show_a_scan = false;
+	//bool show_a_scan = false;
 
 	TTFont *ttfont = new TTFont();
 
@@ -198,7 +252,7 @@ int main(void) {
 //			usleep(10000);
 
 		//renderFrame();
-
+/*
 		if (dss) {
 			unsigned int key = dss->GetKey();
 			if (key == BTN_HOME) {
@@ -228,7 +282,7 @@ int main(void) {
 
 			font->FlushText();
 		}
-
+*/
 		//draw->DrawGrid(10, 10, 790, 450, false);
 
 		//tscroll->RenderFrame(dss);
@@ -252,6 +306,7 @@ int main(void) {
 
 //		draw->SetColor(0.0, 0.0, .25, .75);
 //		draw->FillRect(30, 10, 34 + up70.m_W, 14 + up70.m_H);
+		/*
 		for (int i = 0; i < 8; i++) {
 			if (i == 2 || i == 0)
 				draw->SetColor(1.0, 0.0, 0.0, 1.0);
@@ -306,8 +361,9 @@ int main(void) {
 			small_font->RenderString(796 - sw, i * 480 / 13 + 2, str);
 		}
 		small_font->FlushText();
+		*/
 
-		ch_tag->Render();
+		//ch_tag->Render();
 
 		ci->Render();
 
