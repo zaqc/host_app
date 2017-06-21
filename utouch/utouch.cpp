@@ -145,7 +145,7 @@ int main(void) {
 	ts_prev = ts;
 
 	//========================================================================
-#define testing_mode
+//#define testing_mode
 #ifdef testing_mode
 
 	ChannelInfo *tst_ci = new ChannelInfo();

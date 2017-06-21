@@ -558,6 +558,7 @@ void DScopeStream::DecodeStream(void) {
 
 		case ssWaitPreamble: {
 			if (RecvBuf(ch, 1, true) == 1) {
+				//printf("0x%02X ", ch[0]);
 				if ((ch[0] & 0xF0) == 0xC0) {
 					if (RecvBuf(ch, 4, true) == 4)
 						printf("Key changed 0x%08X\n", *(unsigned int *) ch);

@@ -165,6 +165,13 @@ uint32_t DLogChannel::SetDelay(int aDelay) {
 }
 //----------------------------------------------------------------------------
 
+uint32_t DLogChannel::SetPulseParam(int aPulseCount, int aJamming) {
+	m_Jamming = aJamming;
+	m_PulseCount = aPulseCount;
+	return send_cmd(PARAM_DELAY, ((aJamming << 4) & 0xF0) | (aPulseCount & 0x0F));
+}
+//----------------------------------------------------------------------------
+
 uint32_t DLogChannel::SetADCOffset(int aADCOffset) {
 	m_ADCOffset = (aADCOffset < 0) ? 0 : ((aADCOffset > 255) ? 255 : aADCOffset);
 	return send_cmd(PARAM_LOG_OFFSET, m_ADCOffset | (m_ADCOffset << 8));

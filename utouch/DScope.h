@@ -17,6 +17,7 @@
 #define	ASCAN_CHANNEL		14
 #define	CONTROL_CHANNEL		15
 
+#define	PARAM_PULSE			3
 #define PARAM_DELAY			4
 #define PARAM_ACCUM			5
 #define PARAM_DATA_LEN		6
@@ -98,6 +99,9 @@ protected:
 	int m_Delay;
 	int m_PreAmp12dB;
 	int m_ADCOffset;
+	
+	int m_PulseCount;
+	int m_Jamming;
 
 	int m_Amp1; // virtual param (for VGA scan view)
 	int m_Amp2;
@@ -114,6 +118,7 @@ public:
 
 	uint32_t SetDataLen(int aDataLen);
 	uint32_t SetADCAccum(int aADCAccum);
+	uint32_t SetPulseParam(int aPulseCount, int aJamming);
 	uint32_t SetDelay(int aDelay);
 	uint32_t SetADCOffset(int aADCOffset);
 

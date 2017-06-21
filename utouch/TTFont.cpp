@@ -22,7 +22,7 @@ TTFont::TTFont() {
 			"attribute vec2 TexturePos; \n"
 			"varying vec2 TextCoord; \n"
 			"uniform vec2 OffsetXY; \n"
-			"uniform vec4 FontColor; \n"
+			//"uniform vec4 FontColor; \n"
 			"float x; \n"
 			"float y; \n"
 			"void main() \n"
